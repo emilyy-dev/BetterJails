@@ -1,5 +1,5 @@
 # BetterJails
-A simple jails system Bukkit plugin for aimed at Minecraft 1.13 and later versions (works with older versions as well).
+A simple jails system Bukkit plugin aimed for Minecraft 1.13 and later versions (works with older versions as well).
 
 It lets you manage jails, jail offline players, and sentence time will be over when prisoners have been online for the required time.
 
