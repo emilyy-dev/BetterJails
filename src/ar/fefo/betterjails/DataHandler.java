@@ -197,6 +197,7 @@ public class DataHandler implements Listener {
         if (jailedPlayersSection.contains(playerUUID.toString()) &&
             player.hasPermission("betterjails.jail.exempt")) {
             jailedPlayersSection.set(playerUUID.toString(), null);
+            main.ess.getUser(playerUUID).setJailed(false);
             return;
         }
 
