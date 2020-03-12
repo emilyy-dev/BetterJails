@@ -10,7 +10,7 @@ public class Main extends JavaPlugin {
     DataHandler dataHandler;
     Essentials ess;
 
-    // I really don't like commenting code..... I'm sorry, I've tried...
+    // I really don't like commenting code..... I'm sorry, I've tried... :(
     @Override
     public void onEnable() {
         try {

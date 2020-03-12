@@ -4,7 +4,7 @@ version: 1.0
 main: ar.fefo.betterjails.Main
 api-version: 1.13
 load: STARTUP
-depend:
+softdepend:
   - Essentials
 
 permissions:
@@ -29,18 +29,22 @@ commands:
   jail:
     permission: betterjails.jail
     permission-message: §cYou are not allowed to run this command
+    usage: "§cUsage: /jail <player> <jail> <time>"
   jails:
     permission: betterjails.jails
     permission-message: §cYou are not allowed to run this command
   unjail:
     permission: betterjails.unjail
     permission-message: §cYou are not allowed to run this command
+    usage: "§cUsage: /unjail <player>"
   setjail:
     permission: betterjails.setjail
     permission-message: §cYou are not allowed to run this command
+    usage: "§cUsage: /setjail <jail name>"
   deljail:
     permission: betterjails.deljail
     permission-message: §cYou are not allowed to run this command
+    usage: "§cUsage: /deljail <jail name>"
   betterjails:
     permission: betterjails.betterjails
     permission-message: §cYou are not allowed to run this command

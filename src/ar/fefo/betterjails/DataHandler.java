@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -124,24 +125,31 @@ public class DataHandler implements Listener {
     void addJailedPlayer(@NotNull OfflinePlayer player,
                          @NotNull String jail,
                          int seconds) throws IOException {
-        main.ess.getUser(player.getUniqueId()).setLastLocation();
-        main.ess.getUser(player.getUniqueId()).setJailed(true);
-        if (player.isOnline())
+        Location lastLocation = new Location(main.getServer().getWorlds().get(0),
+                                             0.0,
+                                             0.0,
+                                             0.0,
+                                             0.0f,
+                                             0.0f);
+        if (main.ess != null)
+            main.ess.getUser(player.getUniqueId()).setJailed(true);
+        if (player.isOnline()) {
+            lastLocation = ((Player)player).getLocation();
             ((Player)player).teleport(getJail(jail).getLocation());
-        Location lastLocation = main.ess.getUser(player.getUniqueId()).getLastLocation();
+        }
 
         if (jailedPlayersSection == null)
             jailedPlayersSection = yamlJailedPlayers.createSection("players");
         jailedPlayersSection.set(player.getUniqueId() + ".name", player.getName());
         jailedPlayersSection.set(player.getUniqueId() + ".jail", jail);
         jailedPlayersSection.set(player.getUniqueId() + ".secondsLeft", seconds);
+        jailedPlayersSection.set(player.getUniqueId() + ".unjailed", false);
         jailedPlayersSection.set(player.getUniqueId() + ".x", lastLocation.getX());
         jailedPlayersSection.set(player.getUniqueId() + ".y", lastLocation.getY());
         jailedPlayersSection.set(player.getUniqueId() + ".z", lastLocation.getZ());
         jailedPlayersSection.set(player.getUniqueId() + ".yaw", lastLocation.getYaw());
         jailedPlayersSection.set(player.getUniqueId() + ".pitch", lastLocation.getPitch());
         jailedPlayersSection.set(player.getUniqueId() + ".world", Objects.requireNonNull(lastLocation.getWorld()).getName());
-        jailedPlayersSection.set(player.getUniqueId() + ".unjailed", false);
 
         yamlJailedPlayers.save(jailedPlayersFile);
     }
@@ -157,7 +165,8 @@ public class DataHandler implements Listener {
                     (float)jailedPlayersSection.getDouble(uuid + ".yaw"),
                     (float)jailedPlayersSection.getDouble(uuid + ".pitch"));
             ((Player)player).teleport(lastLocation);
-            main.ess.getUser(uuid).setJailed(false);
+            if (main.ess != null)
+                main.ess.getUser(uuid).setJailed(false);
 
             jailedPlayersSection.set(uuid.toString(), null);
         } else {
@@ -193,27 +202,46 @@ public class DataHandler implements Listener {
     @EventHandler
     void onPlayerJoin(@NotNull PlayerJoinEvent e) {
         Player player = e.getPlayer();
-        UUID playerUUID = player.getUniqueId();
-        if (jailedPlayersSection.contains(playerUUID.toString()) &&
+        UUID uuid = player.getUniqueId();
+        if (jailedPlayersSection.contains(uuid.toString()) &&
             player.hasPermission("betterjails.jail.exempt")) {
-            jailedPlayersSection.set(playerUUID.toString(), null);
-            main.ess.getUser(playerUUID).setJailed(false);
+            jailedPlayersSection.set(uuid.toString(), null);
+            if (main.ess != null)
+                main.ess.getUser(uuid).setJailed(false);
             return;
         }
 
-        if (jailedPlayersSection.contains(playerUUID.toString()) &&
-            jailedPlayersSection.getBoolean(playerUUID + ".unjailed")) {
+        if (jailedPlayersSection.contains(uuid.toString()) &&
+            jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
             try {
-                removeJailedPlayer(playerUUID);
+                removeJailedPlayer(uuid);
             } catch (IOException ex) {
                 main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                 ex.printStackTrace();
             }
-        } else if (jailedPlayersSection.contains(playerUUID.toString()) &&
-                   !jailedPlayersSection.getBoolean(playerUUID + ".unjailed")) {
-            player.teleport(
-                    getJail(jailedPlayersSection.getString(playerUUID + ".jail"))
-                            .getLocation());
+        } else if (jailedPlayersSection.contains(uuid.toString()) &&
+                   !jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
+            try {
+                addJailedPlayer(main.getServer().getOfflinePlayer(uuid),
+                                Objects.requireNonNull(jailedPlayersSection.getString(uuid + ".jail")),
+                                jailedPlayersSection.getInt(uuid + ".secondsLeft"));
+            } catch (IOException ex) {
+                main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    @EventHandler
+    void onPlayerRespawn(@NotNull PlayerRespawnEvent e) {
+        Player player = e.getPlayer();
+        UUID uuid = player.getUniqueId();
+
+        if (jailedPlayersSection.contains(uuid.toString())) {
+            Location jailLocation = getJail(jailedPlayersSection.getString(uuid + ".jail")).getLocation();
+            main.getServer().getScheduler().runTaskLater(main,
+                                                         () -> player.teleport(jailLocation),
+                                                         1);
         }
     }
 }

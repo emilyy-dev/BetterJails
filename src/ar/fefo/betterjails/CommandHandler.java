@@ -23,6 +23,7 @@ public class CommandHandler implements CommandExecutor {
         this.main.getCommand("jail").setExecutor(this);
         this.main.getCommand("jail").setTabCompleter(tabCompleter);
         this.main.getCommand("jails").setExecutor(this);
+        this.main.getCommand("jails").setTabCompleter(tabCompleter);
         this.main.getCommand("unjail").setExecutor(this);
         this.main.getCommand("unjail").setTabCompleter(tabCompleter);
         this.main.getCommand("setjail").setExecutor(this);
@@ -30,6 +31,7 @@ public class CommandHandler implements CommandExecutor {
         this.main.getCommand("deljail").setExecutor(this);
         this.main.getCommand("deljail").setTabCompleter(tabCompleter);
         this.main.getCommand("betterjails").setExecutor(this);
+        this.main.getCommand("betterjails").setTabCompleter(tabCompleter);
     }
 
     static void init(Main main) {
@@ -48,7 +50,7 @@ public class CommandHandler implements CommandExecutor {
 
             case "jail":
                 if (args.length != 3) {
-                    sender.sendMessage("§cUsage: /jail <player> <jail> <time>");
+                    return false;
                 } else {
                     OfflinePlayer[] alltimePlayers = main.getServer().getOfflinePlayers();
                     for (OfflinePlayer p : alltimePlayers) {
@@ -88,7 +90,7 @@ public class CommandHandler implements CommandExecutor {
                                             scale = 3600 * 24 * 365.25;
                                             break;
                                     }
-                                    int seconds = (int)(scale * Integer.valueOf(args[2].substring(0, args.length - 2), 10));
+                                    int seconds = (int)(scale * Integer.parseInt(args[2].substring(0, args[2].length() - 1)));
                                     try {
                                         main.dataHandler.addJailedPlayer(p, args[1], seconds);
                                     } catch (IOException e) {
@@ -130,7 +132,7 @@ public class CommandHandler implements CommandExecutor {
 
             case "unjail":
                 if (args.length != 1) {
-                    sender.sendMessage("§cUsage: /unjail <player>");
+                    return false;
                 } else {
                     OfflinePlayer[] alltimePlayers = main.getServer().getOfflinePlayers();
                     for (OfflinePlayer p : alltimePlayers) {
@@ -162,7 +164,7 @@ public class CommandHandler implements CommandExecutor {
                 if (!(sender instanceof Player)) {
                     sender.sendMessage("§cOnly players can set jails!");
                 } else if (args.length != 1) {
-                    sender.sendMessage("§cUsage: /setjail <jail name>");
+                    return false;
                 } else {
                     Player p = ((Player)sender);
                     try {
@@ -177,7 +179,7 @@ public class CommandHandler implements CommandExecutor {
 
             case "deljail":
                 if (args.length != 1) {
-                    sender.sendMessage("§cUsage: /deljail <jail name>");
+                    return false;
                 } else {
                     if (main.dataHandler.getJail(args[0]) != null) {
                         try {
@@ -193,7 +195,6 @@ public class CommandHandler implements CommandExecutor {
                 }
                 break;
         }
-
         return true;
     }
 }

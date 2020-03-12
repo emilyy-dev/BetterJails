@@ -50,6 +50,7 @@ public class CommandTabCompleter implements TabCompleter {
                         break;
                 }
                 break;
+
             case "unjail":
                 if (args.length == 1) {
                     for (Player player : main.getServer().getOnlinePlayers())
@@ -59,6 +60,7 @@ public class CommandTabCompleter implements TabCompleter {
                     returnedList.add("");
                 }
                 break;
+
             case "setjail":
                 if (args.length == 1) {
                     returnedList.add("<jail name>");
@@ -66,6 +68,7 @@ public class CommandTabCompleter implements TabCompleter {
                     returnedList.add("");
                 }
                 break;
+
             case "deljail":
                 if (args.length == 1) {
                     for (Jail jail : main.dataHandler.getJails())
@@ -74,6 +77,11 @@ public class CommandTabCompleter implements TabCompleter {
                 } else {
                     returnedList.add("");
                 }
+                break;
+
+            case "jails":
+            case "betterjails":
+                returnedList.add("");
                 break;
         }
 
