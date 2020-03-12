@@ -195,6 +195,12 @@ public class DataHandler implements Listener {
         Player player = e.getPlayer();
         UUID playerUUID = player.getUniqueId();
         if (jailedPlayersSection.contains(playerUUID.toString()) &&
+            player.hasPermission("betterjails.jail.exempt")) {
+            jailedPlayersSection.set(playerUUID.toString(), null);
+            return;
+        }
+
+        if (jailedPlayersSection.contains(playerUUID.toString()) &&
             jailedPlayersSection.getBoolean(playerUUID + ".unjailed")) {
             try {
                 removeJailedPlayer(playerUUID);
