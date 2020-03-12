@@ -1,0 +1,46 @@
+name: BetterJails
+author: Fefo6644
+version: 1.0
+main: ar.fefo.betterjails.Main
+api-version: 1.13
+load: STARTUP
+depend:
+  - Essentials
+
+permissions:
+  betterjails.jail:
+    default: op
+  betterjails.jail.exempt:
+    default: op
+  betterjails.jails:
+    default: op
+  betterjails.unjail:
+    default: op
+  betterjails.setjail:
+    default: op
+  betterjails.deljail:
+    default: op
+  betterjails.receivebroadcast:
+    default: op
+  betterjails.betterjails:
+    default: op
+
+commands:
+  jail:
+    permission: betterjails.jail
+    permission-message: §cYou are not allowed to run this command
+  jails:
+    permission: betterjails.jails
+    permission-message: §cYou are not allowed to run this command
+  unjail:
+    permission: betterjails.unjail
+    permission-message: §cYou are not allowed to run this command
+  setjail:
+    permission: betterjails.setjail
+    permission-message: §cYou are not allowed to run this command
+  deljail:
+    permission: betterjails.deljail
+    permission-message: §cYou are not allowed to run this command
+  betterjails:
+    permission: betterjails.betterjails
+    permission-message: §cYou are not allowed to run this command
