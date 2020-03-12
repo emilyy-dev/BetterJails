@@ -1,4 +1,5 @@
 # BetterJails
+### Resource in [SpigotMC](https://www.spigotmc.org/resources/betterjails.76001/)
 A simple jails system Bukkit plugin aimed for Minecraft 1.13 and later versions (works with older versions as well).
 
 It lets you manage jails, jail offline players, and sentence time will be over when prisoners have been online for the required time.
