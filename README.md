@@ -10,7 +10,7 @@ It lets you manage jails, jail offline players, and sentence time will be over w
 - `/jails` / Prints a list of available jails.
 - `/jail <player> <jail> <time>` / Sends a player to the provided jail, and won't be teleported back until they spend online the time provided.
 - `/unjail <player>` / Teleports a jailed player back to where they were when jailed.
-- `/betterjails` / Shows the version of the plugin.
+- `/betterjails` / Prints the version of the plugin.
 
 #### Permissions
 All permissions default to operators only.
