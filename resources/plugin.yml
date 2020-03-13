@@ -2,7 +2,7 @@ name: BetterJails
 author: Fefo6644
 version: 1.0
 main: ar.fefo.betterjails.Main
-api-version: 1.13
+api-version: 1.15
 load: STARTUP
 softdepend:
   - Essentials

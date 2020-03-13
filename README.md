@@ -1,6 +1,6 @@
 # BetterJails
 ### Resource in [SpigotMC](https://www.spigotmc.org/resources/betterjails.76001/)
-A simple jails system Bukkit plugin aimed for Minecraft 1.13 and later versions (works with older versions as well).
+A simple jails system Bukkit plugin aimed for most Minecraft versions.
 
 It lets you manage jails, jail offline players, and sentence time will be over when prisoners have been online for the required time.
 
@@ -16,7 +16,7 @@ It lets you manage jails, jail offline players, and sentence time will be over w
 #### Permissions
 All permissions default to operators only.
 - `betterjails.jail` / Lets the user execute the `/jail` command.
-- `betterjails.jail.exempt` / The user with this permission won't be jailed by others (unless offline, but they don't get sent to jail).
+- `betterjails.jail.exempt` / The user with this permission won't be jailed by others (unless offline, but it runs check on join).
 - `betterjails.jails` / Lets the user execute the `/jails` command.
 - `betterjails.unjail` / Lets the user execute the `/unjail` command.
 - `betterjails.setjail` / Lets the user execute the `/setjail` command.
