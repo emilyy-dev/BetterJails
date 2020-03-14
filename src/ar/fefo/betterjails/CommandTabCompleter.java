@@ -40,10 +40,10 @@ public class CommandTabCompleter implements TabCompleter {
                     case 3:
                         if (args[2].length() < 2)
                             returnedList.addAll(Arrays.asList("24h",
-                                                              "12h",
-                                                              "6h",
-                                                              "3h",
-                                                              "30m"));
+                                    "12h",
+                                    "6h",
+                                    "3h",
+                                    "30m"));
                         break;
                     default:
                         returnedList.add("");
@@ -80,8 +80,15 @@ public class CommandTabCompleter implements TabCompleter {
                 break;
 
             case "jails":
-            case "betterjails":
                 returnedList.add("");
+                break;
+
+            case "betterjails":
+                if (args.length == 1 &&
+                        sender.hasPermission("betterjails.betterjails.reload"))
+                    returnedList.add("reload");
+                else
+                    returnedList.add("");
                 break;
         }
 

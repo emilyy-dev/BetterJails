@@ -45,7 +45,15 @@ public class CommandHandler implements CommandExecutor {
                              @NotNull String[] args) {
         switch (cmd.getName()) {
             case "betterjails":
-                sender.sendMessage("§cBetterJails §6by §cFefo6644 §6- v" + main.getDescription().getVersion());
+                if (args.length != 1)
+                    sender.sendMessage("§cBetterJails §6by §cFefo6644 §6- v" + main.getDescription().getVersion());
+                else {
+                    if (args[0].equalsIgnoreCase("reload") &&
+                            sender.hasPermission("betterjails.betterjails.reload")) {
+                        main.dataHandler.reload();
+                        sender.sendMessage("§6Files reloaded!");
+                    }
+                }
                 break;
 
             case "jail":
@@ -90,9 +98,9 @@ public class CommandHandler implements CommandExecutor {
                                             scale = 3600 * 24 * 365.25;
                                             break;
                                     }
-                                    int seconds = (int)(scale * Integer.parseInt(args[2].substring(0, args[2].length() - 1)));
+                                    int seconds = (int) (scale * Integer.parseInt(args[2].substring(0, args[2].length() - 1)));
                                     try {
-                                        main.dataHandler.addJailedPlayer(p, args[1], seconds);
+                                        main.dataHandler.addJailedPlayer(p, args[1], seconds, true);
                                     } catch (IOException e) {
                                         sender.sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                                         main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
@@ -140,7 +148,7 @@ public class CommandHandler implements CommandExecutor {
                         if (Objects.requireNonNull(p.getName()).equalsIgnoreCase(args[0])) {
                             // Once it's been confirmed the player exists and can be jailed, check if the jail exists.
                             try {
-                                main.dataHandler.removeJailedPlayer(p.getUniqueId());
+                                main.dataHandler.removeJailedPlayer(p.getUniqueId(), true);
                             } catch (IOException e) {
                                 sender.sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                                 main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
@@ -166,7 +174,7 @@ public class CommandHandler implements CommandExecutor {
                 } else if (args.length != 1) {
                     return false;
                 } else {
-                    Player p = ((Player)sender);
+                    Player p = ((Player) sender);
                     try {
                         main.dataHandler.addJail(args[0], p.getLocation());
                         sender.sendMessage("§6Jail added successfully!");
