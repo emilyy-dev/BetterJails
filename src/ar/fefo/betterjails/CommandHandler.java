@@ -52,6 +52,16 @@ public class CommandHandler implements CommandExecutor {
                             sender.hasPermission("betterjails.betterjails.reload")) {
                         main.dataHandler.reload();
                         sender.sendMessage("§6Files reloaded!");
+                    } else if (args[0].equalsIgnoreCase("save")) {
+                        try {
+                            main.dataHandler.save();
+                            sender.sendMessage("§6Files saved successfully!");
+                        } catch (IOException e) {
+                            sender.sendMessage("§cThere was an internal error while trying to save the data files.\nPlease check console for more information.");
+                            e.printStackTrace();
+                        }
+                    } else {
+                        sender.sendMessage("§cBetterJails §6by §cFefo6644 §6- v" + main.getDescription().getVersion());
                     }
                 }
                 break;
@@ -147,20 +157,25 @@ public class CommandHandler implements CommandExecutor {
                         // Check if the player even exists in the server.
                         if (Objects.requireNonNull(p.getName()).equalsIgnoreCase(args[0])) {
                             // Once it's been confirmed the player exists and can be jailed, check if the jail exists.
+                            boolean wasUnjailed = true;
                             try {
-                                main.dataHandler.removeJailedPlayer(p.getUniqueId(), true);
+                                wasUnjailed = main.dataHandler.removeJailedPlayer(p.getUniqueId(), true);
                             } catch (IOException e) {
                                 sender.sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                                 main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                                 e.printStackTrace();
                             }
 
-                            List<Player> onlinePlayers = new ArrayList<>(main.getServer().getOnlinePlayers());
-                            for (Player playerToBroadcast : onlinePlayers) {
-                                if (playerToBroadcast.hasPermission("betterjails.recievebroadcast"))
-                                    playerToBroadcast.sendMessage("§c" + args[0] + " §6was unjailed by §c" + sender.getName());
+                            if (wasUnjailed) {
+                                List<Player> onlinePlayers = new ArrayList<>(main.getServer().getOnlinePlayers());
+                                for (Player playerToBroadcast : onlinePlayers) {
+                                    if (playerToBroadcast.hasPermission("betterjails.recievebroadcast"))
+                                        playerToBroadcast.sendMessage("§c" + args[0] + " §6was unjailed by §c" + sender.getName());
+                                }
+                                main.getServer().getConsoleSender().sendMessage("§c" + args[0] + " §6was unjailed by §c" + sender.getName());
+                            } else {
+                                sender.sendMessage("§6Could not unjail " + p.getName() + ", player wasn't jailed.");
                             }
-                            main.getServer().getConsoleSender().sendMessage("§c" + args[0] + " §6was unjailed by §c" + sender.getName());
                             return true;
                         }
                     }

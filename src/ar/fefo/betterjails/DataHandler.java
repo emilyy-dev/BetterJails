@@ -87,13 +87,7 @@ public class DataHandler implements Listener {
         if (jailsSection == null)
             jailsSection = yamlJails.createSection("jails");
         for (String key : jailsSection.getKeys(false)) {
-            Location location = new Location(
-                    main.getServer().getWorld(Objects.requireNonNull(jailsSection.getString(key + ".world"))),
-                    jailsSection.getDouble(key + ".x"),
-                    jailsSection.getDouble(key + ".y"),
-                    jailsSection.getDouble(key + ".z"),
-                    (float) jailsSection.getDouble(key + ".yaw"),
-                    (float) jailsSection.getDouble(key + ".pitch"));
+            Location location = jailsSection.getLocation(key);
             jails.add(new Jail(key, location));
         }
         return jails;
@@ -109,12 +103,7 @@ public class DataHandler implements Listener {
     void addJail(String name, Location location) throws IOException {
         if (jailsSection == null)
             jailsSection = yamlJails.createSection("jails");
-        jailsSection.set(name + ".x", location.getX());
-        jailsSection.set(name + ".y", location.getY());
-        jailsSection.set(name + ".z", location.getZ());
-        jailsSection.set(name + ".yaw", location.getYaw());
-        jailsSection.set(name + ".pitch", location.getPitch());
-        jailsSection.set(name + ".world", Objects.requireNonNull(location.getWorld()).getName());
+        jailsSection.set(name, location);
         yamlJails.save(jailsFile);
     }
 
@@ -133,12 +122,9 @@ public class DataHandler implements Listener {
                 0.0,
                 0.0f,
                 0.0f);
+
         if (main.ess != null)
             main.ess.getUser(player.getUniqueId()).setJailed(true);
-        if (player.isOnline()) {
-            lastLocation = ((Player) player).getLocation();
-            ((Player) player).teleport(getJail(jail).getLocation());
-        }
 
         if (jailedPlayersSection == null)
             jailedPlayersSection = yamlJailedPlayers.createSection("players");
@@ -146,27 +132,30 @@ public class DataHandler implements Listener {
         jailedPlayersSection.set(player.getUniqueId() + ".jail", jail);
         jailedPlayersSection.set(player.getUniqueId() + ".secondsLeft", seconds);
         jailedPlayersSection.set(player.getUniqueId() + ".unjailed", false);
-        jailedPlayersSection.set(player.getUniqueId() + ".x", lastLocation.getX());
-        jailedPlayersSection.set(player.getUniqueId() + ".y", lastLocation.getY());
-        jailedPlayersSection.set(player.getUniqueId() + ".z", lastLocation.getZ());
-        jailedPlayersSection.set(player.getUniqueId() + ".yaw", lastLocation.getYaw());
-        jailedPlayersSection.set(player.getUniqueId() + ".pitch", lastLocation.getPitch());
-        jailedPlayersSection.set(player.getUniqueId() + ".world", Objects.requireNonNull(lastLocation.getWorld()).getName());
+        if (jailedPlayersSection.contains(player.getUniqueId() + ".lastlocation")) {
+            if (jailedPlayersSection.getLocation(player.getUniqueId() + ".lastlocation").equals(lastLocation)) {
+                jailedPlayersSection.set(player.getUniqueId() + ".lastlocation", ((Player) player).getLocation());
+            }
+        } else {
+            lastLocation = player.isOnline() ? ((Player) player).getLocation() : lastLocation;
+            jailedPlayersSection.set(player.getUniqueId() + ".lastlocation", lastLocation);
+        }
+
+        if (player.isOnline())
+            ((Player) player).teleport(getJail(jail).getLocation());
 
         if (saveFile)
             yamlJailedPlayers.save(jailedPlayersFile);
     }
 
-    void removeJailedPlayer(UUID uuid, boolean saveFile) throws IOException {
+    boolean removeJailedPlayer(@NotNull UUID uuid, boolean saveFile) throws IOException {
+        if (!jailedPlayersSection.contains(uuid.toString()))
+            return false;
+
+        Location lastLocation = jailedPlayersSection.getLocation(uuid + ".lastlocation");
+
         OfflinePlayer player = main.getServer().getOfflinePlayer(uuid);
         if (player.isOnline()) {
-            Location lastLocation = new Location(
-                    main.getServer().getWorld(Objects.requireNonNull(jailedPlayersSection.getString(uuid + ".world"))),
-                    jailedPlayersSection.getDouble(uuid + ".x"),
-                    jailedPlayersSection.getDouble(uuid + ".y"),
-                    jailedPlayersSection.getDouble(uuid + ".z"),
-                    (float) jailedPlayersSection.getDouble(uuid + ".yaw"),
-                    (float) jailedPlayersSection.getDouble(uuid + ".pitch"));
             ((Player) player).teleport(lastLocation);
             if (main.ess != null)
                 main.ess.getUser(uuid).setJailed(false);
@@ -180,13 +169,6 @@ public class DataHandler implements Listener {
                     0.0f,
                     0.0f);
 
-            Location lastLocation = new Location(
-                    main.getServer().getWorld(Objects.requireNonNull(jailedPlayersSection.getString(uuid + ".world"))),
-                    jailedPlayersSection.getDouble(uuid + ".x"),
-                    jailedPlayersSection.getDouble(uuid + ".y"),
-                    jailedPlayersSection.getDouble(uuid + ".z"),
-                    (float) jailedPlayersSection.getDouble(uuid + ".yaw"),
-                    (float) jailedPlayersSection.getDouble(uuid + ".pitch"));
             if (lastLocation.equals(zeroZero))
                 jailedPlayersSection.set(uuid.toString(), null);
             else
@@ -194,6 +176,7 @@ public class DataHandler implements Listener {
         }
         if (saveFile)
             yamlJailedPlayers.save(jailedPlayersFile);
+        return true;
     }
 
     void save() throws IOException {

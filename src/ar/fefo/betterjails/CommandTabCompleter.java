@@ -84,10 +84,21 @@ public class CommandTabCompleter implements TabCompleter {
                 break;
 
             case "betterjails":
-                if (args.length == 1 &&
-                        sender.hasPermission("betterjails.betterjails.reload"))
-                    returnedList.add("reload");
-                else
+                if (args.length == 1) {
+                    boolean reloadPerms = sender.hasPermission("betterjails.betterjails.reload");
+                    boolean savePerms = sender.hasPermission("betterjails.betterjails.save");
+                    if (!reloadPerms && !savePerms) {
+                        returnedList.add("");
+                        break;
+                    }
+                    if (reloadPerms &&
+                            "reload".contains(args[0].toLowerCase()))
+                        returnedList.add("reload");
+
+                    if (savePerms &&
+                            "save".contains(args[0].toLowerCase()))
+                        returnedList.add("save");
+                } else
                     returnedList.add("");
                 break;
         }

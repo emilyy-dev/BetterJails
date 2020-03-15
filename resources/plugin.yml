@@ -1,6 +1,6 @@
 name: BetterJails
 author: Fefo6644
-version: 1.1
+version: 1.1.1
 main: ar.fefo.betterjails.Main
 api-version: 1.15
 load: POSTWORLD
@@ -55,4 +55,6 @@ permissions:
   betterjails.betterjails:
     default: op
   betterjails.betterjails.reload:
+    default: op
+  betterjails.betterjails.save:
     default: op
