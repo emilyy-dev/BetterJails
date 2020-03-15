@@ -13,6 +13,7 @@ It lets you manage jails, jail offline players, and sentence time will be over w
 - `/unjail <player>` / Teleports a jailed player back to where they were when jailed.
 - `/betterjails` / Prints the version of the plugin.
 - `/betterjails reload` / Reloads files into memory.
+- `/betterjails save` / Saves files from memory.
 
 #### Permissions
 All permissions default to operators only.
@@ -25,3 +26,4 @@ All permissions default to operators only.
 - `betterjails.receivebroadcast` / Prints in the user's chat when a player has been jailed.
 - `betterjails.betterjails` / Lets the user execute the `/betterjails` command.
 - `betterjails.betterjails.reload` / Lets the user reload the files into memory by doing `/betterjails reload`.
+- `betterjails.betterjails.save` / Lets the user save the files from memory by doing `/betterjails save`.
