@@ -169,7 +169,7 @@ public class CommandHandler implements CommandExecutor {
                             if (wasUnjailed) {
                                 List<Player> onlinePlayers = new ArrayList<>(main.getServer().getOnlinePlayers());
                                 for (Player playerToBroadcast : onlinePlayers) {
-                                    if (playerToBroadcast.hasPermission("betterjails.recievebroadcast"))
+                                    if (playerToBroadcast.hasPermission("betterjails.receivebroadcast"))
                                         playerToBroadcast.sendMessage("§c" + args[0] + " §6was unjailed by §c" + sender.getName());
                                 }
                                 main.getServer().getConsoleSender().sendMessage("§c" + args[0] + " §6was unjailed by §c" + sender.getName());
