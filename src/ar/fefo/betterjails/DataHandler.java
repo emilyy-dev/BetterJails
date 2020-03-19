@@ -1,5 +1,6 @@
 package ar.fefo.betterjails;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
@@ -8,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -116,7 +118,7 @@ public class DataHandler implements Listener {
                          @NotNull String jail,
                          int seconds,
                          boolean saveFile) throws IOException {
-        Location lastLocation = new Location(main.getServer().getWorlds().get(0),
+        Location lastLocation = new Location(Bukkit.getWorlds().get(0),
                                              0.0,
                                              0.0,
                                              0.0,
@@ -156,7 +158,7 @@ public class DataHandler implements Listener {
 
         Location lastLocation = jailedPlayersSection.getLocation(uuid + ".lastlocation");
 
-        OfflinePlayer player = main.getServer().getOfflinePlayer(uuid);
+        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
         if (player.isOnline()) {
             ((Player)player).teleport(lastLocation);
             if (main.ess != null)
@@ -164,7 +166,7 @@ public class DataHandler implements Listener {
 
             jailedPlayersSection.set(uuid.toString(), null);
         } else {
-            Location zeroZero = new Location(main.getServer().getWorlds().get(0),
+            Location zeroZero = new Location(Bukkit.getWorlds().get(0),
                                              0.0,
                                              0.0,
                                              0.0,
@@ -192,7 +194,7 @@ public class DataHandler implements Listener {
         yamlJailedPlayers = YamlConfiguration.loadConfiguration(jailedPlayersFile);
         jailedPlayersSection = yamlJailedPlayers.getConfigurationSection("players");
 
-        for (Player onlinePlayer : main.getServer().getOnlinePlayers()) {
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             UUID uuid = onlinePlayer.getUniqueId();
             if (jailedPlayersSection.contains(uuid.toString()) &&
                 onlinePlayer.hasPermission("betterjails.jail.exempt")) {
@@ -207,18 +209,18 @@ public class DataHandler implements Listener {
                 try {
                     removeJailedPlayer(uuid, false);
                 } catch (IOException ex) {
-                    main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
+                    Bukkit.getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                     ex.printStackTrace();
                 }
             } else if (jailedPlayersSection.contains(uuid.toString()) &&
                        !jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
                 try {
-                    addJailedPlayer(main.getServer().getOfflinePlayer(uuid),
+                    addJailedPlayer(Bukkit.getOfflinePlayer(uuid),
                                     Objects.requireNonNull(jailedPlayersSection.getString(uuid + ".jail")),
                                     jailedPlayersSection.getInt(uuid + ".secondsLeft"),
                                     false);
                 } catch (IOException ex) {
-                    main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
+                    Bukkit.getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                     ex.printStackTrace();
                 }
             }
@@ -229,7 +231,7 @@ public class DataHandler implements Listener {
         if (jailedPlayersSection == null)
             jailedPlayersSection = yamlJailedPlayers.createSection("players");
         for (String key : jailedPlayersSection.getKeys(false)) {
-            if (main.getServer().getOfflinePlayer(UUID.fromString(key)).isOnline()) {
+            if (Bukkit.getOfflinePlayer(UUID.fromString(key)).isOnline()) {
                 int secondsLeft = jailedPlayersSection.getInt(key + ".secondsLeft");
                 jailedPlayersSection.set(key + ".secondsLeft", --secondsLeft);
                 if (secondsLeft <= 0) {
@@ -241,6 +243,14 @@ public class DataHandler implements Listener {
                     }
                 }
             }
+        }
+    }
+
+    void autoSaveTimer() {
+        try {
+            save();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -261,18 +271,18 @@ public class DataHandler implements Listener {
             try {
                 removeJailedPlayer(uuid, true);
             } catch (IOException ex) {
-                main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
+                Bukkit.getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                 ex.printStackTrace();
             }
         } else if (jailedPlayersSection.contains(uuid.toString()) &&
                    !jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
             try {
-                addJailedPlayer(main.getServer().getOfflinePlayer(uuid),
+                addJailedPlayer(Bukkit.getOfflinePlayer(uuid),
                                 Objects.requireNonNull(jailedPlayersSection.getString(uuid + ".jail")),
                                 jailedPlayersSection.getInt(uuid + ".secondsLeft"),
                                 true);
             } catch (IOException ex) {
-                main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
+                Bukkit.getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                 ex.printStackTrace();
             }
         }
@@ -285,9 +295,23 @@ public class DataHandler implements Listener {
 
         if (jailedPlayersSection.contains(uuid.toString())) {
             Location jailLocation = getJail(jailedPlayersSection.getString(uuid + ".jail")).getLocation();
-            main.getServer().getScheduler().runTaskLater(main,
-                                                         () -> player.teleport(jailLocation),
-                                                         1);
+            Bukkit.getScheduler().runTaskLater(main,
+                                               () -> player.teleport(jailLocation),
+                                               1);
+        }
+    }
+
+    @EventHandler
+    void onPlayerQuit(@NotNull PlayerQuitEvent e) {
+        Player player = e.getPlayer();
+        UUID uuid = player.getUniqueId();
+
+        if (jailedPlayersSection.contains(uuid.toString())) {
+            try {
+                yamlJailedPlayers.save(jailedPlayersFile);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 }

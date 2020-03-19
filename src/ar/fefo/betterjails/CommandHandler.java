@@ -1,5 +1,6 @@
 package ar.fefo.betterjails;
 
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -70,7 +71,7 @@ public class CommandHandler implements CommandExecutor {
                 if (args.length != 3) {
                     return false;
                 } else {
-                    OfflinePlayer[] alltimePlayers = main.getServer().getOfflinePlayers();
+                    OfflinePlayer[] alltimePlayers = Bukkit.getOfflinePlayers();
                     for (OfflinePlayer p : alltimePlayers) {
                         // Check if the player even exists in the server.
                         if (Objects.requireNonNull(p.getName()).equalsIgnoreCase(args[0])) {
@@ -113,16 +114,16 @@ public class CommandHandler implements CommandExecutor {
                                         main.dataHandler.addJailedPlayer(p, args[1], seconds, true);
                                     } catch (IOException e) {
                                         sender.sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
-                                        main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
+                                        Bukkit.getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                                         e.printStackTrace();
                                     }
 
-                                    List<Player> onlinePlayers = new ArrayList<>(main.getServer().getOnlinePlayers());
+                                    List<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
                                     for (Player playerToBroadcast : onlinePlayers) {
                                         if (playerToBroadcast.hasPermission("betterjails.receivebroadcast"))
                                             playerToBroadcast.sendMessage("§c" + args[0] + " §6was jailed by §c" + sender.getName() + " §6for §c" + args[2]);
                                     }
-                                    main.getServer().getConsoleSender().sendMessage("§c" + args[0] + " §6was jailed by §c" + sender.getName() + " §6for §c" + args[2]);
+                                    Bukkit.getConsoleSender().sendMessage("§c" + args[0] + " §6was jailed by §c" + sender.getName() + " §6for §c" + args[2]);
                                 } else {
                                     sender.sendMessage("§cThe time provided is not valid.");
                                 }
@@ -152,7 +153,7 @@ public class CommandHandler implements CommandExecutor {
                 if (args.length != 1) {
                     return false;
                 } else {
-                    OfflinePlayer[] alltimePlayers = main.getServer().getOfflinePlayers();
+                    OfflinePlayer[] alltimePlayers = Bukkit.getOfflinePlayers();
                     for (OfflinePlayer p : alltimePlayers) {
                         // Check if the player even exists in the server.
                         if (Objects.requireNonNull(p.getName()).equalsIgnoreCase(args[0])) {
@@ -162,17 +163,17 @@ public class CommandHandler implements CommandExecutor {
                                 wasUnjailed = main.dataHandler.removeJailedPlayer(p.getUniqueId(), true);
                             } catch (IOException e) {
                                 sender.sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
-                                main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
+                                Bukkit.getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                                 e.printStackTrace();
                             }
 
                             if (wasUnjailed) {
-                                List<Player> onlinePlayers = new ArrayList<>(main.getServer().getOnlinePlayers());
+                                List<Player> onlinePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
                                 for (Player playerToBroadcast : onlinePlayers) {
                                     if (playerToBroadcast.hasPermission("betterjails.receivebroadcast"))
                                         playerToBroadcast.sendMessage("§c" + args[0] + " §6was unjailed by §c" + sender.getName());
                                 }
-                                main.getServer().getConsoleSender().sendMessage("§c" + args[0] + " §6was unjailed by §c" + sender.getName());
+                                Bukkit.getConsoleSender().sendMessage("§c" + args[0] + " §6was unjailed by §c" + sender.getName());
                             } else {
                                 sender.sendMessage("§6Could not unjail " + p.getName() + ", player wasn't jailed.");
                             }

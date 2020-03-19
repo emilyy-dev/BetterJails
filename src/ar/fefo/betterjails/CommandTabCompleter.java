@@ -1,5 +1,6 @@
 package ar.fefo.betterjails;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -28,7 +29,7 @@ public class CommandTabCompleter implements TabCompleter {
             case "jail":
                 switch (args.length) {
                     case 1:
-                        for (Player player : main.getServer().getOnlinePlayers())
+                        for (Player player : Bukkit.getOnlinePlayers())
                             if (player.getName().toLowerCase().contains(args[0].toLowerCase()))
                                 returnedList.add(player.getName());
                         break;
@@ -53,7 +54,7 @@ public class CommandTabCompleter implements TabCompleter {
 
             case "unjail":
                 if (args.length == 1) {
-                    for (Player player : main.getServer().getOnlinePlayers())
+                    for (Player player : Bukkit.getOnlinePlayers())
                         if (player.getName().toLowerCase().contains(args[0].toLowerCase()))
                             returnedList.add(player.getName());
                 } else {
