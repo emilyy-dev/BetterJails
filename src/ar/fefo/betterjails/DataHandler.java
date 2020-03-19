@@ -117,11 +117,11 @@ public class DataHandler implements Listener {
                          int seconds,
                          boolean saveFile) throws IOException {
         Location lastLocation = new Location(main.getServer().getWorlds().get(0),
-                0.0,
-                0.0,
-                0.0,
-                0.0f,
-                0.0f);
+                                             0.0,
+                                             0.0,
+                                             0.0,
+                                             0.0f,
+                                             0.0f);
 
         if (main.ess != null)
             main.ess.getUser(player.getUniqueId()).setJailed(true);
@@ -134,15 +134,17 @@ public class DataHandler implements Listener {
         jailedPlayersSection.set(player.getUniqueId() + ".unjailed", false);
         if (jailedPlayersSection.contains(player.getUniqueId() + ".lastlocation")) {
             if (jailedPlayersSection.getLocation(player.getUniqueId() + ".lastlocation").equals(lastLocation)) {
-                jailedPlayersSection.set(player.getUniqueId() + ".lastlocation", ((Player) player).getLocation());
+                if (player.isOnline()) {
+                    jailedPlayersSection.set(player.getUniqueId() + ".lastlocation", ((Player)player).getLocation());
+                }
             }
         } else {
-            lastLocation = player.isOnline() ? ((Player) player).getLocation() : lastLocation;
+            lastLocation = player.isOnline() ? ((Player)player).getLocation() : lastLocation;
             jailedPlayersSection.set(player.getUniqueId() + ".lastlocation", lastLocation);
         }
 
         if (player.isOnline())
-            ((Player) player).teleport(getJail(jail).getLocation());
+            ((Player)player).teleport(getJail(jail).getLocation());
 
         if (saveFile)
             yamlJailedPlayers.save(jailedPlayersFile);
@@ -156,18 +158,18 @@ public class DataHandler implements Listener {
 
         OfflinePlayer player = main.getServer().getOfflinePlayer(uuid);
         if (player.isOnline()) {
-            ((Player) player).teleport(lastLocation);
+            ((Player)player).teleport(lastLocation);
             if (main.ess != null)
                 main.ess.getUser(uuid).setJailed(false);
 
             jailedPlayersSection.set(uuid.toString(), null);
         } else {
             Location zeroZero = new Location(main.getServer().getWorlds().get(0),
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0f,
-                    0.0f);
+                                             0.0,
+                                             0.0,
+                                             0.0,
+                                             0.0f,
+                                             0.0f);
 
             if (lastLocation.equals(zeroZero))
                 jailedPlayersSection.set(uuid.toString(), null);
@@ -193,7 +195,7 @@ public class DataHandler implements Listener {
         for (Player onlinePlayer : main.getServer().getOnlinePlayers()) {
             UUID uuid = onlinePlayer.getUniqueId();
             if (jailedPlayersSection.contains(uuid.toString()) &&
-                    onlinePlayer.hasPermission("betterjails.jail.exempt")) {
+                onlinePlayer.hasPermission("betterjails.jail.exempt")) {
                 jailedPlayersSection.set(uuid.toString(), null);
                 if (main.ess != null)
                     main.ess.getUser(uuid).setJailed(false);
@@ -201,7 +203,7 @@ public class DataHandler implements Listener {
             }
 
             if (jailedPlayersSection.contains(uuid.toString()) &&
-                    jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
+                jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
                 try {
                     removeJailedPlayer(uuid, false);
                 } catch (IOException ex) {
@@ -209,12 +211,12 @@ public class DataHandler implements Listener {
                     ex.printStackTrace();
                 }
             } else if (jailedPlayersSection.contains(uuid.toString()) &&
-                    !jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
+                       !jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
                 try {
                     addJailedPlayer(main.getServer().getOfflinePlayer(uuid),
-                            Objects.requireNonNull(jailedPlayersSection.getString(uuid + ".jail")),
-                            jailedPlayersSection.getInt(uuid + ".secondsLeft"),
-                            false);
+                                    Objects.requireNonNull(jailedPlayersSection.getString(uuid + ".jail")),
+                                    jailedPlayersSection.getInt(uuid + ".secondsLeft"),
+                                    false);
                 } catch (IOException ex) {
                     main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                     ex.printStackTrace();
@@ -247,7 +249,7 @@ public class DataHandler implements Listener {
         Player player = e.getPlayer();
         UUID uuid = player.getUniqueId();
         if (jailedPlayersSection.contains(uuid.toString()) &&
-                player.hasPermission("betterjails.jail.exempt")) {
+            player.hasPermission("betterjails.jail.exempt")) {
             jailedPlayersSection.set(uuid.toString(), null);
             if (main.ess != null)
                 main.ess.getUser(uuid).setJailed(false);
@@ -255,7 +257,7 @@ public class DataHandler implements Listener {
         }
 
         if (jailedPlayersSection.contains(uuid.toString()) &&
-                jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
+            jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
             try {
                 removeJailedPlayer(uuid, true);
             } catch (IOException ex) {
@@ -263,12 +265,12 @@ public class DataHandler implements Listener {
                 ex.printStackTrace();
             }
         } else if (jailedPlayersSection.contains(uuid.toString()) &&
-                !jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
+                   !jailedPlayersSection.getBoolean(uuid + ".unjailed")) {
             try {
                 addJailedPlayer(main.getServer().getOfflinePlayer(uuid),
-                        Objects.requireNonNull(jailedPlayersSection.getString(uuid + ".jail")),
-                        jailedPlayersSection.getInt(uuid + ".secondsLeft"),
-                        true);
+                                Objects.requireNonNull(jailedPlayersSection.getString(uuid + ".jail")),
+                                jailedPlayersSection.getInt(uuid + ".secondsLeft"),
+                                true);
             } catch (IOException ex) {
                 main.getServer().getConsoleSender().sendMessage("§4Fatal error! Could not saved updated jailed_players.yml");
                 ex.printStackTrace();
@@ -284,8 +286,8 @@ public class DataHandler implements Listener {
         if (jailedPlayersSection.contains(uuid.toString())) {
             Location jailLocation = getJail(jailedPlayersSection.getString(uuid + ".jail")).getLocation();
             main.getServer().getScheduler().runTaskLater(main,
-                    () -> player.teleport(jailLocation),
-                    1);
+                                                         () -> player.teleport(jailLocation),
+                                                         1);
         }
     }
 }
