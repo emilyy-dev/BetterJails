@@ -1,11 +1,10 @@
 name: BetterJails
 author: Fefo6644
-version: 1.1.4
+version: 1.2
 main: ar.fefo.betterjails.Main
 api-version: 1.15
 load: POSTWORLD
-softdepend:
-  - Essentials
+softdepend: [Essentials, LuckPerms]
 
 commands:
   jail:
@@ -53,7 +52,7 @@ permissions:
   betterjails.receivebroadcast:
     default: op
   betterjails.betterjails:
-    default: op
+    default: true
   betterjails.betterjails.reload:
     default: op
   betterjails.betterjails.save:

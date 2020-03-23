@@ -1,8 +1,8 @@
-package ar.fefo.betterjails;
+package ar.fefo.betterjails.utils;
 
 import org.bukkit.Location;
 
-class Jail {
+public class Jail {
     private String name;
     private Location location;
 
@@ -11,6 +11,11 @@ class Jail {
         this.location = location;
     }
 
-    Location getLocation() { return location; }
-    String getName() { return name; }
+    public Location getLocation() {
+        return location;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

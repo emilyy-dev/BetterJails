@@ -2,5 +2,6 @@
 /out/
 /.idea/
 /BetterJails.iml
+/copy.bat
 /dependencies/spigot-api-1.15.2-R0.1-SNAPSHOT-shaded.jar
 /version.json
