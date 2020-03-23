@@ -290,6 +290,10 @@ public class DataHandler implements Listener {
                                       (float)main.getConfig().getDouble("backupLocation.pitch"));
 
         yamlJails = YamlConfiguration.loadConfiguration(jailsFile);
+
+        for (String key : yamlJails.getKeys(false))
+            jails.put(key, new Jail(key, yamlJails.getLocation(key)));
+
         yamlsOnlineJailedPlayers.clear();
         if (main.getConfig().getBoolean("offlineTime")) {
             File[] files = playerDataFolder.listFiles();
