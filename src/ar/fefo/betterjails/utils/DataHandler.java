@@ -167,14 +167,14 @@ public class DataHandler implements Listener {
         yaml.set("secondsleft", secondsLeft);
         yaml.set("unjailed", false);
 
-        if (player.isOnline()) {
+        if (player.isOnline() && yaml.getString("group") == null) {
             if (main.getConfig().getBoolean("changeGroup")) {
                 User user = main.lp.getUserManager().getUser(player.getUniqueId());
                 if (user != null) {
                     String group = user.getPrimaryGroup();
                     yaml.set("group", group);
-                    Bukkit.getLogger().log(Level.INFO, user.data().remove(Node.builder("group." + group).build()).name());
-                    Bukkit.getLogger().log(Level.INFO, user.data().add(Node.builder("group." + main.prisonerGroup).value(true).build()).name());
+                    user.data().remove(Node.builder("group." + group).build());
+                    user.data().add(Node.builder("group." + main.prisonerGroup).value(true).build());
                     main.lp.getUserManager().saveUser(user);
                 }
             }
