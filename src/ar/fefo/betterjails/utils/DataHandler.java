@@ -227,8 +227,8 @@ public class DataHandler implements Listener {
                 User user = main.lp.getUserManager().getUser(player.getUniqueId());
                 if (user != null) {
                     String group = yaml.getString("group");
-                    Bukkit.getLogger().log(Level.INFO, user.data().remove(Node.builder("group." + main.prisonerGroup).build()).name());
-                    Bukkit.getLogger().log(Level.INFO, user.data().add(Node.builder("group." + (group != null ? group : "default")).value(true).build()).name());
+                    user.data().remove(Node.builder("group." + main.prisonerGroup).build());
+                    user.data().add(Node.builder("group." + (group != null ? group : "default")).value(true).build());
                     main.lp.getUserManager().saveUser(user);
                 }
             }
