@@ -1,6 +1,6 @@
 name: BetterJails
 author: Fefo6644
-version: 1.2.2
+version: 1.2.1
 main: ar.fefo.betterjails.Main
 api-version: 1.15
 load: POSTWORLD
