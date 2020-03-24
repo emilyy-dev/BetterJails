@@ -167,19 +167,6 @@ public class DataHandler implements Listener {
         yaml.set("secondsleft", secondsLeft);
         yaml.set("unjailed", false);
 
-        if (player.isOnline()) {
-            if (main.getConfig().getBoolean("changeGroup")) {
-                User user = main.lp.getUserManager().getUser(player.getUniqueId());
-                if (user != null) {
-                    String group = user.getPrimaryGroup();
-                    yaml.set("group", group);
-                    Bukkit.getLogger().log(Level.INFO, user.data().remove(Node.builder("group." + group).build()).name());
-                    Bukkit.getLogger().log(Level.INFO, user.data().add(Node.builder("group." + main.prisonerGroup).value(true).build()).name());
-                    main.lp.getUserManager().saveUser(user);
-                }
-            }
-        }
-
         if (isPlayerOnline && !isPlayerJailed) {
             yaml.set("lastlocation", ((Player)player).getLocation());
 
@@ -201,6 +188,17 @@ public class DataHandler implements Listener {
 
             if (lastLocation.equals(backupLocation)) {
                 yaml.set("lastlocation", ((Player)player).getLocation());
+
+                if (main.getConfig().getBoolean("changeGroup")) {
+                    User user = main.lp.getUserManager().getUser(player.getUniqueId());
+                    if (user != null) {
+                        String group = user.getPrimaryGroup();
+                        yaml.set("group", group);
+                        user.data().remove(Node.builder("group." + group).build());
+                        user.data().add(Node.builder("group." + main.prisonerGroup).value(true).build());
+                        main.lp.getUserManager().saveUser(user);
+                    }
+                }
             }
             ((Player)player).teleport(jail.getLocation());
             yamlsOnlineJailedPlayers.put(player.getUniqueId(), yaml);

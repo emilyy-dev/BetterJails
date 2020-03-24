@@ -4,9 +4,6 @@ import ar.fefo.betterjails.commands.CommandHandler;
 import ar.fefo.betterjails.commands.CommandTabCompleter;
 import ar.fefo.betterjails.utils.DataHandler;
 import com.earth2me.essentials.Essentials;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import org.bukkit.Bukkit;
@@ -14,7 +11,6 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
@@ -64,15 +60,14 @@ public class Main extends JavaPlugin {
 
             Bukkit.getScheduler().runTaskLaterAsynchronously(this, () -> {
                 try {
-                    URL versionURL = new URL("https://pastebin.com/raw/xUrVFGqY");
+                    URL versionURL = new URL("https://pastebin.com/raw/gz16Wmt7");
                     ReadableByteChannel rbc = Channels.newChannel(versionURL.openStream());
                     ByteBuffer buffer = ByteBuffer.allocate(128);
                     if (rbc.isOpen()) {
                         rbc.read(buffer);
                         rbc.close();
 
-                        JsonElement json = new JsonParser().parse(new JsonReader(new StringReader(new String(buffer.array()))));
-                        String version = json.getAsJsonObject().get("version").getAsString();
+                        String version = new String(buffer.array());
                         if (version.compareTo(getDescription().getVersion()) > 0)
                             getServer().getConsoleSender().sendMessage("§7[§bBetterJails§7] §3New version §bv" + version + " §3for §bBetterJails §3available.");
                     }
