@@ -89,7 +89,7 @@ public class Main extends JavaPlugin {
 
             Bukkit.getScheduler().runTaskLater(this, () ->
                     new UpdateChecker(this, 76001).getVersion(version -> {
-                        if (!getDescription().getVersion().equalsIgnoreCase(version))
+                        if (!getDescription().getVersion().equalsIgnoreCase(version.substring(1)))
                             getServer().getConsoleSender().sendMessage("§7[§bBetterJails§7] §3New version §b" + version + " §3for §bBetterJails §3available.");
                     }), 100);
 
