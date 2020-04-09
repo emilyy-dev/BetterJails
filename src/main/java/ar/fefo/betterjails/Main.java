@@ -69,7 +69,7 @@ public class Main extends JavaPlugin {
                 }
             }
 
-            Bukkit.getScheduler().runTaskTimer(this, new Runnable() {
+            Bukkit.getScheduler().runTaskTimerAsynchronously(this, new Runnable() {
                 @Override
                 public void run() {
                     dataHandler.timer();

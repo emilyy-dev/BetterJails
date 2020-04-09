@@ -132,15 +132,6 @@ public class DataHandler {
         if (jailer != null)
             yaml.set("jailedby", jailer);
         yaml.set("secondsleft", secondsLeft);
-
-        if (main.perm != null && (yaml.getString("group") == null || yaml.getBoolean("unjailed"))) {
-            if (main.getConfig().getBoolean("changeGroup")) {
-                String group = main.perm.getPrimaryGroup(null, player);
-                yaml.set("group", group);
-                main.perm.playerRemoveGroup(null, player, group);
-                main.perm.playerAddGroup(null, player, main.prisonerGroup);
-            }
-        }
         yaml.set("unjailed", false);
 
         if (isPlayerOnline && !isPlayerJailed) {
@@ -169,7 +160,25 @@ public class DataHandler {
             yamlsOnlineJailedPlayers.put(player.getUniqueId(), yaml);
         }
 
-        yaml.save(new File(playerDataFolder, player.getUniqueId().toString() + ".yml"));
+        YamlConfiguration finalYaml = yaml;
+        Bukkit.getScheduler().runTaskAsynchronously(main, new Runnable() {
+            @Override
+            public void run() {
+                if (main.perm != null && (finalYaml.getString("group") == null || finalYaml.getBoolean("unjailed"))) {
+                    if (main.getConfig().getBoolean("changeGroup")) {
+                        String group = main.perm.getPrimaryGroup(null, player);
+                        finalYaml.set("group", group);
+                        main.perm.playerRemoveGroup(null, player, group);
+                        main.perm.playerAddGroup(null, player, main.prisonerGroup);
+                    }
+                }
+                try {
+                    finalYaml.save(new File(playerDataFolder, player.getUniqueId().toString() + ".yml"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
         if (main.ess != null) {
             User user = main.ess.getUser(player.getUniqueId());
@@ -189,11 +198,16 @@ public class DataHandler {
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
-        if (main.perm != null && main.getConfig().getBoolean("changeGroup")) {
-            String group = yaml.getString("group");
-            main.perm.playerRemoveGroup(null, player, main.prisonerGroup);
-            main.perm.playerAddGroup(null, player, group != null ? group : "default");
-        }
+        Bukkit.getScheduler().runTaskAsynchronously(main, new Runnable() {
+            @Override
+            public void run() {
+                if (main.perm != null && main.getConfig().getBoolean("changeGroup")) {
+                    String group = yaml.getString("group");
+                    main.perm.playerRemoveGroup(null, player, main.prisonerGroup);
+                    main.perm.playerAddGroup(null, player, group != null ? group : "default");
+                }
+            }
+        });
 
         if (player.isOnline()) {
             Location lastLocation = (Location)yaml.get("lastlocation");
