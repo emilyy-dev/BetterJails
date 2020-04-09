@@ -1,5 +1,5 @@
 # BetterJails
-### Resource in [SpigotMC](https://www.spigotmc.org/resources/betterjails.76001/)
+#### Resource in [spigotmc.org](https://www.spigotmc.org/resources/betterjails.76001/) & [dev.bukkit.org](https://dev.bukkit.org/projects/betterjails)
 A simple jails system Bukkit plugin aimed for most Minecraft versions.
 
 It lets you manage jails, jail offline players, and sentence time will be over when prisoners have been online for the required time.
@@ -10,6 +10,7 @@ It lets you manage jails, jail offline players, and sentence time will be over w
 - `/deljail <jail name>` / Removes a jail location from the jails list.
 - `/jails` / Prints a list of available jails.
 - `/jail <player> <jail> <time>` / Sends a player to the provided jail, and won't be teleported back until they spend online the time provided.
+- `/jail info <player>` / Will print out in chat some information about the jailed player stored in the player data file.
 - `/unjail <player>` / Teleports a jailed player back to where they were when jailed.
 - `/betterjails` / Prints the version of the plugin.
 - `/betterjails reload` / Reloads files into memory.
@@ -40,7 +41,7 @@ ___
 **changeGroup:**
 Whether or not the player's group should be changed **when jailed**.
 
-**Only [LuckPerms](https://www.spigotmc.org/resources/luckperms-an-advanced-permissions-plugin.28140/) is supported for this feature!**
+**Requires [Vault](https://dev.bukkit.org/projects/vault/files)!**
 
 Value: Boolean (`true` or `false`)
 ___

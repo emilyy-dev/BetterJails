@@ -1,20 +1,21 @@
 name: BetterJails
 author: Fefo6644
-version: 1.2.2
+version: 1.3
 main: ar.fefo.betterjails.Main
 api-version: 1.15
 load: POSTWORLD
-softdepend: [Essentials, LuckPerms]
+softdepend: [Essentials, Vault]
 
 commands:
   jail:
     permission: betterjails.jail
     permission-message: §cYou are not allowed to run this command
-    usage: "§cUsage: /jail <player> <jail> <time>"
+    usage: "§cUsage: /jail <player> <jail> <time>\n§cUsage: /jail info <player>"
     description: Sends a player to the provided jail, and won't be teleported back until they spend online the time provided.
   jails:
     permission: betterjails.jails
     permission-message: §cYou are not allowed to run this command
+    usage: "§cUsage: /jails"
     description: Prints a list of available jails.
   unjail:
     permission: betterjails.unjail
@@ -24,12 +25,12 @@ commands:
   setjail:
     permission: betterjails.setjail
     permission-message: §cYou are not allowed to run this command
-    usage: "§cUsage: /setjail <jail name>"
+    usage: "§cUsage: /setjail <jailname>"
     description: Adds a new jail location in where the command is executed.
   deljail:
     permission: betterjails.deljail
     permission-message: §cYou are not allowed to run this command
-    usage: "§cUsage: /deljail <jail name>"
+    usage: "§cUsage: /deljail <jailname>"
     description: Removes a jail location from the jails list.
   betterjails:
     permission: betterjails.betterjails

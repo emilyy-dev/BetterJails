@@ -11,7 +11,7 @@ backupLocation:
 offlineTime: false
 
 # Change prisoner group when jailed.
-# Works only with LuckPerms.
+# Needs Vault to be installed.
 changeGroup: false
 # Group name for prisoner to be moved to when jailed.
 prisonerGroup: prisoner
@@ -32,6 +32,11 @@ messages:
   jailFailedPlayerExempt: "&4{prisoner} &ccannot be jailed."
   jailFailedJailNotFound: "&cJail &4{jail} &cnot found."
   jailFailedTimeIncorrect: "&cThe time provided is not valid."
+  # Placeholders for /jail info:
+  # · {prisoner}: player to retrieve the status and info.
+  # · {player}: player that executes the command.
+  infoFailedPlayerNotJailed: "&6The player you are requesting the information from is not currently serving a sentence."
+  infoFailedPlayerNeverJoined: "&6Player &c{prisoner} &6never joined this server."
 
   # Placeholders for /unjail:
   # · {prisoner}: player to be unjailed.

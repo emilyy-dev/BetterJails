@@ -1,8 +1,5 @@
 # Project exclude paths
 /.idea/
 /BetterJails.iml
-/dependencies/spigot-api-1.15.2-R0.1-SNAPSHOT-shaded.jar
-/out/
-/temp/
-/logo.png
-/logo.xcf
+/target/
+/ignore/

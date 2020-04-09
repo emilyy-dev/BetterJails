@@ -30,14 +30,22 @@ public class CommandTabCompleter implements TabCompleter {
             case "jail": {
                 switch (args.length) {
                     case 1:
+                        if ("info".startsWith(args[0].toLowerCase()))
+                            returnedList.add("info");
                         for (Player player : main.getServer().getOnlinePlayers())
                             if (player.getName().toLowerCase().startsWith(args[0].toLowerCase()))
                                 returnedList.add(player.getName());
                         break;
                     case 2:
-                        for (String jailName : main.dataHandler.getJails().keySet())
-                            if (jailName.toLowerCase().startsWith(args[1].toLowerCase()))
-                                returnedList.add(jailName);
+                        if (!args[0].equalsIgnoreCase("info")) {
+                            for (String jailName : main.dataHandler.getJails().keySet())
+                                if (jailName.toLowerCase().startsWith(args[1].toLowerCase()))
+                                    returnedList.add(jailName);
+                        } else {
+                            for (Player player : main.getServer().getOnlinePlayers())
+                                if (player.getName().toLowerCase().startsWith(args[1].toLowerCase()))
+                                    returnedList.add(player.getName());
+                        }
                         break;
                     case 3:
                         if (args[2].length() < 2)
@@ -62,7 +70,7 @@ public class CommandTabCompleter implements TabCompleter {
 
             case "setjail": {
                 if (args.length == 1)
-                    returnedList.add("<jail name>");
+                    returnedList.add("<jailname>");
                 break;
             }
 
