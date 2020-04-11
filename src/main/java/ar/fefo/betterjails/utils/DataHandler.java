@@ -200,7 +200,7 @@ public class DataHandler {
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
-        if (yaml.getBoolean("unjailed") && !player.isOnline())
+        if (yaml.getBoolean("unjailed"))
             return true;
 
         if (main.perm != null && main.getConfig().getBoolean("changeGroup")) {
@@ -215,22 +215,24 @@ public class DataHandler {
         }
 
         if (player.isOnline()) {
-            Location lastLocation = (Location)yaml.get("lastlocation");
+            Location lastLocation = (Location)yaml.get("lastlocation", backupLocation);
 
-            if (lastLocation == null)
-                lastLocation = backupLocation;
-            else if (lastLocation.equals(backupLocation))
+            if (lastLocation.equals(backupLocation))
                 lastLocation = ((Player)player).getLocation();
 
             ((Player)player).teleport(lastLocation);
-            new File(playerDataFolder, uuid + ".yml").delete();
+            files[0].delete();
             yamlsOnlineJailedPlayers.remove(uuid);
         } else {
-            yaml.set("unjailed", true);
-            try {
-                yaml.save(files[0]);
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (yaml.get("lastlocation", backupLocation).equals(backupLocation)) {
+                files[0].delete();
+            } else {
+                yaml.set("unjailed", true);
+                try {
+                    yaml.save(files[0]);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
