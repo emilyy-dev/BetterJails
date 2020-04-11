@@ -160,25 +160,27 @@ public class DataHandler {
             yamlsOnlineJailedPlayers.put(player.getUniqueId(), yaml);
         }
 
-        YamlConfiguration finalYaml = yaml;
-        Bukkit.getScheduler().runTaskAsynchronously(main, new Runnable() {
-            @Override
-            public void run() {
-                if (main.perm != null && (finalYaml.getString("group") == null || finalYaml.getBoolean("unjailed"))) {
-                    if (main.getConfig().getBoolean("changeGroup")) {
+        if (main.getConfig().getBoolean("changeGroup")) {
+            YamlConfiguration finalYaml = yaml;
+            Bukkit.getScheduler().runTaskAsynchronously(main, new Runnable() {
+                @Override
+                public void run() {
+                    if (main.perm != null && (finalYaml.getString("group") == null || finalYaml.getBoolean("unjailed"))) {
                         String group = main.perm.getPrimaryGroup(null, player);
                         finalYaml.set("group", group);
+                        try {
+                            finalYaml.save(new File(playerDataFolder, player.getUniqueId().toString() + ".yml"));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         main.perm.playerRemoveGroup(null, player, group);
                         main.perm.playerAddGroup(null, player, main.prisonerGroup);
                     }
                 }
-                try {
-                    finalYaml.save(new File(playerDataFolder, player.getUniqueId().toString() + ".yml"));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+            });
+        } else {
+            yaml.save(new File(playerDataFolder, player.getUniqueId().toString() + ".yml"));
+        }
 
         if (main.ess != null) {
             User user = main.ess.getUser(player.getUniqueId());
@@ -198,16 +200,19 @@ public class DataHandler {
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
-        Bukkit.getScheduler().runTaskAsynchronously(main, new Runnable() {
-            @Override
-            public void run() {
-                if (main.perm != null && main.getConfig().getBoolean("changeGroup")) {
-                    String group = yaml.getString("group");
+        if (yaml.getBoolean("unjailed") && !player.isOnline())
+            return true;
+
+        if (main.perm != null && main.getConfig().getBoolean("changeGroup")) {
+            String group = yaml.getString("group");
+            Bukkit.getScheduler().runTaskAsynchronously(main, new Runnable() {
+                @Override
+                public void run() {
                     main.perm.playerRemoveGroup(null, player, main.prisonerGroup);
                     main.perm.playerAddGroup(null, player, group != null ? group : "default");
                 }
-            }
-        });
+            });
+        }
 
         if (player.isOnline()) {
             Location lastLocation = (Location)yaml.get("lastlocation");
@@ -309,11 +314,17 @@ public class DataHandler {
         for (Map.Entry<UUID, YamlConfiguration> entry : yamlsOnlineJailedPlayers.entrySet()) {
             UUID k = entry.getKey();
             YamlConfiguration v = entry.getValue();
+            if (v.get("lastlocation", backupLocation).equals(backupLocation) &&
+                v.getBoolean("unjailed")) {
+                yamlsOnlineJailedPlayers.remove(k);
+                new File(playerDataFolder, k + ".yml").delete();
+            } else if (v.get("lastlocation", backupLocation).equals(backupLocation))
+                continue;
             int secondsLeft = v.getInt("secondsleft");
-            if (--secondsLeft <= 0 || v.getBoolean("unjailed"))
+            if (secondsLeft <= 0 || v.getBoolean("unjailed"))
                 removeJailedPlayer(k);
             else
-                v.set("secondsleft", secondsLeft);
+                v.set("secondsleft", --secondsLeft);
         }
     }
 
@@ -357,8 +368,8 @@ public class DataHandler {
         FileConfiguration oldConfig = main.getConfig();
 
         if (newYaml.getKeys(true).hashCode() != oldConfig.getKeys(true).hashCode()) {
-            Bukkit.getLogger().log(Level.WARNING, "New config.yml inside plugin's jar!");
-            Bukkit.getLogger().log(Level.WARNING, "Make sure to make a backup of your settings before deleting config.yml!");
+            Bukkit.getLogger().log(Level.WARNING, "New config.yml found!");
+            Bukkit.getLogger().log(Level.WARNING, "Make sure to make a backup of your settings before deleting your current config.yml!");
         }
     }
 }
