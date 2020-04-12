@@ -11,6 +11,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,11 +29,12 @@ public class CommandHandler implements CommandExecutor, Listener {
     private final UUID defaultUUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
     private Main main;
     private ConfigurationSection messages;
-    private HashMap<String, UUID> alltimePlayers = new HashMap<>();
+    private Hashtable<String, UUID> alltimePlayers = new Hashtable<>();
 
     private CommandHandler(@NotNull Main main) {
         this.main = main;
         messages = this.main.getConfig().getConfigurationSection("messages");
+        Bukkit.getPluginManager().registerEvents(this, this.main);
         for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers())
             alltimePlayers.put(offlinePlayer.getName(), offlinePlayer.getUniqueId());
     }
@@ -378,7 +380,7 @@ public class CommandHandler implements CommandExecutor, Listener {
         return true;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPlayerJoin(@NotNull PlayerJoinEvent e) {
         Player player = e.getPlayer();
         String name = player.getName();

@@ -51,7 +51,7 @@ public class Listeners implements Listener {
         if (player.hasPermission("betterjails.receivebroadcast"))
             Bukkit.getScheduler().runTaskLater(main, () ->
                     new UpdateChecker(main, 76001).getVersion(version -> {
-                        if (!main.getDescription().getVersion().equalsIgnoreCase(version))
+                        if (!main.getDescription().getVersion().equalsIgnoreCase(version.substring(1)))
                             player.sendMessage("§7[§bBetterJails§7] §3New version §b" + version + " §3for §bBetterJails §3available.");
                     }), 100);
     }

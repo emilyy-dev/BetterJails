@@ -15,19 +15,19 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 
 public class DataHandler {
+    private final Hashtable<UUID, YamlConfiguration> yamlsOnlineJailedPlayers = new Hashtable<>();
     public File playerDataFolder;
     private Location backupLocation;
     private Main main;
     private File jailsFile;
     private YamlConfiguration yamlJails;
-    private HashMap<String, Jail> jails = new HashMap<>();
-    private HashMap<UUID, YamlConfiguration> yamlsOnlineJailedPlayers = new HashMap<>();
+    private Hashtable<String, Jail> jails = new Hashtable<>();
 
     public DataHandler(@NotNull Main main) throws IOException {
         this.main = main;
@@ -94,7 +94,7 @@ public class DataHandler {
 
     public void unloadJailedPlayer(UUID uuid) { yamlsOnlineJailedPlayers.remove(uuid); }
 
-    public HashMap<String, Jail> getJails() { return jails; }
+    public Hashtable<String, Jail> getJails() { return jails; }
 
     @Nullable
     public Jail getJail(String name) { return jails.get(name); }
