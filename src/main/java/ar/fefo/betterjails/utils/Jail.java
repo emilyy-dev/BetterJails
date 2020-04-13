@@ -3,8 +3,8 @@ package ar.fefo.betterjails.utils;
 import org.bukkit.Location;
 
 public class Jail {
-    private String name;
-    private Location location;
+    private final String name;
+    private final Location location;
 
     Jail(String name, Location location) {
         this.name = name;

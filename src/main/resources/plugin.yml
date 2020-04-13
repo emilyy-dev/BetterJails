@@ -1,6 +1,6 @@
-name: "BetterJails"
+name: "${project.name}"
 author: "Fefo6644"
-version: "1.3.2"
+version: "${project.version}"
 main: "ar.fefo.betterjails.Main"
 api-version: "1.15"
 load: "POSTWORLD"

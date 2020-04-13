@@ -27,9 +27,9 @@ import java.util.UUID;
 public class CommandHandler implements CommandExecutor, Listener {
     private static CommandHandler instance;
     private final UUID defaultUUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
-    private Main main;
+    private final Main main;
     private ConfigurationSection messages;
-    private Hashtable<String, UUID> alltimePlayers = new Hashtable<>();
+    private final Hashtable<String, UUID> alltimePlayers = new Hashtable<>();
 
     private CommandHandler(@NotNull Main main) {
         this.main = main;

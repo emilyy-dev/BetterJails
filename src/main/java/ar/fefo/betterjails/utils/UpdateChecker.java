@@ -11,8 +11,8 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public class UpdateChecker {
-    private Plugin plugin;
-    private int id;
+    private final Plugin plugin;
+    private final int id;
 
     public UpdateChecker(Plugin plugin, int id) {
         this.plugin = plugin;

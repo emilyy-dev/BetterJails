@@ -20,7 +20,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 public class Listeners implements Listener {
-    private Main main;
+    private final Main main;
 
     public Listeners(Main main) { this.main = main; }
 
@@ -56,7 +56,7 @@ public class Listeners implements Listener {
                     }), 100);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlayerQuit(@NotNull PlayerQuitEvent e) {
         Player player = e.getPlayer();
         UUID uuid = player.getUniqueId();

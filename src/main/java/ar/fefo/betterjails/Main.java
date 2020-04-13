@@ -69,11 +69,9 @@ public class Main extends JavaPlugin {
                 }
             }
 
-            Bukkit.getScheduler().runTaskTimerAsynchronously(this, new Runnable() {
+            Bukkit.getScheduler().runTaskTimer(this, new Runnable() {
                 @Override
-                public void run() {
-                    dataHandler.timer();
-                }
+                public void run() { dataHandler.timer(); }
             }, 0, 20);
             if (getConfig().getInt("autoSaveTimeInMinutes") > 0)
                 Bukkit.getScheduler().runTaskTimerAsynchronously(this, new Runnable() {

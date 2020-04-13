@@ -18,16 +18,17 @@ import java.io.*;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public class DataHandler {
-    private final Hashtable<UUID, YamlConfiguration> yamlsOnlineJailedPlayers = new Hashtable<>();
+    private final ConcurrentHashMap<UUID, YamlConfiguration> yamlsOnlineJailedPlayers = new ConcurrentHashMap<>();
+    private final Main main;
+    private final File jailsFile;
+    private final Hashtable<String, Jail> jails = new Hashtable<>();
     public File playerDataFolder;
     private Location backupLocation;
-    private Main main;
-    private File jailsFile;
     private YamlConfiguration yamlJails;
-    private Hashtable<String, Jail> jails = new Hashtable<>();
 
     public DataHandler(@NotNull Main main) throws IOException {
         this.main = main;
@@ -200,14 +201,13 @@ public class DataHandler {
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
-        if (yaml.getBoolean("unjailed"))
-            return true;
-
         if (main.perm != null && main.getConfig().getBoolean("changeGroup")) {
             String group = yaml.getString("group");
             Bukkit.getScheduler().runTaskAsynchronously(main, new Runnable() {
                 @Override
                 public void run() {
+                    if (main.perm.getPrimaryGroup(null, player).equalsIgnoreCase(group))
+                        return;
                     main.perm.playerRemoveGroup(null, player, main.prisonerGroup);
                     main.perm.playerAddGroup(null, player, group != null ? group : "default");
                 }
@@ -224,6 +224,9 @@ public class DataHandler {
             files[0].delete();
             yamlsOnlineJailedPlayers.remove(uuid);
         } else {
+            if (yaml.getBoolean("unjailed"))
+                return true;
+
             if (yaml.get("lastlocation", backupLocation).equals(backupLocation)) {
                 files[0].delete();
             } else {
@@ -323,9 +326,14 @@ public class DataHandler {
             } else if (v.get("lastlocation", backupLocation).equals(backupLocation))
                 continue;
             int secondsLeft = v.getInt("secondsleft");
-            if (secondsLeft <= 0 || v.getBoolean("unjailed"))
+            if (secondsLeft <= 0 || v.getBoolean("unjailed")) {
+                try {
+                    v.save(new File(playerDataFolder, k + ".yml"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 removeJailedPlayer(k);
-            else
+            } else
                 v.set("secondsleft", --secondsLeft);
         }
     }

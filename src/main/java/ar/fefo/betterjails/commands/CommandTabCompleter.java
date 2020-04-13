@@ -13,7 +13,7 @@ import java.util.List;
 
 public class CommandTabCompleter implements TabCompleter {
     private static CommandTabCompleter instance;
-    private Main main;
+    private final Main main;
 
     private CommandTabCompleter(Main main) { this.main = main; }
     public static void init(Main main) { instance = new CommandTabCompleter(main); }
