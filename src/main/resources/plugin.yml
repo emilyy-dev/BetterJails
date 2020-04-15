@@ -2,7 +2,7 @@ name: "${project.name}"
 author: "Fefo6644"
 version: "${project.version}"
 main: "ar.fefo.betterjails.Main"
-api-version: "1.15"
+api-version: "1.13"
 load: "POSTWORLD"
 softdepend: ["Essentials", "Vault"]
 
