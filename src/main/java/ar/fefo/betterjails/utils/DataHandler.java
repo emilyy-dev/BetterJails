@@ -221,8 +221,8 @@ public class DataHandler {
                 lastLocation = ((Player)player).getLocation();
 
             ((Player)player).teleport(lastLocation);
-            files[0].delete();
             yamlsOnlineJailedPlayers.remove(uuid);
+            files[0].delete();
         } else {
             if (yaml.getBoolean("unjailed"))
                 return true;
@@ -319,21 +319,20 @@ public class DataHandler {
         for (Map.Entry<UUID, YamlConfiguration> entry : yamlsOnlineJailedPlayers.entrySet()) {
             UUID k = entry.getKey();
             YamlConfiguration v = entry.getValue();
-            if (v.get("lastlocation", backupLocation).equals(backupLocation) &&
-                v.getBoolean("unjailed")) {
+            Location loc = ((Location)v.get("lastlocation", backupLocation));
+            boolean unjailed = v.getBoolean("unjailed");
+
+            if (loc.equals(backupLocation) &&
+                unjailed) {
                 yamlsOnlineJailedPlayers.remove(k);
                 new File(playerDataFolder, k + ".yml").delete();
-            } else if (v.get("lastlocation", backupLocation).equals(backupLocation))
+            } else if (loc.equals(backupLocation))
                 continue;
+
             int secondsLeft = v.getInt("secondsleft");
-            if (secondsLeft <= 0 || v.getBoolean("unjailed")) {
-                try {
-                    v.save(new File(playerDataFolder, k + ".yml"));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            if (secondsLeft <= 0 || unjailed)
                 removeJailedPlayer(k);
-            } else
+            else
                 v.set("secondsleft", --secondsLeft);
         }
     }
