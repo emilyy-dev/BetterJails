@@ -23,20 +23,21 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
 
-@SuppressWarnings("ConstantConditions")
 public class CommandHandler implements CommandExecutor, Listener {
     private static CommandHandler instance;
     private final UUID defaultUUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
     private final Main main;
-    private ConfigurationSection messages;
     private final Hashtable<String, UUID> alltimePlayers = new Hashtable<>();
+    private ConfigurationSection messages;
 
     private CommandHandler(@NotNull Main main) {
         this.main = main;
         messages = this.main.getConfig().getConfigurationSection("messages");
         Bukkit.getPluginManager().registerEvents(this, this.main);
-        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers())
-            alltimePlayers.put(offlinePlayer.getName(), offlinePlayer.getUniqueId());
+        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+            if (offlinePlayer.getName() != null)
+                alltimePlayers.put(offlinePlayer.getName(), offlinePlayer.getUniqueId());
+        }
     }
     public static void init(@NotNull Main main) { instance = new CommandHandler(main); }
     public static CommandHandler getInstance() { return instance; }
