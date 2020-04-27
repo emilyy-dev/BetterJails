@@ -12,12 +12,15 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CommandTabCompleter implements TabCompleter {
-    private static CommandTabCompleter instance;
+    private static CommandTabCompleter instance = null;
     private final Main main;
 
     private CommandTabCompleter(Main main) { this.main = main; }
-    public static void init(Main main) { instance = new CommandTabCompleter(main); }
-    public static CommandTabCompleter getInstance() { return instance; }
+    public static CommandTabCompleter init(Main main) {
+        if (instance == null)
+            instance = new CommandTabCompleter(main);
+        return instance;
+    }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender,

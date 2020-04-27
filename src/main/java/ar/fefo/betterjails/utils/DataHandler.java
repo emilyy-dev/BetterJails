@@ -3,7 +3,6 @@ package ar.fefo.betterjails.utils;
 import ar.fefo.betterjails.Main;
 import com.earth2me.essentials.User;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
@@ -15,11 +14,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.time.Instant;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 
 public class DataHandler {
     private final ConcurrentHashMap<UUID, YamlConfiguration> yamlsOnlineJailedPlayers = new ConcurrentHashMap<>();
@@ -36,8 +35,8 @@ public class DataHandler {
         String world = main.getConfig().getString("backupLocation.world");
         if (world == null) {
             world = main.getServer().getWorlds().get(0).getName();
-            Bukkit.getLogger().log(Level.WARNING, "Error in config.yml: Couldn't retrieve backupLocation.world");
-            Bukkit.getLogger().log(Level.WARNING, "Choosing world \"" + world + "\" by default.");
+            main.getLogger().warning("Error in config.yml: Couldn't retrieve backupLocation.world");
+            main.getLogger().warning("Choosing world \"" + world + "\" by default.");
         }
         backupLocation = new Location(main.getServer().getWorld(world),
                                       main.getConfig().getDouble("backupLocation.x"),
@@ -163,7 +162,7 @@ public class DataHandler {
 
         if (main.getConfig().getBoolean("changeGroup")) {
             YamlConfiguration finalYaml = yaml;
-            Bukkit.getScheduler().runTaskAsynchronously(main, new Runnable() {
+            main.getServer().getScheduler().runTaskAsynchronously(main, new Runnable() {
                 @Override
                 public void run() {
                     if (main.perm != null && (finalYaml.getString("group") == null || finalYaml.getBoolean("unjailed"))) {
@@ -185,25 +184,28 @@ public class DataHandler {
 
         if (main.ess != null) {
             User user = main.ess.getUser(player.getUniqueId());
-            if (user != null)
-                user.setJailed(true);
+            if (user != null) {
+                if (player.isOnline())
+                    user.setJailTimeout(Instant.now().toEpochMilli() + secondsLeft * 1000);
+                else
+                    user.setJailed(true);
+            }
         }
 
         return true;
     }
 
     public boolean removeJailedPlayer(@NotNull UUID uuid) {
-        FilenameFilter filter = (dir, name) -> name.equalsIgnoreCase(uuid + ".yml");
-        File[] files = playerDataFolder.listFiles(filter);
-        if (files == null || files.length == 0)
+        YamlConfiguration yaml = retrieveJailedPlayer(uuid);
+        if (yaml == null)
             return false;
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(files[0]);
+        File playerFile = new File(playerDataFolder, uuid + ".yml");
 
-        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+        OfflinePlayer player = main.getServer().getOfflinePlayer(uuid);
 
         if (main.perm != null && main.getConfig().getBoolean("changeGroup")) {
             String group = yaml.getString("group");
-            Bukkit.getScheduler().runTaskAsynchronously(main, new Runnable() {
+            main.getServer().getScheduler().runTaskAsynchronously(main, new Runnable() {
                 @Override
                 public void run() {
                     if (main.perm.getPrimaryGroup(null, player).equalsIgnoreCase(group))
@@ -222,17 +224,18 @@ public class DataHandler {
 
             ((Player)player).teleport(lastLocation);
             yamlsOnlineJailedPlayers.remove(uuid);
-            files[0].delete();
+            playerFile.delete();
         } else {
             if (yaml.getBoolean("unjailed"))
                 return true;
 
             if (yaml.get("lastlocation", backupLocation).equals(backupLocation)) {
-                files[0].delete();
+                yamlsOnlineJailedPlayers.remove(uuid);
+                playerFile.delete();
             } else {
                 yaml.set("unjailed", true);
                 try {
-                    yaml.save(files[0]);
+                    yaml.save(playerFile);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -241,8 +244,10 @@ public class DataHandler {
 
         if (main.ess != null) {
             User user = main.ess.getUser(player.getUniqueId());
-            if (user != null)
+            if (user != null && user.isJailed()) {
+                user.setJailTimeout(0);
                 user.setJailed(false);
+            }
         }
 
         return true;
@@ -257,7 +262,7 @@ public class DataHandler {
             try {
                 v.save(new File(playerDataFolder, k + ".yml"));
             } catch (IOException e) {
-                Bukkit.getLogger().log(Level.SEVERE, e.getMessage());
+                main.getLogger().severe(e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -269,8 +274,8 @@ public class DataHandler {
         String unjailWorld = main.getConfig().getString("backupLocation.world");
         if (unjailWorld == null) {
             unjailWorld = main.getServer().getWorlds().get(0).getName();
-            Bukkit.getLogger().log(Level.WARNING, "Error in config.yml: Couldn't retrieve backupLocation.world");
-            Bukkit.getLogger().log(Level.WARNING, "Choosing world \"" + unjailWorld + "\" by default.");
+            main.getLogger().warning("Error in config.yml: Couldn't retrieve backupLocation.world");
+            main.getLogger().warning("Choosing world \"" + unjailWorld + "\" by default.");
         }
         backupLocation = new Location(main.getServer().getWorld(unjailWorld),
                                       main.getConfig().getDouble("backupLocation.x"),
@@ -291,7 +296,7 @@ public class DataHandler {
                 for (File file : files)
                     yamlsOnlineJailedPlayers.put(UUID.fromString(file.getName().replace(".yml", "")), YamlConfiguration.loadConfiguration(file));
         } else {
-            for (Player player : Bukkit.getOnlinePlayers()) {
+            for (Player player : main.getServer().getOnlinePlayers()) {
                 YamlConfiguration yaml = retrieveJailedPlayer(player.getUniqueId());
                 if (yaml != null)
                     yamlsOnlineJailedPlayers.put(player.getUniqueId(), yaml);
@@ -299,18 +304,18 @@ public class DataHandler {
         }
 
         if (main.getConfig().getBoolean("changeGroup")) {
-            if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
-                RegisteredServiceProvider<Permission> rsp = Bukkit.getServicesManager().getRegistration(Permission.class);
+            if (main.getServer().getPluginManager().getPlugin("Vault") != null) {
+                RegisteredServiceProvider<Permission> rsp = main.getServer().getServicesManager().getRegistration(Permission.class);
                 if (rsp == null) {
-                    main.getLogger().log(Level.SEVERE, "There was an error while hooking with Vault!");
-                    main.getLogger().log(Level.SEVERE, "Group changing feature will not be used!");
+                    main.getLogger().severe("There was an error while hooking with Vault!");
+                    main.getLogger().severe("Group changing feature will not be used!");
                 } else {
                     main.perm = rsp.getProvider();
                     main.prisonerGroup = main.getConfig().getString("prisonerGroup");
                 }
             } else {
-                main.getLogger().log(Level.WARNING, "Option \"changeGroup\" in config.yml is set to true, yet Vault wasn't found!");
-                main.getLogger().log(Level.WARNING, "Group changing feature will not be used!");
+                main.getLogger().warning("Option \"changeGroup\" in config.yml is set to true, yet Vault wasn't found!");
+                main.getLogger().warning("Group changing feature will not be used!");
             }
         }
     }
@@ -377,8 +382,8 @@ public class DataHandler {
         FileConfiguration oldConfig = main.getConfig();
 
         if (newYaml.getKeys(true).hashCode() != oldConfig.getKeys(true).hashCode()) {
-            Bukkit.getLogger().log(Level.WARNING, "New config.yml found!");
-            Bukkit.getLogger().log(Level.WARNING, "Make sure to make a backup of your settings before deleting your current config.yml!");
+            main.getLogger().warning("New config.yml found!");
+            main.getLogger().warning("Make sure to make a backup of your settings before deleting your current config.yml!");
         }
     }
 }

@@ -1,7 +1,6 @@
 package ar.fefo.betterjails.commands;
 
 import ar.fefo.betterjails.Main;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -24,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class CommandHandler implements CommandExecutor, Listener {
-    private static CommandHandler instance;
+    private static CommandHandler instance = null;
     private final UUID defaultUUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
     private final Main main;
     private final Hashtable<String, UUID> alltimePlayers = new Hashtable<>();
@@ -33,14 +32,17 @@ public class CommandHandler implements CommandExecutor, Listener {
     private CommandHandler(@NotNull Main main) {
         this.main = main;
         messages = this.main.getConfig().getConfigurationSection("messages");
-        Bukkit.getPluginManager().registerEvents(this, this.main);
-        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+        main.getServer().getPluginManager().registerEvents(this, this.main);
+        for (OfflinePlayer offlinePlayer : main.getServer().getOfflinePlayers()) {
             if (offlinePlayer.getName() != null)
                 alltimePlayers.put(offlinePlayer.getName(), offlinePlayer.getUniqueId());
         }
     }
-    public static void init(@NotNull Main main) { instance = new CommandHandler(main); }
-    public static CommandHandler getInstance() { return instance; }
+    public static CommandHandler init(@NotNull Main main) {
+        if (instance == null)
+            instance = new CommandHandler(main);
+        return instance;
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender,
@@ -52,7 +54,7 @@ public class CommandHandler implements CommandExecutor, Listener {
                 if (args.length == 1)
                     return betterjails(sender, args[0]);
                 else
-                    sender.sendMessage("§cBetterJails §6by §cFefo6644 §6- v" + main.getDescription().getVersion());
+                    sender.sendMessage("§bBetterJails §3by §bFefo6644 §3- v" + main.getDescription().getVersion());
                 return true;
 
             case "jail":
@@ -96,9 +98,6 @@ public class CommandHandler implements CommandExecutor, Listener {
             sender.sendMessage(messages.getString("reload")
                                        .replace("{player}", sender.getName())
                                        .replace('&', '§'));
-            main.getServer().getConsoleSender().sendMessage(messages.getString("reload")
-                                                                    .replace("{player}", sender.getName())
-                                                                    .replace('&', '§'));
         } else if (arg.equalsIgnoreCase("save") &&
                    sender.hasPermission("betterjails.betterjails.save")) {
             try {
@@ -106,22 +105,19 @@ public class CommandHandler implements CommandExecutor, Listener {
                 sender.sendMessage(messages.getString("save")
                                            .replace("{player}", sender.getName())
                                            .replace('&', '§'));
-                main.getServer().getConsoleSender().sendMessage(messages.getString("save")
-                                                                        .replace("{player}", sender.getName())
-                                                                        .replace('&', '§'));
             } catch (IOException e) {
                 sender.sendMessage("§cThere was an internal error while trying to save the data files.\n" +
                                    "Please check console for more information.");
                 e.printStackTrace();
             }
         } else {
-            sender.sendMessage("§cBetterJails §6by §cFefo6644 §6- v" + main.getDescription().getVersion());
+            sender.sendMessage("§bBetterJails §3by §bFefo6644 §3- v" + main.getDescription().getVersion());
         }
         return true;
     }
 
     private boolean jailPlayer(CommandSender sender, String prisoner, String jail, String time) {
-        OfflinePlayer player = Bukkit.getOfflinePlayer(alltimePlayers.getOrDefault(prisoner, defaultUUID));
+        OfflinePlayer player = main.getServer().getOfflinePlayer(alltimePlayers.getOrDefault(prisoner, defaultUUID));
         if (!player.getUniqueId().equals(defaultUUID)) {
             if (player.isOnline() && ((Player)player).hasPermission("betterjails.jail.exempt")) {
                 sender.sendMessage(messages.getString("jailFailedPlayerExempt")
@@ -212,11 +208,11 @@ public class CommandHandler implements CommandExecutor, Listener {
     }
 
     private boolean jailInfo(CommandSender sender, String prisoner) {
-        OfflinePlayer player = Bukkit.getOfflinePlayer(alltimePlayers.getOrDefault(prisoner, defaultUUID));
+        OfflinePlayer player = main.getServer().getOfflinePlayer(alltimePlayers.getOrDefault(prisoner, defaultUUID));
         if (!player.getUniqueId().equals(defaultUUID)) {
             YamlConfiguration yaml = main.dataHandler.retrieveJailedPlayer(player.getUniqueId());
 
-            if (yaml == null) {
+            if (yaml == null || yaml.getLong("secondsleft", -1) <= 0) {
                 sender.sendMessage(messages.getString("infoFailedPlayerNotJailed")
                                            .replace("{prisoner}", prisoner)
                                            .replace("{player}", sender.getName())
@@ -256,16 +252,16 @@ public class CommandHandler implements CommandExecutor, Listener {
                                                                                     (float)main.getConfig().getDouble("backupLocation.pitch")));
             String lastlocationString = "x:" + lastlocation.getBlockX() + " y:" +
                                         lastlocation.getBlockY() + " z:" +
-                                        lastlocation.getBlockZ() + " §6in §f" +
+                                        lastlocation.getBlockZ() + " §7in §f" +
                                         lastlocation.getWorld().getName();
-            infoLines[0] = "§6Info for jailed player:";
-            infoLines[1] = "  §6· Player: §c" + yaml.getString("name", "§oundefined");
-            infoLines[2] = "  §6· UUID: §c" + yaml.getString("uuid", "§oundefined");
-            infoLines[3] = "  §6· Time left: §c" + df.format(secondsleft) + timeunit;
-            infoLines[4] = "  §6· Jailed in jail: §c" + yaml.getString("jail", "§oundefined");
-            infoLines[5] = "  §6· Jailed by: §c" + yaml.getString("jailedby", "§oundefined");
-            infoLines[6] = "  §6· Location before jailed: §f" + lastlocationString;
-            infoLines[7] = "  §6· Parent group: §c" + yaml.getString("group", main.getConfig().getBoolean("changeGroup", false) ? "§oundefined" : "§oFeature not enabled");
+            infoLines[0] = "§7Info for jailed player:";
+            infoLines[1] = "  §7· Player: §f" + yaml.getString("name", "§oundefined");
+            infoLines[2] = "  §7· UUID: §f" + yaml.getString("uuid", "§oundefined");
+            infoLines[3] = "  §7· Time left: §f" + df.format(secondsleft) + timeunit;
+            infoLines[4] = "  §7· Jailed in jail: §f" + yaml.getString("jail", "§oundefined");
+            infoLines[5] = "  §7· Jailed by: §f" + yaml.getString("jailedby", "§oundefined");
+            infoLines[6] = "  §7· Location before jailed: §f" + lastlocationString;
+            infoLines[7] = "  §7· Parent group: §f" + yaml.getString("group", main.getConfig().getBoolean("changeGroup", false) ? "§oundefined" : "§oFeature not enabled");
 
             sender.sendMessage(infoLines);
         } else {
@@ -288,11 +284,11 @@ public class CommandHandler implements CommandExecutor, Listener {
 
             switch (messages.getString("jailsFormat")) {
                 case "list":
-                    main.dataHandler.getJails().forEach((k, v) -> jailsList.add("§6· " + k));
+                    main.dataHandler.getJails().forEach((k, v) -> jailsList.add("§7· " + k));
                     break;
 
                 case "line":
-                    String line = "§6";
+                    String line = "§7";
                     for (String key : main.dataHandler.getJails().keySet())
                         line = line.concat(key + ", ");
                     jailsList.add(line.substring(0, line.lastIndexOf(',')).concat("."));
@@ -304,7 +300,7 @@ public class CommandHandler implements CommandExecutor, Listener {
     }
 
     private boolean unjailPlayer(CommandSender sender, String prisoner) {
-        OfflinePlayer p = Bukkit.getOfflinePlayer(alltimePlayers.getOrDefault(prisoner, defaultUUID));
+        OfflinePlayer p = main.getServer().getOfflinePlayer(alltimePlayers.getOrDefault(prisoner, defaultUUID));
         if (!p.getUniqueId().equals(defaultUUID)) {
             // Once it's been confirmed the player exists and can be jailed, check if the jail exists.
             boolean wasUnjailed;
