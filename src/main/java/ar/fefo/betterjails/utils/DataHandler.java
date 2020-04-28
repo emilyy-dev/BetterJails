@@ -185,10 +185,9 @@ public class DataHandler {
         if (main.ess != null) {
             User user = main.ess.getUser(player.getUniqueId());
             if (user != null) {
+                user.setJailed(true);
                 if (player.isOnline())
                     user.setJailTimeout(Instant.now().toEpochMilli() + secondsLeft * 1000);
-                else
-                    user.setJailed(true);
             }
         }
 
