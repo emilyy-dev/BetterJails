@@ -6,6 +6,7 @@ import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -18,10 +19,12 @@ import java.time.Instant;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DataHandler {
     private final ConcurrentHashMap<UUID, YamlConfiguration> yamlsOnlineJailedPlayers = new ConcurrentHashMap<>();
+    private final Vector<Integer> cachedJailedPlayersNameHashes = new Vector<>();
     private final Main main;
     private final File jailsFile;
     private final Hashtable<String, Jail> jails = new Hashtable<>();
@@ -52,11 +55,9 @@ public class DataHandler {
         loadJails();
 
         playerDataFolder = new File(this.main.getDataFolder(), "playerdata" + File.separator);
-        if (!playerDataFolder.exists()) {
-            if (!playerDataFolder.mkdirs()) {
+        if (!playerDataFolder.exists())
+            if (!playerDataFolder.mkdirs())
                 throw new IOException("Could not create player data folder.");
-            }
-        }
 
         upgradeDataFiles();
         alertNewConfigAvailable();
@@ -64,8 +65,11 @@ public class DataHandler {
         if (main.getConfig().getBoolean("offlineTime")) {
             File[] files = playerDataFolder.listFiles();
             if (files != null)
-                for (File file : files)
-                    yamlsOnlineJailedPlayers.put(UUID.fromString(file.getName().replace(".yml", "")), YamlConfiguration.loadConfiguration(file));
+                for (File file : files) {
+                    YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+                    yamlsOnlineJailedPlayers.put(UUID.fromString(file.getName().replace(".yml", "")), yaml);
+                    cachedJailedPlayersNameHashes.add(yaml.getString("name", "").toUpperCase().hashCode());
+                }
         }
     }
 
@@ -77,16 +81,33 @@ public class DataHandler {
             jails.put(key, new Jail(key, (Location)yamlJails.get(key)));
     }
 
-    @Nullable
+    public boolean isPlayerJailed(UUID uuid) { return isPlayerJailed(main.getServer().getOfflinePlayer(uuid).getName()); }
+
+    public boolean isPlayerJailed(@NotNull String playerName) { return cachedJailedPlayersNameHashes.contains(playerName.toUpperCase().hashCode()); }
+
+    @NotNull
     public YamlConfiguration retrieveJailedPlayer(UUID uuid) {
+        if (!isPlayerJailed(uuid))
+            return new YamlConfiguration();
+
         if (yamlsOnlineJailedPlayers.containsKey(uuid)) {
             return yamlsOnlineJailedPlayers.get(uuid);
         } else {
-            FilenameFilter filter = (dir, name) -> name.equalsIgnoreCase(uuid + ".yml");
-            File[] matchingFiles = playerDataFolder.listFiles(filter);
-            if (matchingFiles == null || matchingFiles.length == 0)
-                return null;
-            return YamlConfiguration.loadConfiguration(matchingFiles[0]);
+            File playerFile = new File(playerDataFolder, uuid + ".yml");
+            YamlConfiguration retYaml = new YamlConfiguration();
+            try {
+                retYaml.load(playerFile);
+            } catch (IOException e) {
+                if (!(e instanceof FileNotFoundException)) {
+                    main.getLogger().severe("Couldn't read file " + playerFile.getAbsolutePath());
+                    e.printStackTrace();
+                }
+            } catch (InvalidConfigurationException e) {
+                main.getLogger().severe("Invalid YAML configuration in file " + playerFile.getAbsolutePath());
+                e.printStackTrace();
+            }
+
+            return retYaml;
         }
     }
 
@@ -119,13 +140,11 @@ public class DataHandler {
         Jail jail = getJail(jailName);
         boolean jailExists = jail != null;
         boolean isPlayerOnline = player.isOnline();
-        boolean isPlayerJailed = yaml != null;
+        boolean isPlayerJailed = isPlayerJailed(player.getUniqueId());
 
         if (!jailExists)
             return false;
 
-        if (yaml == null)
-            yaml = new YamlConfiguration();
         yaml.set("uuid", player.getUniqueId().toString());
         yaml.set("name", player.getName());
         yaml.set("jail", jailName);
@@ -161,15 +180,14 @@ public class DataHandler {
         }
 
         if (main.getConfig().getBoolean("changeGroup")) {
-            YamlConfiguration finalYaml = yaml;
             main.getServer().getScheduler().runTaskAsynchronously(main, new Runnable() {
                 @Override
                 public void run() {
-                    if (main.perm != null && (finalYaml.getString("group") == null || finalYaml.getBoolean("unjailed"))) {
+                    if (main.perm != null && (yaml.getString("group") == null || yaml.getBoolean("unjailed"))) {
                         String group = main.perm.getPrimaryGroup(null, player);
-                        finalYaml.set("group", group);
+                        yaml.set("group", group);
                         try {
-                            finalYaml.save(new File(playerDataFolder, player.getUniqueId().toString() + ".yml"));
+                            yaml.save(new File(playerDataFolder, player.getUniqueId().toString() + ".yml"));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -181,6 +199,9 @@ public class DataHandler {
         } else {
             yaml.save(new File(playerDataFolder, player.getUniqueId().toString() + ".yml"));
         }
+
+        if (!isPlayerJailed)
+            cachedJailedPlayersNameHashes.add(player.getName().toUpperCase().hashCode());
 
         if (main.ess != null) {
             User user = main.ess.getUser(player.getUniqueId());
@@ -195,9 +216,10 @@ public class DataHandler {
     }
 
     public boolean removeJailedPlayer(@NotNull UUID uuid) {
-        YamlConfiguration yaml = retrieveJailedPlayer(uuid);
-        if (yaml == null)
+        if (!isPlayerJailed(uuid))
             return false;
+
+        YamlConfiguration yaml = retrieveJailedPlayer(uuid);
         File playerFile = new File(playerDataFolder, uuid + ".yml");
 
         OfflinePlayer player = main.getServer().getOfflinePlayer(uuid);
@@ -224,6 +246,7 @@ public class DataHandler {
             ((Player)player).teleport(lastLocation);
             yamlsOnlineJailedPlayers.remove(uuid);
             playerFile.delete();
+            cachedJailedPlayersNameHashes.remove(Integer.valueOf(player.getName().toUpperCase().hashCode()));
         } else {
             if (yaml.getBoolean("unjailed"))
                 return true;
@@ -231,6 +254,7 @@ public class DataHandler {
             if (yaml.get("lastlocation", backupLocation).equals(backupLocation)) {
                 yamlsOnlineJailedPlayers.remove(uuid);
                 playerFile.delete();
+                cachedJailedPlayersNameHashes.remove(Integer.valueOf(player.getName().toUpperCase().hashCode()));
             } else {
                 yaml.set("unjailed", true);
                 try {
@@ -296,9 +320,8 @@ public class DataHandler {
                     yamlsOnlineJailedPlayers.put(UUID.fromString(file.getName().replace(".yml", "")), YamlConfiguration.loadConfiguration(file));
         } else {
             for (Player player : main.getServer().getOnlinePlayers()) {
-                YamlConfiguration yaml = retrieveJailedPlayer(player.getUniqueId());
-                if (yaml != null)
-                    yamlsOnlineJailedPlayers.put(player.getUniqueId(), yaml);
+                if (isPlayerJailed(player.getUniqueId()))
+                    yamlsOnlineJailedPlayers.put(player.getUniqueId(), retrieveJailedPlayer(player.getUniqueId()));
             }
         }
 
@@ -330,6 +353,7 @@ public class DataHandler {
                 unjailed) {
                 yamlsOnlineJailedPlayers.remove(k);
                 new File(playerDataFolder, k + ".yml").delete();
+                cachedJailedPlayersNameHashes.remove(Integer.valueOf(v.getString("name", "").toUpperCase().hashCode()));
             } else if (loc.equals(backupLocation))
                 continue;
 

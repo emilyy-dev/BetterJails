@@ -28,8 +28,8 @@ public class Listeners implements Listener {
         Player player = e.getPlayer();
         UUID uuid = player.getUniqueId();
 
-        YamlConfiguration jailedPlayer = main.dataHandler.retrieveJailedPlayer(uuid);
-        if (jailedPlayer != null) {
+        if (main.dataHandler.isPlayerJailed(uuid)) {
+            YamlConfiguration jailedPlayer = main.dataHandler.retrieveJailedPlayer(uuid);
             if (!jailedPlayer.getBoolean("unjailed") && !player.hasPermission("betterjails.jail.exempt")) {
                 main.dataHandler.loadJailedPlayer(uuid, jailedPlayer);
                 try {
@@ -60,8 +60,8 @@ public class Listeners implements Listener {
         Player player = e.getPlayer();
         UUID uuid = player.getUniqueId();
 
-        YamlConfiguration jailedPlayer = main.dataHandler.retrieveJailedPlayer(uuid);
-        if (jailedPlayer != null) {
+        if (main.dataHandler.isPlayerJailed(uuid)) {
+            YamlConfiguration jailedPlayer = main.dataHandler.retrieveJailedPlayer(uuid);
             try {
                 jailedPlayer.save(new File(main.dataHandler.playerDataFolder, uuid + ".yml"));
                 if (!main.getConfig().getBoolean("offlineTime")) {
@@ -84,8 +84,8 @@ public class Listeners implements Listener {
         UUID uuid = player.getUniqueId();
 
         main.getServer().getScheduler().runTaskLater(main, () -> {
-            YamlConfiguration jailedPlayer = main.dataHandler.retrieveJailedPlayer(uuid);
-            if (jailedPlayer != null) {
+            if (main.dataHandler.isPlayerJailed(uuid)) {
+                YamlConfiguration jailedPlayer = main.dataHandler.retrieveJailedPlayer(uuid);
                 Jail jail = main.dataHandler.getJail(jailedPlayer.getString("jail"));
                 if (jail != null)
                     player.teleport(jail.getLocation());

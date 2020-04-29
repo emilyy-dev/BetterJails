@@ -210,60 +210,67 @@ public class CommandHandler implements CommandExecutor, Listener {
     private boolean jailInfo(CommandSender sender, String prisoner) {
         OfflinePlayer player = main.getServer().getOfflinePlayer(alltimePlayers.getOrDefault(prisoner, defaultUUID));
         if (!player.getUniqueId().equals(defaultUUID)) {
-            YamlConfiguration yaml = main.dataHandler.retrieveJailedPlayer(player.getUniqueId());
+            if (main.dataHandler.isPlayerJailed(prisoner)) {
+                YamlConfiguration yaml = main.dataHandler.retrieveJailedPlayer(player.getUniqueId());
+                if (yaml.getLong("secondsleft", -1) <= 0) {
+                    sender.sendMessage(messages.getString("infoFailedPlayerNotJailed")
+                                               .replace("{prisoner}", prisoner)
+                                               .replace("{player}", sender.getName())
+                                               .replace('&', '§'));
+                    return true;
+                }
 
-            if (yaml == null || yaml.getLong("secondsleft", -1) <= 0) {
+                String[] infoLines = new String[8];
+                DecimalFormat df = new DecimalFormat("#.##");
+                double secondsleft = yaml.getLong("secondsleft", -1);
+                char timeunit = 's';
+                if (secondsleft >= 3600 * 24 * 365.25) {
+                    secondsleft /= (3600 * 24 * 365.25);
+                    timeunit = 'y';
+                } else if (secondsleft >= 3600 * 24 * 30.4375) {
+                    secondsleft /= (3600 * 24 * 30.4375);
+                    timeunit = 'M';
+                } else if (secondsleft >= 3600 * 24 * 7) {
+                    secondsleft /= (3600 * 24 * 7);
+                    timeunit = 'w';
+                } else if (secondsleft >= 3600 * 24) {
+                    secondsleft /= (3600 * 24);
+                    timeunit = 'd';
+                } else if (secondsleft >= 3600) {
+                    secondsleft /= 3600;
+                    timeunit = 'h';
+                } else if (secondsleft >= 60) {
+                    secondsleft /= 60;
+                    timeunit = 'm';
+                }
+
+                Location lastlocation = (Location)yaml.get("lastlocation", new Location(main.getServer().getWorld("backupLocation.world"),
+                                                                                        main.getConfig().getDouble("backupLocation.x"),
+                                                                                        main.getConfig().getDouble("backupLocation.y"),
+                                                                                        main.getConfig().getDouble("backupLocation.z"),
+                                                                                        (float)main.getConfig().getDouble("backupLocation.yaw"),
+                                                                                        (float)main.getConfig().getDouble("backupLocation.pitch")));
+                String lastlocationString = "x:" + lastlocation.getBlockX() + " y:" +
+                                            lastlocation.getBlockY() + " z:" +
+                                            lastlocation.getBlockZ() + " §7in §f" +
+                                            lastlocation.getWorld().getName();
+                infoLines[0] = "§7Info for jailed player:";
+                infoLines[1] = "  §7· Player: §f" + yaml.getString("name", "§oundefined");
+                infoLines[2] = "  §7· UUID: §f" + yaml.getString("uuid", "§oundefined");
+                infoLines[3] = "  §7· Time left: §f" + df.format(secondsleft) + timeunit;
+                infoLines[4] = "  §7· Jailed in jail: §f" + yaml.getString("jail", "§oundefined");
+                infoLines[5] = "  §7· Jailed by: §f" + yaml.getString("jailedby", "§oundefined");
+                infoLines[6] = "  §7· Location before jailed: §f" + lastlocationString;
+                infoLines[7] = "  §7· Parent group: §f" + yaml.getString("group", main.getConfig().getBoolean("changeGroup", false) ? "§oundefined" : "§oFeature not enabled");
+
+                sender.sendMessage(infoLines);
+            } else {
                 sender.sendMessage(messages.getString("infoFailedPlayerNotJailed")
                                            .replace("{prisoner}", prisoner)
                                            .replace("{player}", sender.getName())
                                            .replace('&', '§'));
                 return true;
             }
-
-            String[] infoLines = new String[8];
-            DecimalFormat df = new DecimalFormat("#.##");
-            double secondsleft = yaml.getLong("secondsleft", -1);
-            char timeunit = 's';
-            if (secondsleft >= 3600 * 24 * 365.25) {
-                secondsleft /= (3600 * 24 * 365.25);
-                timeunit = 'y';
-            } else if (secondsleft >= 3600 * 24 * 30.4375) {
-                secondsleft /= (3600 * 24 * 30.4375);
-                timeunit = 'M';
-            } else if (secondsleft >= 3600 * 24 * 7) {
-                secondsleft /= (3600 * 24 * 7);
-                timeunit = 'w';
-            } else if (secondsleft >= 3600 * 24) {
-                secondsleft /= (3600 * 24);
-                timeunit = 'd';
-            } else if (secondsleft >= 3600) {
-                secondsleft /= 3600;
-                timeunit = 'h';
-            } else if (secondsleft >= 60) {
-                secondsleft /= 60;
-                timeunit = 'm';
-            }
-
-            Location lastlocation = (Location)yaml.get("lastlocation", new Location(main.getServer().getWorld("backupLocation.world"),
-                                                                                    main.getConfig().getDouble("backupLocation.x"),
-                                                                                    main.getConfig().getDouble("backupLocation.y"),
-                                                                                    main.getConfig().getDouble("backupLocation.z"),
-                                                                                    (float)main.getConfig().getDouble("backupLocation.yaw"),
-                                                                                    (float)main.getConfig().getDouble("backupLocation.pitch")));
-            String lastlocationString = "x:" + lastlocation.getBlockX() + " y:" +
-                                        lastlocation.getBlockY() + " z:" +
-                                        lastlocation.getBlockZ() + " §7in §f" +
-                                        lastlocation.getWorld().getName();
-            infoLines[0] = "§7Info for jailed player:";
-            infoLines[1] = "  §7· Player: §f" + yaml.getString("name", "§oundefined");
-            infoLines[2] = "  §7· UUID: §f" + yaml.getString("uuid", "§oundefined");
-            infoLines[3] = "  §7· Time left: §f" + df.format(secondsleft) + timeunit;
-            infoLines[4] = "  §7· Jailed in jail: §f" + yaml.getString("jail", "§oundefined");
-            infoLines[5] = "  §7· Jailed by: §f" + yaml.getString("jailedby", "§oundefined");
-            infoLines[6] = "  §7· Location before jailed: §f" + lastlocationString;
-            infoLines[7] = "  §7· Parent group: §f" + yaml.getString("group", main.getConfig().getBoolean("changeGroup", false) ? "§oundefined" : "§oFeature not enabled");
-
-            sender.sendMessage(infoLines);
         } else {
             sender.sendMessage(messages.getString("infoFailedPlayerNeverJoined")
                                        .replace("{prisoner}", prisoner)
