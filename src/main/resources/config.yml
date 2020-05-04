@@ -10,6 +10,11 @@ backupLocation:
 # Counts offline time as sentence time.
 offlineTime: false
 
+# Time after which the player will be released if they don't join the server in said time.
+# Set to 0 to disable.
+#discardDataAfter: 7
+# To-be-implemented.
+
 # Change prisoner group when jailed.
 # Needs Vault to be installed.
 changeGroup: false

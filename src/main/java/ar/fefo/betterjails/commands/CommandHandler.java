@@ -7,7 +7,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -31,8 +30,8 @@ public class CommandHandler implements CommandExecutor, Listener {
 
     private CommandHandler(@NotNull Main main) {
         this.main = main;
-        messages = this.main.getConfig().getConfigurationSection("messages");
-        main.getServer().getPluginManager().registerEvents(this, this.main);
+        messages = main.getConfig().getConfigurationSection("messages");
+        main.getServer().getPluginManager().registerEvents(this, main);
         for (OfflinePlayer offlinePlayer : main.getServer().getOfflinePlayers()) {
             if (offlinePlayer.getName() != null)
                 alltimePlayers.put(offlinePlayer.getName(), offlinePlayer.getUniqueId());
@@ -129,7 +128,7 @@ public class CommandHandler implements CommandExecutor, Listener {
                 return true;
             }
 //            if (args[2].matches("\\d+[yMwdhms]")) {
-            if (time.matches("^(\\d+(\\.\\d+)*)[yMwdhms]$")) {
+            if (time.matches("^(\\d{1,10}(\\.\\d{1,2})?)[yMwdhms]$")) {
                 double scale;
                 switch (time.charAt(time.length() - 1)) {
                     case 's':
@@ -210,9 +209,10 @@ public class CommandHandler implements CommandExecutor, Listener {
     private boolean jailInfo(CommandSender sender, String prisoner) {
         OfflinePlayer player = main.getServer().getOfflinePlayer(alltimePlayers.getOrDefault(prisoner, defaultUUID));
         if (!player.getUniqueId().equals(defaultUUID)) {
+            UUID uuid = player.getUniqueId();
             if (main.dataHandler.isPlayerJailed(prisoner)) {
-                YamlConfiguration yaml = main.dataHandler.retrieveJailedPlayer(player.getUniqueId());
-                if (yaml.getLong("secondsleft", -1) <= 0) {
+                if (main.dataHandler.getUnjailed(uuid, false) ||
+                    main.dataHandler.getSecondsLeft(uuid, 0) <= 0) {
                     sender.sendMessage(messages.getString("infoFailedPlayerNotJailed")
                                                .replace("{prisoner}", prisoner)
                                                .replace("{player}", sender.getName())
@@ -222,7 +222,8 @@ public class CommandHandler implements CommandExecutor, Listener {
 
                 String[] infoLines = new String[8];
                 DecimalFormat df = new DecimalFormat("#.##");
-                double secondsleft = yaml.getLong("secondsleft", -1);
+
+                double secondsleft = main.dataHandler.getSecondsLeft(uuid, 0) / 1.0;
                 char timeunit = 's';
                 if (secondsleft >= 3600 * 24 * 365.25) {
                     secondsleft /= (3600 * 24 * 365.25);
@@ -244,24 +245,22 @@ public class CommandHandler implements CommandExecutor, Listener {
                     timeunit = 'm';
                 }
 
-                Location lastlocation = (Location)yaml.get("lastlocation", new Location(main.getServer().getWorld("backupLocation.world"),
-                                                                                        main.getConfig().getDouble("backupLocation.x"),
-                                                                                        main.getConfig().getDouble("backupLocation.y"),
-                                                                                        main.getConfig().getDouble("backupLocation.z"),
-                                                                                        (float)main.getConfig().getDouble("backupLocation.yaw"),
-                                                                                        (float)main.getConfig().getDouble("backupLocation.pitch")));
+                Location lastlocation = main.dataHandler.getLastLocation(uuid);
                 String lastlocationString = "x:" + lastlocation.getBlockX() + " y:" +
                                             lastlocation.getBlockY() + " z:" +
                                             lastlocation.getBlockZ() + " §7in §f" +
                                             lastlocation.getWorld().getName();
                 infoLines[0] = "§7Info for jailed player:";
-                infoLines[1] = "  §7· Player: §f" + yaml.getString("name", "§oundefined");
-                infoLines[2] = "  §7· UUID: §f" + yaml.getString("uuid", "§oundefined");
+                infoLines[1] = "  §7· Player: §f" + main.dataHandler.getName(uuid, "§oundefined");
+                infoLines[2] = "  §7· UUID: §f" + uuid;
                 infoLines[3] = "  §7· Time left: §f" + df.format(secondsleft) + timeunit;
-                infoLines[4] = "  §7· Jailed in jail: §f" + yaml.getString("jail", "§oundefined");
-                infoLines[5] = "  §7· Jailed by: §f" + yaml.getString("jailedby", "§oundefined");
+                infoLines[4] = "  §7· Jailed in jail: §f" + main.dataHandler.getJail(uuid, "§oundefined");
+                infoLines[5] = "  §7· Jailed by: §f" + main.dataHandler.getJailer(uuid, "§oundefined");
                 infoLines[6] = "  §7· Location before jailed: §f" + lastlocationString;
-                infoLines[7] = "  §7· Parent group: §f" + yaml.getString("group", main.getConfig().getBoolean("changeGroup", false) ? "§oundefined" : "§oFeature not enabled");
+                infoLines[7] = "  §7· Parent group: §f" + main.dataHandler.getGroup(uuid,
+                                                                                    main.getConfig().getBoolean("changeGroup", false) ?
+                                                                                    "§oundefined" :
+                                                                                    "§oFeature not enabled");
 
                 sender.sendMessage(infoLines);
             } else {

@@ -35,9 +35,9 @@ public class Listeners implements Listener {
                 try {
                     String jailName = jailedPlayer.getString("jail");
                     if (jailName != null)
-                        main.dataHandler.addJailedPlayer(player, jailName, null, jailedPlayer.getInt("secondsleft"));
+                        main.dataHandler.addJailedPlayer(player, jailName, null, main.dataHandler.getSecondsLeft(uuid, 0));
                     else
-                        main.dataHandler.addJailedPlayer(player, main.dataHandler.getJails().values().iterator().next().getName(), null, jailedPlayer.getInt("secondsleft"));
+                        main.dataHandler.addJailedPlayer(player, main.dataHandler.getJails().values().iterator().next().getName(), null, main.dataHandler.getSecondsLeft(uuid, 0));
 
                 } catch (IOException ex) {
                     ex.printStackTrace();
@@ -61,6 +61,7 @@ public class Listeners implements Listener {
         UUID uuid = player.getUniqueId();
 
         if (main.dataHandler.isPlayerJailed(uuid)) {
+            main.dataHandler.updateSecondsLeft(uuid);
             YamlConfiguration jailedPlayer = main.dataHandler.retrieveJailedPlayer(uuid);
             try {
                 jailedPlayer.save(new File(main.dataHandler.playerDataFolder, uuid + ".yml"));
