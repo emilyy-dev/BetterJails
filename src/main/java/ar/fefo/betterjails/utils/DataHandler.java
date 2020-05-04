@@ -178,13 +178,17 @@ public class DataHandler {
 
             List<String> asPrisoner = subcommandsYaml.getStringList("on-jail.as-prisoner");
             List<String> asConsole = subcommandsYaml.getStringList("on-jail.as-console");
-            for (String cmd : asPrisoner)
-                ((Player)player).performCommand(cmd.replace("{player}", yaml.getString(FIELD_JAILEDBY, ""))
-                                                   .replace("{prisoner}", player.getName()));
-            for (String cmd : asConsole)
-                main.getServer().dispatchCommand(main.getServer().getConsoleSender(),
-                                                 cmd.replace("{player}", yaml.getString(FIELD_JAILEDBY, ""))
-                                                    .replace("{prisoner}", player.getName()));
+            for (String cmd : asPrisoner) {
+                if (!cmd.equals(""))
+                    ((Player)player).performCommand(cmd.replace("{player}", yaml.getString(FIELD_JAILEDBY, ""))
+                                                       .replace("{prisoner}", player.getName()));
+            }
+            for (String cmd : asConsole) {
+                if (!cmd.equals(""))
+                    main.getServer().dispatchCommand(main.getServer().getConsoleSender(),
+                                                     cmd.replace("{player}", yaml.getString(FIELD_JAILEDBY, ""))
+                                                        .replace("{prisoner}", player.getName()));
+            }
         } else if (!isPlayerOnline && !isPlayerJailed) {
             yaml.set(FIELD_LASTLOCATION, backupLocation);
 
@@ -282,13 +286,17 @@ public class DataHandler {
 
             List<String> asPrisoner = subcommandsYaml.getStringList("on-release.as-prisoner");
             List<String> asConsole = subcommandsYaml.getStringList("on-release.as-console");
-            for (String cmd : asPrisoner)
-                ((Player)player).performCommand(cmd.replace("{player}", yaml.getString(FIELD_JAILEDBY, ""))
-                                                   .replace("{prisoner}", player.getName()));
-            for (String cmd : asConsole)
-                main.getServer().dispatchCommand(main.getServer().getConsoleSender(),
-                                                 cmd.replace("{player}", yaml.getString(FIELD_JAILEDBY, ""))
-                                                    .replace("{prisoner}", player.getName()));
+            for (String cmd : asPrisoner) {
+                if (!cmd.equals(""))
+                    ((Player)player).performCommand(cmd.replace("{player}", yaml.getString(FIELD_JAILEDBY, ""))
+                                                       .replace("{prisoner}", player.getName()));
+            }
+            for (String cmd : asConsole) {
+                if (!cmd.equals(""))
+                    main.getServer().dispatchCommand(main.getServer().getConsoleSender(),
+                                                     cmd.replace("{player}", yaml.getString(FIELD_JAILEDBY, ""))
+                                                        .replace("{prisoner}", player.getName()));
+            }
         } else {
             if (yaml.getBoolean(FIELD_UNJAILED, false))
                 return true;
