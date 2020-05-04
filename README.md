@@ -59,7 +59,8 @@ ___
 Various messages that pop up when doing commands.
 
 ## Sub-commands execution
-**This is pretty straight-forward**
+**This is pretty straight-forward.**
+All of this is inside `subcommands.yml`.
 
 The commands under `as-prisoner` will be executed as if the prisoner performed them, and the ones under `as-console` will be executed as if they were sent from the console.
 
