@@ -9,7 +9,7 @@ It lets you manage jails, jail offline players, and sentence time will be over w
 - `/setjail <jail name>` / Adds a new jail location where the command is executed.
 - `/deljail <jail name>` / Removes a jail location from the jails list.
 - `/jails` / Prints a list of available jails.
-- `/jail <player> <jail> <time>` / Sends a player to the provided jail, and won't be teleported back until the time provided has passed. Time format should match against this rule: `^(\d{1,10}(\.\d{1,2})?)[yMwdhms]$`. If all that sounds like gibberish, you can check [here](https://onlinetexttools.com/generate-text-from-regex?regex=%5E(%5Cd%7B1%2C5%7D(%5C.%5Cd%7B1%2C2%7D)%3F)%5ByMwdhms%5D%24&results=10) for some random examples.
+- `/jail <player> <jail> <time>` / Sends a player to the provided jail, and won't be teleported back until the time provided has passed. Time format must match against this rule: `^(\d{1,10}(\.\d{1,2})?)[yMwdhms]$`. If all that sounds like gibberish, you can check [here](https://onlinetexttools.com/generate-text-from-regex?regex=%5E(%5Cd%7B1%2C5%7D(%5C.%5Cd%7B1%2C2%7D)%3F)%5ByMwdhms%5D%24&results=10) for some random examples of valid times.
 - `/jail info <player>` / Will print out in the chat some information about the jailed player stored in the player data file.
 - `/unjail <player>` / Teleports a jailed player back to where they were when jailed.
 - `/betterjails` / Prints the version of the plugin.
@@ -19,7 +19,7 @@ It lets you manage jails, jail offline players, and sentence time will be over w
 #### Permissions
 All permissions default to operators only unless otherwise noted.
 - `betterjails.jail` / Lets the user execute the `/jail` command.
-- `betterjails.jail.exempt` / The user with this permission cannot be jailed by others (unless offline, but it runs check on join).
+- `betterjails.jail.exempt` / The user with this permission cannot be jailed by others (unless offline, but it runs check when joining).
 - `betterjails.jails` / Lets the user execute the `/jails` command.
 - `betterjails.unjail` / Lets the user execute the `/unjail` command.
 - `betterjails.setjail` / Lets the user execute the `/setjail` command.
@@ -57,7 +57,7 @@ Value: Integer (a whole number, c'mon...)
 ___
 **messages:**
 Various messages that pop up when doing commands.
-
+___
 ## Sub-commands execution
 **This is pretty straight-forward.**
 All of this is inside `subcommands.yml`.
