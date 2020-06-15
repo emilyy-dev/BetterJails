@@ -25,6 +25,18 @@ prisonerGroup: prisoner
 # Set to 0 to disable.
 autoSaveTimeInMinutes: 5
 
+# Tells the plugin to use a MySQL database to store the data.
+# If set to false, the data will be stored in YAML files.
+useMySQL: false
+# If set to true, you'll need to provide the connection credentials.
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  schema: betterjails
+  user: root
+  passwd: root
+  tablePrefix: bj_
+
 # Messages shown.
 messages:
   # Placeholders for /jail:
