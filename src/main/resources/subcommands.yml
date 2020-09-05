@@ -1,0 +1,19 @@
+# Customizable list of commands to be executed when jailing and releasing a player.
+
+# Commands will only be executed when the player is online.
+# If s/he is offline, they will be executed when joining the server.
+
+# Available placeholders:
+# · {prisoner}: player to be jailed/released.
+# · {player}: player that executes the command.
+
+# These commands will not be executed if the player is already jailed.
+on-jail:
+  as-prisoner:
+    - "rules"
+  as-console:
+    - "execute as {prisoner} run say Oh, poopers! I've been imprisoned!"
+
+on-release:
+  as-prisoner: []
+  as-console: []

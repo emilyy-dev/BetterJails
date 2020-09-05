@@ -1,0 +1,80 @@
+name: BetterJails
+authors: [ Fefo6644 ]
+version: ${pluginVersion}
+main: me.fefo.betterjails.BetterJails
+api-version: "1.13"
+load: POSTWORLD
+softdepend: [ Essentials, LuckPerms, Vault, PlaceholderAPI ]
+
+permissions:
+  betterjails.alltheperms:
+    default: op
+    children:
+      betterjails.jail: true
+      betterjails.jail.exempt: true
+      betterjails.jails: true
+      betterjails.unjail: true
+      betterjails.setjail: true
+      betterjails.deljail: true
+      betterjails.receivebroadcast: true
+      betterjails.betterjails: true
+      betterjails.betterjails.reload: true
+      betterjails.betterjails.save: true
+  betterjails.moderator:
+    default: false
+    children:
+      betterjails.jail: true
+      betterjails.jail.exempt: true
+      betterjails.jails: true
+      betterjails.unjail: true
+      betterjails.setjail: false
+      betterjails.deljail: false
+      betterjails.receivebroadcast: true
+      betterjails.betterjails: true
+      betterjails.betterjails.reload: false
+      betterjails.betterjails.save: false
+  betterjails.jail:
+    default: false
+  betterjails.jail.exempt:
+    default: false
+  betterjails.jails:
+    default: false
+  betterjails.unjail:
+    default: false
+  betterjails.setjail:
+    default: false
+  betterjails.deljail:
+    default: false
+  betterjails.receivebroadcast:
+    default: false
+  betterjails.betterjails:
+    default: true
+  betterjails.betterjails.reload:
+    default: false
+  betterjails.betterjails.save:
+    default: false
+
+commands:
+  jail:
+    permission: betterjails.jail
+    usage: "§cUsage: /<command> <player> <jail> <time>\n§cUsage: /<command> info <player>"
+    description: Sends a player to the provided jail, and won't be teleported back until they spend online the time provided.
+  jails:
+    permission: betterjails.jails
+    usage: "§cUsage: /<command>"
+    description: Prints a list of available jails.
+  unjail:
+    permission: betterjails.unjail
+    usage: "§cUsage: /<command> <player>"
+    description: Teleports a jailed player back to where they were when jailed.
+  setjail:
+    permission: betterjails.setjail
+    usage: "§cUsage: /<command> <jailname>"
+    description: Adds a new jail location in where the command is executed.
+  deljail:
+    permission: betterjails.deljail
+    usage: "§cUsage: /<command> <jailname>"
+    description: Removes a jail location from the jails list.
+  betterjails:
+    permission: betterjails.betterjails
+    description: Prints the version of the plugin.
