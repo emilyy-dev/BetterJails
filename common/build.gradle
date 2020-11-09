@@ -3,25 +3,50 @@ plugins {
 }
 
 dependencies {
-    compileOnly 'net.luckperms:api:5.2'
+    compileOnly('net.luckperms:api:5.2') {
+        transitive = true
+    }
 
-    compileOnly 'commons-lang:commons-lang:2.6'
-    compileOnly 'com.google.guava:guava:30.0-jre'
+    compileOnly('commons-lang:commons-lang:2.6') {
+        transitive = true
+    }
+    compileOnly('com.google.guava:guava:30.0-jre') {
+        transitive = true
+    }
 
-    compileOnly 'org.yaml:snakeyaml:1.26'
-    compileOnly 'com.google.code.gson:gson:2.8.0'
-    compileOnly 'mysql:mysql-connector-java:5.1.49'
-    implementation 'com.zaxxer:HikariCP:3.4.5'
+    compileOnly('org.yaml:snakeyaml:1.26') {
+        transitive = true
+    }
+    compileOnly('com.google.code.gson:gson:2.8.0') {
+        transitive = true
+    }
+    compileOnly('mysql:mysql-connector-java:5.1.49') {
+        transitive = true
+    }
+    implementation('com.zaxxer:HikariCP:3.4.5') {
+        transitive = true
+    }
 
-    compileOnly 'com.mojang:brigadier:1.0.17'
-    implementation 'net.kyori:adventure-api:4.1.1'
-    implementation 'org.slf4j:slf4j-api:2.0.0-alpha1'
+    compileOnly('com.mojang:brigadier:1.0.17') {
+        transitive = true
+    }
+    implementation('net.kyori:adventure-api:4.1.1') {
+        transitive = true
+    }
+    implementation('org.slf4j:slf4j-api:2.0.0-alpha1') {
+        transitive = true
+    }
 
-    compileOnly 'org.jetbrains:annotations:20.1.0'
-    compileOnly 'org.checkerframework:checker:2.5.5'
-    compileOnly 'org.projectlombok:lombok:1.18.16'
-    annotationProcessor 'org.projectlombok:lombok:1.18.16'
-
-    runtimeElements 'net.luckperms:api:5.2', 'commons-lang:commons-lang:2.6', 'com.google.guava:guava:30.0-jre', 'org.yaml:snakeyaml:1.26', 'com.google.code.gson:gson:2.8.0', 'mysql:mysql-connector-java:5.1.49', 'com.zaxxer:HikariCP:3.4.5', 'com.mojang:brigadier:1.0.17', 'net.kyori:adventure-api:4.1.1', 'org.slf4j:slf4j-api:2.0.0-alpha1'
-    apiElements 'com.zaxxer:HikariCP:3.4.5', 'net.kyori:adventure-api:4.1.1', 'org.slf4j:slf4j-api:2.0.0-alpha1'
+    compileOnly('org.jetbrains:annotations:20.1.0') {
+        transitive = true
+    }
+    compileOnly('org.checkerframework:checker:2.5.5') {
+        transitive = true
+    }
+    compileOnly('org.projectlombok:lombok:1.18.16') {
+        transitive = true
+    }
+    annotationProcessor('org.projectlombok:lombok:1.18.16') {
+        transitive = true
+    }
 }
