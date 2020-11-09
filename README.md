@@ -18,12 +18,10 @@ It lets you manage jails, jail offline players, and sentence time will be over w
 
 #### Permissions
 All permissions default to false unless otherwise noted.
-* `betterjails.moderator` / Sets to `true` some permissions, and `false` a couple ones, specifically, sets to `false` `betterjails.setjail`, `betterjails.deljail`, `betterjails.betterjails.reload` and `betterjails.betterjails.save`. Defaulted to `false`.
-* `betterjails.*` / Sets to `true` all the permissions below. Defaulted to `op`.
 * `betterjails.jail` / Lets the user execute the `/jail` command.
 * `betterjails.jail.exempt` / The user with this permission cannot be jailed by others (unless offline, but it runs check when joining).
-* `betterjails.jails` / Lets the user execute the `/jails` command.
 * `betterjails.unjail` / Lets the user execute the `/unjail` command.
+* `betterjails.listjails` / Lets the user execute the `/listjails` command.
 * `betterjails.setjail` / Lets the user execute the `/setjail` command.
 * `betterjails.deljail` / Lets the user execute the `/deljail` command.
 * `betterjails.receivebroadcast` / Prints in the user's chat when a player has been jailed/unjailed.
@@ -68,4 +66,4 @@ The commands under `as-prisoner` will be executed as if the prisoner performed t
 
 All the commands under `on-jail` will be executed when the player is sent to jail; and the ones under `on-release` will be executed when the player gets released from jail.
 
-**All the commands will only be performed when the player is online. If s/he is jailed/released while offline, they will be executed when s/he gets online.**
+**All the commands will only be performed when the player is online. If they are jailed/released while offline, they will be executed when they get online.**

@@ -1,0 +1,19 @@
+{
+  "on-jail": {
+    "as-prisoner": [
+      "rules"
+    ],
+    "as-console": [
+      "execute as {prisoner} run say Oh, poopers! I've been imprisoned!"
+    ]
+  },
+
+  "on-release": {
+    "as-prisoner": [
+
+    ],
+    "as-console": [
+
+    ]
+  }
+}

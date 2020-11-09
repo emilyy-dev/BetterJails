@@ -1,115 +1,41 @@
-plugins {
-    id 'com.github.johnrengelman.shadow' version '6.0.0'
-    id 'java'
-}
-
 defaultTasks 'clean', 'build'
 
-group = 'me.fefo'
-version = '2.0-SNAPSHOT'
+subprojects {
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
+    apply plugin: 'java'
 
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-}
+    group = 'me.fefo.betterjails'
+    version = '2.0-SNAPSHOT'
 
-processResources {
-    from(sourceSets.main.resources.srcDirs) {
-        expand 'pluginVersion': version
-    }
-}
-
-shadowJar {
-    archiveFileName = "BetterJails-${project.version}.jar"
-
-    dependencies {
-        include(dependency('me.fefo:facilites:.*') as Spec)
-        include(dependency('io.papermc:paperlib:.*') as Spec)
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    relocate 'me.fefo.facilites', 'me.fefo.betterjails.lib.facilites'
-    relocate 'io.papermc.lib', 'me.fefo.betterjails.lib.paperlib'
-}
-
-artifacts {
-    archives shadowJar
-}
-
-dependencies {
-    // Bukkit & Plugins APIs
-    implementation 'com.destroystokyo.paper:paper-api:1.16.2-R0.1-SNAPSHOT'
-    implementation 'net.ess3:EssentialsX:2.18.0'
-    implementation 'net.luckperms:api:5.1'
-    implementation 'com.github.MilkBowl:VaultAPI:1.7'
-    implementation('me.clip:placeholderapi:2.10.9') {
-        exclude(module: 'bstats-bukkit')
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
     }
 
-    // Storage
-    implementation 'com.h2database:h2:1.4.200'
-    implementation 'mysql:mysql-connector-java:5.1.49'
-    implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'org.yaml:snakeyaml:1.26'
+    repositories {
+        mavenCentral()
 
-    // Utilities
-    compile 'me.fefo:facilites:1.1'
-    compile 'io.papermc:paperlib:1.0.5'
-    implementation 'com.mojang:brigadier:1.0.17'
+        maven {
+            url = 'https://jitpack.io'
+        }
 
-    // Annotation thingies
-    compileOnly 'org.jetbrains:annotations:19.0.0'
-    annotationProcessor 'org.projectlombok:lombok:1.18.12'
-}
+        maven {
+            name = 'mojang-repo'
+            url = 'https://libraries.minecraft.net'
+        }
 
-repositories {
-    // Others:
-    // * Jetbrains Annotations
-    // * lombok
-    // * LuckPerms API
-    // * MySQL JDBC
-    // * gson
-    mavenCentral()
+        maven {
+            url = 'https://repo.codemc.org/repository/maven-public'
+        }
 
-    // PlaceholderAPI
-    maven {
-        name = 'papi-repo'
-        url = 'https://repo.extendedclip.com/content/repositories/placeholderapi/'
+        maven {
+            url = 'https://oss.sonatype.org/content/groups/public/'
+        }
+
+        mavenLocal()
     }
-
-    // EssentialsX
-    maven {
-        name = 'essentialsx-repo'
-        url = 'https://ci.ender.zone/plugin/repository/everything/'
-    }
-
-    // PaperLib
-    maven {
-        name = 'papermc-repo'
-        url = 'https://papermc.io/repo/repository/maven-public/'
-    }
-
-    // VaultAPI
-    maven {
-        name = 'jitpack'
-        url = 'https://jitpack.io'
-    }
-
-    // Brigadier
-    maven {
-        name = 'mojang-repo'
-        url = 'https://libraries.minecraft.net'
-    }
-
-    // SnakeYAML
-    maven {
-        name = 'sonatype'
-        url = 'http://oss.sonatype.org/content/groups/public/'
-    }
-
-    // Facilites
-    mavenLocal()
 }

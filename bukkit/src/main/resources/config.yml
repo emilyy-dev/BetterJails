@@ -1,0 +1,72 @@
+# Backup location to teleport prisoner on unjail if location before jailed is found corrupt.
+backup-location:
+  world: world
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  yaw: 0.0
+  pitch: 0.0
+
+# Counts offline time as sentence time.
+offline-time: false
+
+# Time after which the player will be released if they don't join the server in said time.
+# Set to 0 to disable.
+# The time duration format in here is the same as in the command.
+# Examples: "12d", "25mins", "8.5ys", "3mo5ws2days4.045secs"
+discard-data-after: 0
+
+
+
+# Change prisoner group when jailed.
+# Requires LuckPerms (preferred) or Vault to be installed.
+change-group: false
+
+# Group name for prisoner to be moved to when jailed.
+prisoner-group: prisoner
+
+# What will BJ do when jailing the player. Possible values are:
+# add => add the group to the current parents list.
+# set => clear the player's parents list and add only the prisoner group.
+# clear => just clear everything, don't add the prisoner-group.
+# custom-whitelist => keep all the groups that are under the groups-whitelist section, remove the rest and add the prisoner group.
+# custom-blacklist => remove all the groups that are under the groups-blacklist section, keep the rest and add the prisoner group.
+group-changing-behavior: add
+
+groups-whitelist:
+  #- member
+
+groups-blacklist:
+  #- vip
+  #- vip+
+  #- mvp
+
+
+
+# Enables permission checks to only allow or not jailing into certain cells.
+# betterjails.jail.<name of cell>
+# It also checks for releasing.
+# betterjails.unjail.<name of cell>
+cell-specific-permissions: false
+
+
+
+# Placeholders for /listjails list:
+# · None :(
+listjails-color: "&a"   # Must be a valid color/format code. Can be RGB too: &#RRGGBB
+listjails-style: "line"
+listjails-separators:
+  list: "&7· "
+  line: "&7, "
+
+# listjails-style can be any of these values:
+# · line
+# · list
+#
+# Examples with default separators:
+#   list:
+#     · cell1
+#     · cell2
+#     · cell3
+#   line:
+#     cell1, cell2, cell3
