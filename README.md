@@ -88,7 +88,7 @@ The commands under `as-prisoner` will be executed as if the prisoner performed t
 
 All the commands under `on-jail` will be executed when the player is sent to jail; and the ones under `on-release` will be executed when the player gets released from jail.
 
-**All the commands will only be performed when the player is online. If s/he is jailed/released while offline, they will be executed when s/he gets online.**
+**All the commands will only be performed when the player is online. If they are jailed/released while offline, they will be executed when they get online.**
 
 
 ## Compiling

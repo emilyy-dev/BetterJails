@@ -1,7 +1,7 @@
 # Customizable list of commands to be executed when jailing and releasing a player.
 
 # Commands will only be executed when the player is online.
-# If s/he is offline, they will be executed when joining the server.
+# If they are offline, they will be executed when joining the server.
 
 # Available placeholders:
 # · {prisoner}: player to be jailed/released.
