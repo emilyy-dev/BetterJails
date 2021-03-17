@@ -1,6 +1,4 @@
-# Project exclude paths
 /.idea/
-/BetterJails.iml
-/ignore/
+**/*.iml
 /src/test/
-/target/
+**/target/
