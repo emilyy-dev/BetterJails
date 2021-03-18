@@ -12,7 +12,6 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
 
 	<licenses>
@@ -22,8 +21,15 @@
 		</license>
 	</licenses>
 
-	<groupId>com.github.fefo</groupId>
+	<groupId>com.github.fefo6644</groupId>
 	<artifactId>betterjails-parent</artifactId>
 	<version>1.5-SNAPSHOT</version>
 	<packaging>pom</packaging>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 </project>

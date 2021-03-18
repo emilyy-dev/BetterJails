@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>betterjails-parent</artifactId>
-		<groupId>com.github.fefo</groupId>
+		<groupId>com.github.fefo6644</groupId>
 		<version>1.5-SNAPSHOT</version>
 	</parent>
 
@@ -16,7 +16,6 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
 
 	<build>
@@ -74,7 +73,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.github.fefo</groupId>
+			<groupId>com.github.fefo6644</groupId>
 			<artifactId>betterjails-api</artifactId>
 			<version>1.5-SNAPSHOT</version>
 			<scope>compile</scope>
