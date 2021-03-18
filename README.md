@@ -1,11 +1,13 @@
 # BetterJails
 
+
 #### Resource in [spigotmc.org](https://www.spigotmc.org/resources/betterjails.76001/) & [dev.bukkit.org](https://dev.bukkit.org/projects/betterjails)
 
 A simple jails system Bukkit plugin aimed for most Minecraft versions.
 
 It lets you manage jails, jail offline players, and sentence time will be over when prisoners have
 been online for the required time.
+
 
 ### Sections
 
@@ -15,7 +17,9 @@ been online for the required time.
 * [Developer API](#Developer-API)
 * [Compiling](#Compiling)
 
+
 ## Commands and permissions
+
 
 ### Commands
 
@@ -34,6 +38,7 @@ been online for the required time.
 * `/betterjails reload` / Reloads files into memory.
 * `/betterjails save` / Saves files from memory.
 
+
 ### Permissions
 
 All permissions default to operators only unless otherwise noted.
@@ -50,6 +55,7 @@ All permissions default to operators only unless otherwise noted.
   to true for all users.
 * `betterjails.betterjails.reload` / Lets the user execute the `/betterjails reload` command.
 * `betterjails.betterjails.save` / Lets the user execute the `/betterjails save` command.
+
 
 ## Configuration
 
@@ -95,6 +101,7 @@ Various messages that pop up when doing commands.
 
 ___
 
+
 ## Sub-commands execution
 
 **This is pretty straight-forward.**
@@ -109,56 +116,45 @@ under `on-release` will be executed when the player gets released from jail.
 **All the commands will only be performed when the player is online. If they are jailed/released
 while offline, they will be executed when they get online.**
 
+
 ## Developer API
 
 BetterJails now ships with a developer API! Plugin developers can now interact with B.J., listen to
 specific events, create jails, release prisoners and much more.
 
-The [`BetterJails` interface](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/BetterJails.java)
-is the heart of the API, in there you can access all the other interfaces you need to work with
-B.J.:
-
-*
-A [`PrisonerManager`](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/prisoner/PrisonerManager.java)
-in which you can retrieve prisoners, jail players and release prisoners
-*
-A [`JailManager`](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/jail/JailManager.java)
-in which you can create and delete jails
-*
-An [`EventBus`](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/event/EventBus.java)
-where you can subscribe (or "listen") to certain events dispatched throughout the functioning of the
-plugin.
+The [`BetterJails` interface](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/BetterJails.java) is the heart of the API, in there you can access all the other interfaces you need to work with B.J.:
+* A [`PrisonerManager`](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/prisoner/PrisonerManager.java) in which you can retrieve prisoners, jail players and release prisoners
+* A [`JailManager`](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/jail/JailManager.java) in which you can create and delete jails
+* An [`EventBus`](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/event/EventBus.java) where you can subscribe (or "listen") to certain events dispatched throughout the functioning of the plugin.
 
 The API is published in OSS Sonatype as it is currently in a snapshot state (and will be for the
 rest of v1 lifecycle). Importing the BetterJails API to your project depends on how you build your
 plugin.
 
+
 ### Maven
 
 If you are using Maven, you need to add the (new) Sonatype repository to your `pom.xml`
-
 ```xml
-
 <repository>
-	<url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+    <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
 </repository>
 ```
-
 You also need to add the dependency itself that will be pulled from Sonatype
-
 ```xml
-
 <dependency>
-	<groupId>com.github.fefo6644</groupId>
-	<artifactId>betterjails-api</artifactId>
-	<version>1.5-SNAPSHOT</version>
-	<scope>provided</scope>
+    <groupId>com.github.fefo6644</groupId>
+    <artifactId>betterjails-api</artifactId>
+    <version>1.5-SNAPSHOT</version>
+    <scope>provided</scope>
 </dependency>
 ```
+
 
 ### Gradle
 
 Same principle applies if you are using Gradle to build your plugin:
+
 
 ##### Groovy DSL
 
@@ -172,6 +168,7 @@ dependencies {
 }
 ```
 
+
 ##### Kotlin DSL
 
 ```kotlin
@@ -184,11 +181,11 @@ dependencies {
 }
 ```
 
+
 ### Manually
 
-If you want to manually add the API dependency to your classpath, you can obtain the jar
-by [downloading it from here](https://s01.oss.sonatype.org/content/repositories/snapshots/com/github/fefo6644/betterjails-api/1.5-SNAPSHOT/)
-.
+If you want to manually add the API dependency to your classpath, you can obtain the jar by [downloading it from here](https://s01.oss.sonatype.org/content/repositories/snapshots/com/github/fefo6644/betterjails-api/1.5-SNAPSHOT/).
+
 
 ## Compiling
 
