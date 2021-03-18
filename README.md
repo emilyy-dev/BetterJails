@@ -127,6 +127,26 @@ The [`BetterJails` interface](https://github.com/Fefo6644/BetterJails/blob/v1/ap
 * A [`JailManager`](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/jail/JailManager.java) in which you can create and delete jails
 * An [`EventBus`](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/event/EventBus.java) where you can subscribe (or "listen") to certain events dispatched throughout the functioning of the plugin.
 
+You can get an instance of the `BetterJails` interface like so:
+
+````java
+public class MyPlugin extends JavaPlugin {
+
+  private BetterJails betterJails;
+
+  public BetterJails getBetterJails() {
+    return betterJails;
+  }
+
+  @Override
+  public void onEnable() {
+    betterJails = Bukkit.getServicesManager().load(BetterJails.class);
+  }
+}
+````
+
+Don't forget to add `"BetterJails"` as `depend`/`softdepend` to your `plugin.yml` :)
+
 The API is published in OSS Sonatype as it is currently in a snapshot state (and will be for the
 rest of v1 lifecycle). Importing the BetterJails API to your project depends on how you build your
 plugin.
