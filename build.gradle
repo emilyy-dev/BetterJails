@@ -2,7 +2,7 @@ defaultTasks 'clean', 'build'
 
 subprojects {
 
-    apply plugin: 'java'
+    apply plugin: 'java-library'
 
     group = 'me.fefo.betterjails'
     version = '2.0-SNAPSHOT'
@@ -35,7 +35,5 @@ subprojects {
         maven {
             url = 'https://oss.sonatype.org/content/groups/public/'
         }
-
-        mavenLocal()
     }
 }

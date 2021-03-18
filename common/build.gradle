@@ -3,50 +3,22 @@ plugins {
 }
 
 dependencies {
-    compileOnly('net.luckperms:api:5.2') {
-        transitive = true
-    }
+    api('net.luckperms:api:5.2')
 
-    compileOnly('commons-lang:commons-lang:2.6') {
-        transitive = true
-    }
-    compileOnly('com.google.guava:guava:30.0-jre') {
-        transitive = true
-    }
+    api('commons-lang:commons-lang:2.6')
+    api('com.google.guava:guava:30.0-jre')
 
-    compileOnly('org.yaml:snakeyaml:1.26') {
-        transitive = true
-    }
-    compileOnly('com.google.code.gson:gson:2.8.0') {
-        transitive = true
-    }
-    compileOnly('mysql:mysql-connector-java:5.1.49') {
-        transitive = true
-    }
-    implementation('com.zaxxer:HikariCP:3.4.5') {
-        transitive = true
-    }
+    api('org.yaml:snakeyaml:1.26')
+    api('com.google.code.gson:gson:2.8.0')
+    api('mysql:mysql-connector-java:5.1.49')
+    api('com.zaxxer:HikariCP:3.4.5')
+    api('org.xerial:sqlite-jdbc:3.34.0')
 
-    compileOnly('com.mojang:brigadier:1.0.17') {
-        transitive = true
-    }
-    implementation('net.kyori:adventure-api:4.1.1') {
-        transitive = true
-    }
-    implementation('org.slf4j:slf4j-api:2.0.0-alpha1') {
-        transitive = true
-    }
+    api('com.mojang:brigadier:1.0.17')
+    api('net.kyori:adventure-api:4.1.1')
+    api('org.slf4j:slf4j-api:2.0.0-alpha1')
 
-    compileOnly('org.jetbrains:annotations:20.1.0') {
-        transitive = true
-    }
-    compileOnly('org.checkerframework:checker:2.5.5') {
-        transitive = true
-    }
-    compileOnly('org.projectlombok:lombok:1.18.16') {
-        transitive = true
-    }
-    annotationProcessor('org.projectlombok:lombok:1.18.16') {
-        transitive = true
-    }
+    api('org.jetbrains:annotations:20.1.0')
+    api('org.checkerframework:checker:2.5.5')
+    implementation project(":bukkit")
 }

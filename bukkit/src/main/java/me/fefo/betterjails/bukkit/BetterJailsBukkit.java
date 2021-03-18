@@ -25,7 +25,10 @@ import me.fefo.betterjails.common.BetterJailsPlugin;
 import me.fefo.betterjails.common.abstraction.MessagingSubject;
 import me.fefo.betterjails.common.abstraction.PlatformAdapter;
 import me.fefo.betterjails.common.abstraction.PlatformScheduler;
+import me.fefo.betterjails.common.logging.SQLite;
 import me.fefo.betterjails.common.model.cell.CellManager;
+import me.fefo.betterjails.common.model.jail.Jail;
+import me.fefo.betterjails.common.model.jail.JailManager;
 import me.fefo.betterjails.common.model.prisoner.PrisonerManager;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
@@ -53,10 +56,13 @@ public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsPl
     }
   };
 
+  private final JailManager jailManager = new JailManager(null, this);
   private final CellManager cellManager = new CellManager(null);
   private final PrisonerManager prisonerManager = new PrisonerManager();
   private final Logger logger = LoggerFactory.getLogger(this.getClass());
   private final PlatformScheduler<BukkitTask> schedulerUtil = new BukkitScheduler(this);
+  private final Utils utils = new Utils();
+  private final SQLite sqLite = new SQLite("bj-log");
 
   @Override
   public void onEnable() {
@@ -123,4 +129,8 @@ public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsPl
   public @NotNull String getVersion() {
     return getDescription().getVersion();
   }
+
+  public @NotNull Utils getUtils() { return utils; }
+
+  public @NotNull SQLite getSqLite() { return sqLite; }
 }

@@ -20,12 +20,15 @@
 package me.fefo.betterjails.common.model.cell;
 
 import me.fefo.betterjails.common.abstraction.Location;
+import me.fefo.betterjails.common.abstraction.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class Cell {
 
   private final String name;
   private final Location location;
+  private Player jailedPlayer;
 
   public Cell(@NotNull final String name, @NotNull final Location location) {
     this.name = name;
@@ -38,5 +41,21 @@ public final class Cell {
 
   public @NotNull Location getLocation() {
     return location;
+  }
+
+  public boolean isOccupied() {
+    return !(jailedPlayer == null);
+  }
+
+  public @Nullable Player getJailedPlayer() {
+    return jailedPlayer;
+  }
+
+  public void setJailedPlayer(@NotNull final Player player) {
+    jailedPlayer = player;
+  }
+
+  public void clearJailedPlayer() {
+    jailedPlayer = null;
   }
 }

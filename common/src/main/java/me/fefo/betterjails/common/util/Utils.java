@@ -19,9 +19,14 @@
 
 package me.fefo.betterjails.common.util;
 
+import jdk.internal.event.Event;
+import me.fefo.betterjails.bukkit.BetterJailsBukkit;
+import me.fefo.betterjails.common.BetterJailsPlugin;
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.bukkit.event.Cancellable;
+
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -109,6 +114,10 @@ public final class Utils {
                                                      @NotNull final String current) {
     final FilteringCriteria criteria = new FilteringCriteria(current);
     return options.stream().map(toString).filter(criteria).collect(Collectors.toList());
+  }
+
+  public static boolean fireCancellableEvent(@NotNull Cancellable event) {
+    return me.fefo.betterjails.bukkit.Utils.fireCancellableEventBukkit(event);
   }
 
   private static final class FilteringCriteria implements Predicate<String> {
