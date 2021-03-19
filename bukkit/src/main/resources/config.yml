@@ -14,7 +14,7 @@ offline-time: false
 # Set to 0 to disable.
 # The time duration format in here is the same as in the command.
 # Examples: "12d", "25mins", "8.5ys", "3mo5ws2days4.045secs"
-discard-data-after: 0
+discard-data-after: 0d
 
 
 
@@ -53,11 +53,14 @@ cell-specific-permissions: false
 
 # Placeholders for /listjails list:
 # · None :(
-listjails-color: "&a"   # Must be a valid color/format code. Can be RGB too: &#RRGGBB
-listjails-style: "line"
-listjails-separators:
-  list: "&7· "
-  line: "&7, "
+
+# Color can be named ('green', 'light_purple') or RGB ('#ab71f8')
+# This **does not** accept legacy color codes ('&a' or '§a').
+jail-list-color: "green"
+jail-list-style: "line"
+jail-list-separators:
+  list: "· "
+  line: ", "
 
 # listjails-style can be any of these values:
 # · line

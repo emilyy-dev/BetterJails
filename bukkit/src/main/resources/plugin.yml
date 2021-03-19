@@ -1,85 +1,108 @@
----
-name: BetterJails
-authors:
-  - Fefo6644
-version: "${pluginVersion}"
+{
+  "name": "BetterJails",
+  "authors": [
+    "Fefo6644"
+  ],
+  "version": "${pluginVersion}",
+  "main": "com.github.fefo6644.betterjails.bukkit.BetterJailsBukkit",
 
-main: me.fefo.betterjails.bukkit.BetterJailsBukkit
-api-version: '1.13'
-load: POSTWORLD
-softdepend:
-  - Essentials
-  - LuckPerms
-  - Vault
-  - PlaceholderAPI
+  "api-version": "1.13",
+  "load": "POSTWORLD",
 
-permissions:
-  betterjails.jail:
-    default: op
-    description: Allows running '/jail <player> <jail> [<time>]' and imprison someone
-  betterjails.jail.exempt:
-    default: op
-    description: Prevents one from being jailed
-  betterjails.unjail:
-    default: op
-    description: Allows running '/unjail <player>' and free someone
-  betterjails.listjails:
-    default: op
-    description: Allows running '/listjails' and list the available jails
-  betterjails.setjail:
-    default: op
-    description: Allows running '/setjail <jail name>' and add a new jail location
-  betterjails.deljail:
-    default: op
-    description: Allows running '/deljail <jail name>' and remove a jail location
-  betterjails.receivebroadcast:
-    default: op
-    description: Prints notifications on a player's chat when someone is jailed or
-      unjailed
-  betterjails.betterjails:
-    default: true
-    description: Allows running '/betterjails' main command
-  betterjails.reloadconfig:
-    default: op
-    description: Allows running '/betterjails reloadconfig' to reload the config file
-      only
-  betterjails.reloaddata:
-    default: op
-    description: Allows running '/betterjails reloaddata' to reload the data files
-  betterjails.save:
-    default: op
-    description: Allows running '/betterjails save' to save onto storage the data
-      loaded on memory
-  betterjails.playerinfo:
-    default: op
-    description: Allows running '/betterjails playerinfo <player>' to get information
-      on a jailed player
+  "softdepend": [
+    "Essentials",
+    "LuckPerms",
+    "Vault",
+    "PlaceholderAPI"
+  ],
 
-commands:
-  jail:
-    permission: betterjails.jail
-    description: Sends a player to the provided jail/cell.
-  unjail:
-    aliases:
-      - release
-    permission: betterjails.unjail
-    description: Teleports a jailed player back to where they were before being jailed.
-  setjail:
-    aliases:
-      - addcell
-      - addjail
-      - setcell
-    permission: betterjails.setjail
-    description: Adds a new
-  listjails:
-    aliases:
-      - cells
-      - jails
-      - listcells
-    permission: betterjails.listjails;betterjails.jails
-    description: Prints a list of available jails.
-  betterjails:
-    aliases:
-      - bj
-    permission: betterjails.betterjails;betterjails.playerinfo;betterjails.reloadconfig;betterjails.reloaddata;betterjails.save
-    description: Prints the version of the plugin.
+  "permissions": {
+    "betterjails.jail": {
+      "default": "op",
+      "description": "Allows running '/jail <player> <jail> [<time>]' and imprison someone"
+    },
+    "betterjails.jail.exempt": {
+      "default": "op",
+      "description": "Prevents one from being jailed"
+    },
+    "betterjails.unjail": {
+      "default": "op",
+      "description": "Allows running '/unjail <player>' and free someone"
+    },
+    "betterjails.listjails": {
+      "default": "op",
+      "description": "Allows running '/listjails' and list the available jails"
+    },
+    "betterjails.setjail": {
+      "default": "op",
+      "description": "Allows running '/setjail <jail name>' and add a new jail location"
+    },
+    "betterjails.deljail": {
+      "default": "op",
+      "description": "Allows running '/deljail <jail name>' and remove a jail location"
+    },
+    "betterjails.receivebroadcast": {
+      "default": "op",
+      "description": "Prints notifications on a player's chat when someone is jailed or unjailed"
+    },
+    "betterjails.betterjails": {
+      "default": true,
+      "description": "Allows running '/betterjails' main command"
+    },
+    "betterjails.reloadconfig": {
+      "default": "op",
+      "description": "Allows running '/betterjails reloadconfig' to reload the config file only"
+    },
+    "betterjails.reloaddata": {
+      "default": "op",
+      "description": "Allows running '/betterjails reloaddata' to reload the data files"
+    },
+    "betterjails.save": {
+      "default": "op",
+      "description": "Allows running '/betterjails save' to save onto storage the data loaded on memory"
+    },
+    "betterjails.playerinfo": {
+      "default": "op",
+      "description": "Allows running '/betterjails playerinfo <player>' to get information on a jailed player"
+    }
+  },
+
+  "commands": {
+    "jail": {
+      "permission": "betterjails.jail",
+      "description": "Sends a player to the provided jail/cell."
+    },
+    "unjail": {
+      "aliases": [
+        "release"
+      ],
+      "permission": "betterjails.unjail",
+      "description": "Teleports a jailed player back to where they were before being jailed."
+    },
+    "setjail": {
+      "aliases": [
+        "addcell",
+        "addjail",
+        "setcell"
+      ],
+      "permission": "betterjails.setjail",
+      "description": "Adds a new"
+    },
+    "listjails": {
+      "aliases": [
+        "cells",
+        "jails",
+        "listcells"
+      ],
+      "permission": "betterjails.listjails;betterjails.jails",
+      "description": "Prints a list of available jails."
+    },
+    "betterjails": {
+      "aliases": [
+        "bj"
+      ],
+      "permission": "betterjails.betterjails;betterjails.playerinfo;betterjails.reloadconfig;betterjails.reloaddata;betterjails.save",
+      "description": "Prints the version of the plugin."
+    }
+  }
+}
