@@ -25,37 +25,49 @@
 
 package com.github.fefo6644.betterjails.common.message;
 
-import com.github.fefo6644.betterjails.common.platform.abstraction.Player;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.Player;
 import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.audience.ForwardingAudience;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import org.apache.commons.lang.Validate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class MessagingSubject implements ForwardingAudience.Single {
+public class MessagingSubject {
 
-  public static MessagingSubject of(final @NonNull Audience audience, final @NotNull String name) {
+  public static MessagingSubject of(final @NonNull Audience audience, final @NotNull String name, final boolean isConsoleSubject) {
     Validate.notNull(audience, "audience");
     Validate.notNull(name, "name");
-    return new MessagingSubject(audience, name);
+    return new MessagingSubject(audience, name, isConsoleSubject);
   }
 
-  private final Audience audience;
   protected final String name;
+  private final Audience audience;
+  private final boolean isConsoleSubject;
 
   protected MessagingSubject(final Audience audience, final String name) {
+    this(audience, name, false);
+  }
+
+  private MessagingSubject(final Audience audience, final String name, final boolean isConsoleSubject) {
     this.audience = audience;
     this.name = name;
+    this.isConsoleSubject = isConsoleSubject;
   }
 
-  public boolean hasPermission() {
-    return false;
+  public void sendMessage(final ComponentLike componentLike) {
+    final Component component = componentLike.asComponent();
+
+    if (this.isConsoleSubject && false) {
+      // TODO split on Component.newline() and send each line individually...
+    } else {
+      this.audience.sendMessage(component);
+    }
   }
 
-  @Override
-  public @NonNull Audience audience() {
-    return this.audience;
+  public boolean hasPermission(final String permission) {
+    return this.isConsoleSubject;
   }
 
   public @NotNull String name() {
@@ -66,9 +78,9 @@ public class MessagingSubject implements ForwardingAudience.Single {
     return this instanceof Player;
   }
 
-  public @Nullable Player asPlayerSubject() {
+  public @Nullable Player<?> asPlayerSubject() {
     try {
-      return (Player) this;
+      return (Player<?>) this;
     } catch (final ClassCastException exception) {
       return null;
     }

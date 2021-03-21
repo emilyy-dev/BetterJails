@@ -1,5 +1,6 @@
 tasks.shadowJar {
     relocate("net.kyori", "com.github.fefo6644.betterjails.lib.kyori")
+    relocate("com.zaxxer.hikari", "com.github.fefo6644.betterjails.lib.hikari")
     relocate("org.bstats", "com.github.fefo6644.betterjails.lib.bstats")
     relocate("io.papermc.lib", "com.github.fefo6644.betterjails.lib.paperlib")
 }

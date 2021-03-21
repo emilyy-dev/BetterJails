@@ -23,34 +23,53 @@
 // SOFTWARE.
 //
 
-package com.github.fefo6644.betterjails.common.platform.abstraction;
+package com.github.fefo6644.betterjails.common.plugin.abstraction;
 
+import com.github.fefo6644.betterjails.common.message.MessagingSubject;
+import com.github.fefo6644.betterjails.common.model.prisoner.Prisoner;
+import net.kyori.adventure.audience.Audience;
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.WeakReference;
 import java.util.UUID;
 
-public class World {
+public abstract class Player<P> extends MessagingSubject {
 
-  public static World world(final @NotNull String name, final @NotNull UUID uuid) {
-    Validate.notNull(name, "name");
-    Validate.notNull(uuid, "uuid");
-    return new World(name, uuid);
-  }
-
-  private final String name;
   private final UUID uuid;
+  private final WeakReference<P> playerReference;
 
-  private World(final String name, final UUID uuid) {
-    this.name = name;
+  protected Player(final @NotNull UUID uuid, final @Nullable String name,
+                   final @NotNull Audience audience, final @NotNull P player) {
+    super(audience, name);
+    Validate.notNull(uuid, "uuid");
+    Validate.notNull(player, "player");
+
     this.uuid = uuid;
-  }
-
-  public @NotNull String name() {
-    return this.name;
+    this.playerReference = new WeakReference<>(player);
   }
 
   public @NotNull UUID uuid() {
     return this.uuid;
+  }
+
+  public @Nullable String getName() {
+    return this.name;
+  }
+
+  // Implementation detail: no-op if the player reference is null
+  public abstract void teleport(Location location, World world);
+
+  public boolean isJailed() {
+    return false;
+  }
+
+  public Prisoner<P> asPrisoner() {
+    return isJailed() ? (Prisoner<P>) this : null;
+  }
+
+  protected final @Nullable P getPlayerHandle() {
+    return this.playerReference.get();
   }
 }

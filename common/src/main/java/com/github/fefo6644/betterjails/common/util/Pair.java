@@ -25,15 +25,13 @@
 
 package com.github.fefo6644.betterjails.common.util;
 
-import org.jetbrains.annotations.Nullable;
-
 public class Pair<T, U> {
 
-  public static <T, U> Pair<T, U> of(@Nullable final T first, @Nullable final U second) {
+  public static <T, U> Pair<T, U> of(final T first, final U second) {
     return new Pair<>(first, second);
   }
 
-  public static <T, U> Pair<T, U> immutable(@Nullable final T first, @Nullable final U second) {
+  public static <T, U> Pair<T, U> immutable(final T first, final U second) {
     return new ImmutablePair<>(first, second);
   }
 
@@ -45,19 +43,19 @@ public class Pair<T, U> {
     this.second = second;
   }
 
-  public @Nullable T getFirst() {
-    return first;
+  public T getFirst() {
+    return this.first;
   }
 
-  public @Nullable U getSecond() {
-    return second;
+  public U getSecond() {
+    return this.second;
   }
 
-  public void setFirst(@Nullable final T first) {
+  public void setFirst(final T first) {
     this.first = first;
   }
 
-  public void setSecond(@Nullable final U second) {
+  public void setSecond(final U second) {
     this.second = second;
   }
 
@@ -68,12 +66,12 @@ public class Pair<T, U> {
     }
 
     @Override
-    public void setFirst(@Nullable final T first) {
+    public void setFirst(final T first) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setSecond(@Nullable final U second) {
+    public void setSecond(final U second) {
       throw new UnsupportedOperationException();
     }
   }

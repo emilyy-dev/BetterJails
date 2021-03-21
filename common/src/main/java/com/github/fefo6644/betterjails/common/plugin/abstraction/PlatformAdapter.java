@@ -23,43 +23,20 @@
 // SOFTWARE.
 //
 
-package com.github.fefo6644.betterjails.common.platform.abstraction;
+package com.github.fefo6644.betterjails.common.plugin.abstraction;
 
 import com.github.fefo6644.betterjails.common.message.MessagingSubject;
-import com.github.fefo6644.betterjails.common.model.prisoner.Prisoner;
-import net.kyori.adventure.audience.Audience;
-import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.UUID;
+public interface PlatformAdapter<S, P, L, W> {
 
-public abstract class Player extends MessagingSubject {
+  S adaptSubject(@NotNull MessagingSubject subject);
+  P adaptPlayer(@NotNull Player player);
+  L adaptLocation(@NotNull Location location);
+  W adaptWorld(@NotNull World world);
 
-  private final UUID uuid;
-
-  protected Player(final @NotNull UUID uuid, final @Nullable String name, final @NotNull Audience audience) {
-    super(audience, name);
-    Validate.notNull(uuid, "uuid");
-    this.uuid = uuid;
-  }
-
-  public @NotNull UUID uuid() {
-    return this.uuid;
-  }
-
-  public @Nullable String getName() {
-    return this.name;
-  }
-
-  // Implementation detail: no-op if the player is offline for whatever reason
-  public abstract void teleport(Location location, World world);
-
-  public boolean isJailed() {
-    return false;
-  }
-
-  public Prisoner asPrisoner() {
-    return isJailed() ? (Prisoner) this : null;
-  }
+  MessagingSubject adaptSubject(@NotNull S subject);
+  Player adaptPlayer(@NotNull P player);
+  Location adaptLocation(@NotNull L location);
+  World adaptWorld(@NotNull W world);
 }

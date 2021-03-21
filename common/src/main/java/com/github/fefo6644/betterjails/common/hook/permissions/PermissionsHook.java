@@ -25,7 +25,7 @@
 
 package com.github.fefo6644.betterjails.common.hook.permissions;
 
-import com.github.fefo6644.betterjails.common.platform.abstraction.Player;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.Player;
 
 import java.util.Collection;
 import java.util.UUID;

@@ -23,7 +23,7 @@
 // SOFTWARE.
 //
 
-package com.github.fefo6644.betterjails.common.platform.abstraction;
+package com.github.fefo6644.betterjails.common.plugin.abstraction;
 
 public class Location {
 

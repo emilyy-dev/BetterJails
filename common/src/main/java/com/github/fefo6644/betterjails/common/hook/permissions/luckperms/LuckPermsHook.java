@@ -25,8 +25,8 @@
 
 package com.github.fefo6644.betterjails.common.hook.permissions.luckperms;
 
-import com.github.fefo6644.betterjails.common.platform.BetterJailsPlugin;
-import com.github.fefo6644.betterjails.common.platform.abstraction.Player;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.Player;
 import com.github.fefo6644.betterjails.common.hook.permissions.PermissionsHook;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
@@ -66,32 +66,32 @@ public class LuckPermsHook extends PermissionsHook {
 
   @Override
   public CompletableFuture<Collection<String>> getParentGroups(final Player player) {
-    userManager.modifyUser(player.uuid(), user -> {
+    this.userManager.modifyUser(player.uuid(), user -> {
       // do stuff
     }).thenRun(() -> {
-      if (messagingService != null) {
-        messagingService.pushUpdate();
+      if (this.messagingService != null) {
+        this.messagingService.pushUpdate();
       }
     });
 
-    return userManager.loadUser(player.uuid(), player.getName())
-                      .thenApply(user -> user.getInheritedGroups(user.getQueryOptions().toBuilder()
+    return this.userManager.loadUser(player.uuid(), player.getName())
+                           .thenApply(user -> user.getInheritedGroups(user.getQueryOptions().toBuilder()
                                                                      .flag(Flag.RESOLVE_INHERITANCE,
                                                                            false)
                                                                      .build()))
-                      .thenApply(groups -> groups.stream()
+                           .thenApply(groups -> groups.stream()
                                                  .map(Group::getName)
                                                  .collect(Collectors.toList()));
   }
 
   @Override
   public CompletableFuture<Collection<String>> getParentGroups(final UUID uuid) {
-    return userManager.loadUser(uuid)
-                      .thenApply(user -> user.getInheritedGroups(user.getQueryOptions().toBuilder()
+    return this.userManager.loadUser(uuid)
+                           .thenApply(user -> user.getInheritedGroups(user.getQueryOptions().toBuilder()
                                                                      .flag(Flag.RESOLVE_INHERITANCE,
                                                                            false)
                                                                      .build()))
-                      .thenApply(groups -> groups.stream()
+                           .thenApply(groups -> groups.stream()
                                                  .map(Group::getName)
                                                  .collect(Collectors.toList()));
   }
@@ -103,8 +103,8 @@ public class LuckPermsHook extends PermissionsHook {
 
   @Override
   public CompletableFuture<Void> setParentGroup(final UUID uuid, final String group) {
-    return userManager.modifyUser(uuid, user -> {
-      final Group g = groupManager.getGroup(group);
+    return this.userManager.modifyUser(uuid, user -> {
+      final Group g = this.groupManager.getGroup(group);
       if (g == null) {
         return;
       }

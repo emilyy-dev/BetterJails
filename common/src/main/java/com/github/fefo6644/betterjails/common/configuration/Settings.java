@@ -27,6 +27,7 @@ package com.github.fefo6644.betterjails.common.configuration;
 
 import com.github.fefo6644.betterjails.common.configuration.type.BooleanSetting;
 import com.github.fefo6644.betterjails.common.configuration.type.StringSetting;
+import com.google.common.collect.ImmutableList;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.jetbrains.annotations.NotNull;
@@ -113,5 +114,15 @@ public final class Settings {
         }
       };
 
-  // TODO List<Setting<?>> ; add other settings
+  // TODO add other settings
+
+  public static final ImmutableList<Setting<?>> SETTINGS =
+      ImmutableList.of(OFFLINE_TIME,
+                       CHANGE_GROUP,
+                       PRISONER_GROUP,
+                       GROUP_CHANGING_BEHAVIOR,
+                       CELL_SPECIFIC_PERMISSION,
+                       JAIL_LIST_STYLE,
+                       JAIL_LIST_COLOR,
+                       LIST_SEPARATOR);
 }

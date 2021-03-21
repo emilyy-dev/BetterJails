@@ -25,7 +25,7 @@
 
 package com.github.fefo6644.betterjails.common.model.cell;
 
-import com.github.fefo6644.betterjails.common.platform.abstraction.Location;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.Location;
 import com.github.fefo6644.betterjails.common.storage.StorageProvider;
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
@@ -72,16 +72,16 @@ public final class CellManager {
     final Cell cell = new Cell(sanitized, location);
 
     if (overwrite) {
-      loadedCells.put(sanitized, cell);
+      this.loadedCells.put(sanitized, cell);
     } else {
-      loadedCells.putIfAbsent(sanitized, cell);
+      this.loadedCells.putIfAbsent(sanitized, cell);
     }
 
-    return loadedCells.get(sanitized);
+    return this.loadedCells.get(sanitized);
   }
 
   public @Nullable Cell getCell(@NotNull final String name) {
     Validate.notNull(name, "Cell name cannot be null");
-    return loadedCells.get(sanitize(name));
+    return this.loadedCells.get(sanitize(name));
   }
 }

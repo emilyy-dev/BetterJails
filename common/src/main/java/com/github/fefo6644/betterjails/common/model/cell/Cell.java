@@ -25,7 +25,7 @@
 
 package com.github.fefo6644.betterjails.common.model.cell;
 
-import com.github.fefo6644.betterjails.common.platform.abstraction.Location;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.Location;
 import org.jetbrains.annotations.NotNull;
 
 public final class Cell {
@@ -39,10 +39,10 @@ public final class Cell {
   }
 
   public @NotNull String getName() {
-    return name;
+    return this.name;
   }
 
   public @NotNull Location getLocation() {
-    return location;
+    return this.location;
   }
 }

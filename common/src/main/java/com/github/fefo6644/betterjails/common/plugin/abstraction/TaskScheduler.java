@@ -23,9 +23,9 @@
 // SOFTWARE.
 //
 
-package com.github.fefo6644.betterjails.common.platform.abstraction;
+package com.github.fefo6644.betterjails.common.plugin.abstraction;
 
-import com.github.fefo6644.betterjails.common.platform.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.util.concurrent.Callable;

@@ -27,9 +27,9 @@ package com.github.fefo6644.betterjails.bukkit.hook.permissions;
 
 import com.github.fefo6644.betterjails.bukkit.hook.BukkitServiceProvider;
 import com.github.fefo6644.betterjails.common.hook.permissions.PermissionsHook;
-import com.github.fefo6644.betterjails.common.platform.BetterJailsPlugin;
-import com.github.fefo6644.betterjails.common.platform.abstraction.PlatformAdapter;
-import com.github.fefo6644.betterjails.common.platform.abstraction.TaskScheduler;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.TaskScheduler;
 import com.google.common.collect.ImmutableList;
 import net.milkbowl.vault.permission.Permission;
 import org.apache.commons.lang.Validate;
@@ -63,7 +63,7 @@ public class VaultHook extends PermissionsHook {
   }
 
   @Override
-  public CompletableFuture<Collection<String>> getParentGroups(final com.github.fefo6644.betterjails.common.platform.abstraction.Player player) {
+  public CompletableFuture<Collection<String>> getParentGroups(final com.github.fefo6644.betterjails.common.plugin.abstraction.Player player) {
     return CompletableFuture.supplyAsync(() -> ImmutableList.copyOf(this.vaultPerm.getPlayerGroups(this.adapter.adaptPlayer(player))),
                                          this.scheduler::async);
   }
@@ -75,7 +75,7 @@ public class VaultHook extends PermissionsHook {
   }
 
   @Override
-  public CompletableFuture<Void> setParentGroup(final com.github.fefo6644.betterjails.common.platform.abstraction.Player player, final String group) {
+  public CompletableFuture<Void> setParentGroup(final com.github.fefo6644.betterjails.common.plugin.abstraction.Player player, final String group) {
     return CompletableFuture.runAsync(() -> {
 
       final Player p = this.adapter.adaptPlayer(player);

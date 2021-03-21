@@ -23,20 +23,26 @@
 // SOFTWARE.
 //
 
-package com.github.fefo6644.betterjails.common.platform.abstraction;
+package com.github.fefo6644.betterjails.common.plugin;
 
+import com.github.fefo6644.betterjails.common.configuration.ConfigurationAdapter;
 import com.github.fefo6644.betterjails.common.message.MessagingSubject;
-import org.jetbrains.annotations.NotNull;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.Player;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.TaskScheduler;
+import net.kyori.adventure.platform.AudienceProvider;
 
-public interface PlatformAdapter<S, P, L, W> {
+import java.nio.file.Path;
+import java.util.List;
 
-  S adaptSubject(@NotNull MessagingSubject subject);
-  P adaptPlayer(@NotNull Player player);
-  L adaptLocation(@NotNull Location location);
-  W adaptWorld(@NotNull World world);
+public interface BetterJailsBootstrap {
 
-  MessagingSubject adaptSubject(@NotNull S subject);
-  Player adaptPlayer(@NotNull P player);
-  Location adaptLocation(@NotNull L location);
-  World adaptWorld(@NotNull W world);
+  AudienceProvider getAudienceProvider();
+  MessagingSubject getConsoleSubject();
+  TaskScheduler getTaskScheduler();
+  <S, P, L, W> PlatformAdapter<S, P, L, W> getPlatformAdapter();
+  Path getPluginFolder();
+  ConfigurationAdapter getConfigurationAdapter();
+  String getVersion();
+  List<Player> getOnlinePlayers();
 }

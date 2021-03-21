@@ -23,27 +23,34 @@
 // SOFTWARE.
 //
 
-package com.github.fefo6644.betterjails.common.platform;
+package com.github.fefo6644.betterjails.common.plugin.abstraction;
 
-import com.github.fefo6644.betterjails.common.configuration.ConfigurationAdapter;
-import com.github.fefo6644.betterjails.common.message.MessagingSubject;
-import com.github.fefo6644.betterjails.common.platform.abstraction.PlatformAdapter;
-import com.github.fefo6644.betterjails.common.platform.abstraction.Player;
-import com.github.fefo6644.betterjails.common.platform.abstraction.TaskScheduler;
-import net.kyori.adventure.platform.AudienceProvider;
+import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.file.Path;
-import java.util.List;
+import java.util.UUID;
 
-public interface BetterJailsBootstrap {
+public class World {
 
-  @NotNull AudienceProvider getAudienceProvider();
-  @NotNull MessagingSubject getConsoleSubject();
-  @NotNull TaskScheduler getTaskScheduler();
-  @NotNull <S, P, L, W> PlatformAdapter<S, P, L, W> getPlatformAdapter();
-  @NotNull Path getPluginFolder();
-  @NotNull ConfigurationAdapter getConfigurationAdapter();
-  @NotNull String getVersion();
-  @NotNull List<Player> getOnlinePlayers();
+  public static World world(final @NotNull String name, final @NotNull UUID uuid) {
+    Validate.notNull(name, "name");
+    Validate.notNull(uuid, "uuid");
+    return new World(name, uuid);
+  }
+
+  private final String name;
+  private final UUID uuid;
+
+  private World(final String name, final UUID uuid) {
+    this.name = name;
+    this.uuid = uuid;
+  }
+
+  public @NotNull String name() {
+    return this.name;
+  }
+
+  public @NotNull UUID uuid() {
+    return this.uuid;
+  }
 }

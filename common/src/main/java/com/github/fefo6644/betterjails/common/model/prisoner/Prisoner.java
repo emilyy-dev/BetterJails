@@ -25,8 +25,8 @@
 
 package com.github.fefo6644.betterjails.common.model.prisoner;
 
-import com.github.fefo6644.betterjails.common.platform.abstraction.Location;
-import com.github.fefo6644.betterjails.common.platform.abstraction.Player;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.Location;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.Player;
 import net.kyori.adventure.audience.Audience;
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +37,7 @@ import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
-public abstract class Prisoner extends Player {
+public abstract class Prisoner<P> extends Player<P> {
 
   private final Set<String> groups;
   private final String jailedBy;
@@ -48,8 +48,8 @@ public abstract class Prisoner extends Player {
   public Prisoner(final @NotNull UUID uuid, final @Nullable String name,
                   final @NotNull String jailedBy, final @NotNull Location lastLocation,
                   final @NotNull Duration duration, final @NotNull Set<String> groups,
-                  final @NotNull Audience audience) {
-    super(uuid, name, audience);
+                  final @NotNull Audience audience, final @NotNull P player) {
+    super(uuid, name, audience, player);
     Validate.notNull(jailedBy);
     Validate.notNull(lastLocation);
 

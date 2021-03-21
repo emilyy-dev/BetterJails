@@ -27,7 +27,7 @@ package com.github.fefo6644.betterjails.bukkit.platform;
 
 import com.github.fefo6644.betterjails.bukkit.BetterJailsBukkit;
 import com.github.fefo6644.betterjails.common.message.MessagingSubject;
-import com.github.fefo6644.betterjails.common.platform.abstraction.PlatformAdapter;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -53,18 +53,18 @@ public final class BukkitPlatformAdapter implements PlatformAdapter<CommandSende
   }
 
   @Override
-  public Player adaptPlayer(final @NotNull com.github.fefo6644.betterjails.common.platform.abstraction.Player player) {
+  public Player adaptPlayer(final @NotNull com.github.fefo6644.betterjails.common.plugin.abstraction.Player player) {
     return Bukkit.getPlayer(player.uuid());
   }
 
   @Override
-  public Location adaptLocation(final @NotNull com.github.fefo6644.betterjails.common.platform.abstraction.Location location) {
+  public Location adaptLocation(final @NotNull com.github.fefo6644.betterjails.common.plugin.abstraction.Location location) {
     return new Location(null, location.getX(), location.getY(), location.getZ(),
                         (float) location.getYaw(), (float) location.getPitch());
   }
 
   @Override
-  public World adaptWorld(final @NotNull com.github.fefo6644.betterjails.common.platform.abstraction.World world) {
+  public World adaptWorld(final @NotNull com.github.fefo6644.betterjails.common.plugin.abstraction.World world) {
     return Bukkit.getWorld(world.uuid());
   }
 
@@ -78,18 +78,18 @@ public final class BukkitPlatformAdapter implements PlatformAdapter<CommandSende
   }
 
   @Override
-  public com.github.fefo6644.betterjails.common.platform.abstraction.Player adaptPlayer(final @NotNull Player player) {
+  public com.github.fefo6644.betterjails.common.plugin.abstraction.Player adaptPlayer(final @NotNull Player player) {
     return new BukkitPlayer(player, this.plugin.getAudienceProvider().player(player.getUniqueId()));
   }
 
   @Override
-  public com.github.fefo6644.betterjails.common.platform.abstraction.Location adaptLocation(final @NotNull Location location) {
-    return new com.github.fefo6644.betterjails.common.platform.abstraction.Location(location.getX(), location.getY(), location.getZ(),
-                                                                                    location.getYaw(), location.getPitch());
+  public com.github.fefo6644.betterjails.common.plugin.abstraction.Location adaptLocation(final @NotNull Location location) {
+    return new com.github.fefo6644.betterjails.common.plugin.abstraction.Location(location.getX(), location.getY(), location.getZ(),
+                                                                                  location.getYaw(), location.getPitch());
   }
 
   @Override
-  public com.github.fefo6644.betterjails.common.platform.abstraction.World adaptWorld(final @NotNull World world) {
-    return com.github.fefo6644.betterjails.common.platform.abstraction.World.world(world.getName(), world.getUID());
+  public com.github.fefo6644.betterjails.common.plugin.abstraction.World adaptWorld(final @NotNull World world) {
+    return com.github.fefo6644.betterjails.common.plugin.abstraction.World.world(world.getName(), world.getUID());
   }
 }

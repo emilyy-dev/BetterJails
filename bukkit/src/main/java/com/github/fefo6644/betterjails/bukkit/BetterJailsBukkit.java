@@ -30,10 +30,10 @@ import com.github.fefo6644.betterjails.bukkit.platform.BukkitTaskScheduler;
 import com.github.fefo6644.betterjails.common.configuration.ConfigurationAdapter;
 import com.github.fefo6644.betterjails.common.configuration.adapter.YamlConfigurationAdapter;
 import com.github.fefo6644.betterjails.common.message.MessagingSubject;
-import com.github.fefo6644.betterjails.common.platform.BetterJailsBootstrap;
-import com.github.fefo6644.betterjails.common.platform.BetterJailsPlugin;
-import com.github.fefo6644.betterjails.common.platform.abstraction.PlatformAdapter;
-import com.github.fefo6644.betterjails.common.platform.abstraction.TaskScheduler;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsBootstrap;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.TaskScheduler;
 import com.google.common.collect.ImmutableList;
 import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
@@ -43,7 +43,6 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -59,9 +58,16 @@ public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBo
   private final TaskScheduler taskScheduler = new BukkitTaskScheduler(this.betterJailsPlugin);
 
   @Override
+  public void onLoad() {
+    this.betterJailsPlugin.load();
+  }
+
+  @Override
   public void onEnable() {
     this.audiences = BukkitAudiences.create(this);
-    this.console = MessagingSubject.of(this.audiences.console(), Bukkit.getConsoleSender().getName());
+    this.console = MessagingSubject.of(this.audiences.console(), Bukkit.getConsoleSender().getName(), true);
+
+    this.betterJailsPlugin.enable();
 
 //    final Metrics metrics = new Metrics(this, 9015);
 //    metrics.addCustomChart(new Metrics.SingleLineChart("total-jails", null));
@@ -73,44 +79,44 @@ public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBo
   }
 
   @Override
-  public @NotNull AudienceProvider getAudienceProvider() {
+  public AudienceProvider getAudienceProvider() {
     return this.audiences;
   }
 
   @Override
-  public @NotNull MessagingSubject getConsoleSubject() {
+  public MessagingSubject getConsoleSubject() {
     return this.console;
   }
 
   @Override
-  public @NotNull TaskScheduler getTaskScheduler() {
+  public TaskScheduler getTaskScheduler() {
     return this.taskScheduler;
   }
 
   @Override
-  public @NotNull ConfigurationAdapter getConfigurationAdapter() {
+  public ConfigurationAdapter getConfigurationAdapter() {
     return this.configurationAdapter;
   }
 
   @Override
-  public @NotNull Path getPluginFolder() {
+  public Path getPluginFolder() {
     return getDataFolder().toPath();
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public @NotNull PlatformAdapter<CommandSender, Player, Location, World> getPlatformAdapter() {
+  public PlatformAdapter<CommandSender, Player, Location, World> getPlatformAdapter() {
     return this.platformAdapter;
   }
 
   @Override
-  public @NotNull String getVersion() {
+  public String getVersion() {
     return getDescription().getVersion();
   }
 
   @Override
-  public @NotNull List<com.github.fefo6644.betterjails.common.platform.abstraction.Player> getOnlinePlayers() {
-    final ImmutableList.Builder<com.github.fefo6644.betterjails.common.platform.abstraction.Player> builder = ImmutableList.builder();
+  public List<com.github.fefo6644.betterjails.common.plugin.abstraction.Player> getOnlinePlayers() {
+    final ImmutableList.Builder<com.github.fefo6644.betterjails.common.plugin.abstraction.Player> builder = ImmutableList.builder();
     Bukkit.getOnlinePlayers().forEach(player -> builder.add(this.platformAdapter.adaptPlayer(player)));
     return builder.build();
   }

@@ -25,7 +25,7 @@
 
 package com.github.fefo6644.betterjails.common.configuration.adapter;
 
-import com.github.fefo6644.betterjails.common.platform.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
 import com.github.fefo6644.betterjails.common.configuration.ConfigurationAdapter;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;

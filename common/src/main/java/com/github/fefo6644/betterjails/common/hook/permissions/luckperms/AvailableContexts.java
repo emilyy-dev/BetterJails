@@ -26,9 +26,9 @@
 package com.github.fefo6644.betterjails.common.hook.permissions.luckperms;
 
 import com.github.fefo6644.betterjails.common.model.cell.CellManager;
-import com.github.fefo6644.betterjails.common.platform.BetterJailsPlugin;
-import com.github.fefo6644.betterjails.common.platform.abstraction.PlatformAdapter;
-import com.github.fefo6644.betterjails.common.platform.abstraction.Player;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.Player;
 import com.github.fefo6644.betterjails.common.model.prisoner.Prisoner;
 import net.luckperms.api.context.ContextCalculator;
 import net.luckperms.api.context.ContextConsumer;

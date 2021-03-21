@@ -25,9 +25,8 @@
 
 package com.github.fefo6644.betterjails.common.configuration;
 
-import com.github.fefo6644.betterjails.common.platform.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,7 +38,6 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
@@ -47,8 +45,6 @@ public abstract class ConfigurationAdapter {
 
   private static final String SEPARATOR = ".";
   private static final Pattern SEPARATOR_PATTERN = Pattern.compile(SEPARATOR, Pattern.LITERAL);
-  private static final Set<Setting<?>> SETTINGS =
-      ImmutableSet.of();
 
   protected final BetterJailsPlugin plugin;
   protected final Path configFile;
@@ -65,7 +61,7 @@ public abstract class ConfigurationAdapter {
   }
 
   public BetterJailsPlugin getPlugin() {
-    return plugin;
+    return this.plugin;
   }
 
   public void load() throws IOException {
@@ -74,7 +70,7 @@ public abstract class ConfigurationAdapter {
     }
 
     if (Files.notExists(this.configFile)) {
-      try (final InputStream inputStream = this.plugin.getClass().getClassLoader().getResourceAsStream(this.configFile.getFileName().toString())) {
+      try (final InputStream inputStream = this.plugin.getResource(this.configFile.getFileName().toString())) {
         if (inputStream != null) {
           Files.copy(inputStream, this.configFile);
         } else {
@@ -85,13 +81,13 @@ public abstract class ConfigurationAdapter {
 
     reload0();
     this.initialized = true;
-    SETTINGS.forEach(configKey -> this.deserialized.put(configKey.key(), configKey.get(this)));
+    Settings.SETTINGS.forEach(configKey -> this.deserialized.put(configKey.key(), configKey.get(this)));
   }
 
   public void reload() throws IOException {
     this.rootRaw.clear();
     reload0();
-    SETTINGS.forEach(configKey -> {
+    Settings.SETTINGS.forEach(configKey -> {
       if (configKey.reloadable()) {
         this.deserialized.put(configKey.key(), configKey.get(this));
       }

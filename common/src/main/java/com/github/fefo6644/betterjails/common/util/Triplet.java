@@ -25,15 +25,13 @@
 
 package com.github.fefo6644.betterjails.common.util;
 
-import org.jetbrains.annotations.Nullable;
-
 public class Triplet<T, U, V> {
 
-  public static <T, U, V> Triplet<T, U, V> of(@Nullable final T first, @Nullable final U second, @Nullable final V third) {
+  public static <T, U, V> Triplet<T, U, V> of(final T first, final U second, final V third) {
     return new Triplet<>(first, second, third);
   }
 
-  public static <T, U, V> Triplet<T, U, V> immutable(@Nullable final T first, @Nullable final U second, @Nullable final V third) {
+  public static <T, U, V> Triplet<T, U, V> immutable(final T first, final U second, final V third) {
     return new ImmutableTriplet<>(first, second, third);
   }
 
@@ -47,27 +45,27 @@ public class Triplet<T, U, V> {
     this.third = third;
   }
 
-  public @Nullable T getFirst() {
-    return first;
+  public T getFirst() {
+    return this.first;
   }
 
-  public @Nullable U getSecond() {
-    return second;
+  public U getSecond() {
+    return this.second;
   }
 
-  public @Nullable V getThird() {
-    return third;
+  public V getThird() {
+    return this.third;
   }
 
-  public void setFirst(@Nullable final T first) {
+  public void setFirst(final T first) {
     this.first = first;
   }
 
-  public void setSecond(@Nullable final U second) {
+  public void setSecond(final U second) {
     this.second = second;
   }
 
-  public void setThird(@Nullable final V third) {
+  public void setThird(final V third) {
     this.third = third;
   }
 
@@ -78,17 +76,17 @@ public class Triplet<T, U, V> {
     }
 
     @Override
-    public void setFirst(@Nullable final T first) {
+    public void setFirst(final T first) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setSecond(@Nullable final U second) {
+    public void setSecond(final U second) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setThird(@Nullable final V third) {
+    public void setThird(final V third) {
       throw new UnsupportedOperationException();
     }
   }

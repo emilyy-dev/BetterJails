@@ -23,24 +23,27 @@
 // SOFTWARE.
 //
 
-package com.github.fefo6644.betterjails.common.platform;
+package com.github.fefo6644.betterjails.common.plugin;
 
 import com.github.fefo6644.betterjails.common.configuration.ConfigurationAdapter;
+import com.github.fefo6644.betterjails.common.message.Message;
 import com.github.fefo6644.betterjails.common.message.MessagingSubject;
+import com.github.fefo6644.betterjails.common.message.TranslationManager;
 import com.github.fefo6644.betterjails.common.model.cell.CellManager;
 import com.github.fefo6644.betterjails.common.model.prisoner.PrisonerManager;
-import com.github.fefo6644.betterjails.common.platform.abstraction.PlatformAdapter;
-import com.github.fefo6644.betterjails.common.platform.abstraction.Player;
-import com.github.fefo6644.betterjails.common.platform.abstraction.TaskScheduler;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.Player;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.TaskScheduler;
 import com.github.fefo6644.betterjails.common.storage.StorageProvider;
 import com.google.common.collect.ImmutableList;
 import net.kyori.adventure.platform.AudienceProvider;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -48,6 +51,7 @@ public class BetterJailsPlugin {
 
   public static final Logger LOGGER = LoggerFactory.getLogger(BetterJailsPlugin.class);
 
+  private final TranslationManager translationManager = new TranslationManager(this);
   private final BetterJailsBootstrap bootstrapPlugin;
 
   private ConfigurationAdapter configurationAdapter;
@@ -62,66 +66,82 @@ public class BetterJailsPlugin {
   }
 
   public void load() {
+    try {
+      this.translationManager.loadTranslations();
+    } catch (final Exception exception) {
+      exception.printStackTrace();
+    }
+
+    try {
+      this.configurationAdapter = this.bootstrapPlugin.getConfigurationAdapter();
+      this.configurationAdapter.load();
+    } catch (final IOException exception) {
+      exception.printStackTrace();
+    }
+
     this.taskScheduler = this.bootstrapPlugin.getTaskScheduler();
   }
 
   public void enable() {
     this.configurationAdapter = this.bootstrapPlugin.getConfigurationAdapter();
+
+    getConsoleSubject().sendMessage(Message.STARTUP_BANNER);
+    getConsoleSubject().sendMessage(Message.PLUGIN_INFO.build(this));
   }
 
   public void disable() {
     getAudienceProvider().close();
   }
 
-  public @NotNull BetterJailsBootstrap getBootstrapPlugin() {
+  public BetterJailsBootstrap getBootstrapPlugin() {
     return this.bootstrapPlugin;
   }
 
-  public @NotNull AudienceProvider getAudienceProvider() {
+  public AudienceProvider getAudienceProvider() {
     return this.bootstrapPlugin.getAudienceProvider();
   }
 
-  public @NotNull Path getPluginFolder() {
+  public Path getPluginFolder() {
     return this.bootstrapPlugin.getPluginFolder();
   }
 
-  public @NotNull StorageProvider getStorageProvider() {
+  public StorageProvider getStorageProvider() {
     return this.storageProvider;
   }
 
-  public @NotNull CellManager getCellManager() {
+  public CellManager getCellManager() {
     return this.cellManager;
   }
 
-  public @NotNull PrisonerManager getPrisonerManager() {
+  public PrisonerManager getPrisonerManager() {
     return this.prisonerManager;
   }
 
-  public @NotNull ConfigurationAdapter getConfigurationAdapter() {
+  public ConfigurationAdapter getConfigurationAdapter() {
     return this.configurationAdapter;
   }
 
-  public @NotNull TaskScheduler getTaskScheduler() {
+  public TaskScheduler getTaskScheduler() {
     return this.taskScheduler;
   }
 
-  public <S, P, L, W> @NotNull PlatformAdapter<S, P, L, W> getPlatformAdapter() {
+  public <S, P, L, W> PlatformAdapter<S, P, L, W> getPlatformAdapter() {
     return this.bootstrapPlugin.getPlatformAdapter();
   }
 
-  public @NotNull MessagingSubject getConsoleSubject() {
+  public MessagingSubject getConsoleSubject() {
     return this.bootstrapPlugin.getConsoleSubject();
   }
 
-  public @NotNull Logger getLogger() {
+  public Logger getLogger() {
     return LOGGER;
   }
 
-  public @NotNull String getVersion() {
+  public String getVersion() {
     return this.bootstrapPlugin.getVersion();
   }
 
-  public @NotNull List<String> getAuthors() {
+  public List<String> getAuthors() {
     return ImmutableList.of("Fefo6644");
   }
 
@@ -129,7 +149,11 @@ public class BetterJailsPlugin {
     return this.getClass().getClassLoader().getResourceAsStream(name);
   }
 
-  public @NotNull List<Player> getOnlinePlayers() {
+  public @Nullable URL getResourceURL(final String name) {
+    return this.getClass().getClassLoader().getResource(name);
+  }
+
+  public List<Player> getOnlinePlayers() {
     return this.bootstrapPlugin.getOnlinePlayers();
   }
 }

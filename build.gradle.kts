@@ -27,8 +27,18 @@ subprojects {
     group = "com.github.fefo6644.betterjails"
     version = "2.0-SNAPSHOT"
 
-    tasks.compileJava {
-        options.encoding = "UTF-8"
+    tasks {
+        compileJava {
+            options.encoding = "UTF-8"
+        }
+
+        processResources {
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
+            from(sourceSets.main.get().resources.srcDirs) {
+                expand("pluginVersion" to version)
+            }
+        }
     }
 
     repositories {

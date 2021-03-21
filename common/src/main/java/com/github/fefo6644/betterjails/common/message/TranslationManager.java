@@ -25,14 +25,80 @@
 
 package com.github.fefo6644.betterjails.common.message;
 
-import com.github.fefo6644.betterjails.common.platform.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.translation.GlobalTranslator;
+import net.kyori.adventure.translation.TranslationRegistry;
+import net.kyori.adventure.translation.Translator;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Locale;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.stream.Stream;
 
 public class TranslationManager {
 
+  private static final Locale DEFAULT_LOCALE = Locale.ENGLISH;
   private static final Key TRANSLATIONS_KEY = Key.key("betterjails", "translations");
 
-  public static void init(final BetterJailsPlugin plugin) {
+  private final BetterJailsPlugin plugin;
+  private final TranslationRegistry registry = TranslationRegistry.create(TRANSLATIONS_KEY);
 
+  public TranslationManager(final BetterJailsPlugin plugin) {
+    this.plugin = plugin;
+    this.registry.defaultLocale(DEFAULT_LOCALE);
+    GlobalTranslator.get().addSource(this.registry);
+  }
+
+  public void loadTranslations() throws Exception {
+    final Path localeFolder = this.plugin.getPluginFolder().resolve("locale");
+    Files.createDirectories(localeFolder);
+
+    extractTranslationFiles(localeFolder);
+    registerTranslationFiles(localeFolder);
+  }
+
+  private void extractTranslationFiles(final Path localeFolder) throws IOException, URISyntaxException {
+    // jar:file:<absolute path>!/locale
+    final URL url = this.plugin.getResourceURL("locale");
+    // file:<absolute path>!/locale
+    String jarPath = url.getPath();
+    // file:<absolute path>
+    jarPath = jarPath.substring(0, jarPath.length() - "!/locale".length());
+
+    final File thisFile = new File(new URL(jarPath).toURI());
+    final JarFile jarFile = new JarFile(thisFile);
+    jarFile
+        .stream().parallel()
+        .map(JarEntry::getName)
+        .filter(name -> name.startsWith("locale/"))
+        .filter(name -> name.endsWith(".properties"))
+        .filter(name -> Files.notExists(localeFolder.resolve(name.substring("locale/".length()))))
+        .forEach(name -> {
+          try (final InputStream stream = this.plugin.getResource(name)) {
+            Files.copy(stream, localeFolder.resolve(name.substring("locale/".length())));
+          } catch (final IOException exception) {
+            exception.printStackTrace();
+          }
+        });
+  }
+
+  private void registerTranslationFiles(final Path localeFolder) throws IOException {
+    try (final Stream<Path> localeFolderStream = Files.list(localeFolder)) {
+      localeFolderStream
+          .forEach(path -> {
+            final String fileName = path.getFileName().toString();
+            final String localeString = fileName.substring(0, fileName.length() - ".properties".length());
+            final Locale locale = Translator.parseLocale(localeString);
+            this.registry.registerAll(locale != null ? locale : DEFAULT_LOCALE, path, false);
+          });
+    }
   }
 }

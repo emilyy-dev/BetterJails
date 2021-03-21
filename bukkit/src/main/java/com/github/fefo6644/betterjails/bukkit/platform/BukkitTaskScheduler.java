@@ -26,8 +26,8 @@
 package com.github.fefo6644.betterjails.bukkit.platform;
 
 import com.github.fefo6644.betterjails.bukkit.BetterJailsBukkit;
-import com.github.fefo6644.betterjails.common.platform.BetterJailsPlugin;
-import com.github.fefo6644.betterjails.common.platform.abstraction.TaskScheduler;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.plugin.abstraction.TaskScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitScheduler;
 

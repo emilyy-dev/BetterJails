@@ -25,7 +25,7 @@
 
 package com.github.fefo6644.betterjails.bukkit.hook.papi;
 
-import com.github.fefo6644.betterjails.common.platform.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
 import com.google.common.base.Joiner;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;

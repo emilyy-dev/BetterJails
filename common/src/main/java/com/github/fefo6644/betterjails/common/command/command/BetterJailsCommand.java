@@ -28,7 +28,8 @@ package com.github.fefo6644.betterjails.common.command.command;
 import com.github.fefo6644.betterjails.common.command.segment.CommandSegment;
 import com.github.fefo6644.betterjails.common.configuration.ConfigurationAdapter;
 import com.github.fefo6644.betterjails.common.message.MessagingSubject;
-import com.github.fefo6644.betterjails.common.platform.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -44,8 +45,19 @@ public class BetterJailsCommand implements CommandSegment.Literal<MessagingSubje
   {
     final LiteralArgumentBuilder<MessagingSubject> builder = literal("betterjails");
     builder
-        .then(literal("reloadconfig").executes(this::reloadConfig))
-        .then(literal("reloaddata").executes(this::reloadData));
+        .requires(subject -> subject.hasPermission("betterjails.betterjails"))
+        .then(literal("reloadconfig")
+                  .requires(subject -> subject.hasPermission("betterjails.reloadconfig"))
+                  .executes(this::reloadConfig))
+        .then(literal("reloaddata")
+                  .requires(subject -> subject.hasPermission("betterjails.reloaddata"))
+                  .executes(this::reloadData))
+        .then(literal("save")
+                  .requires(subject -> subject.hasPermission("betterjails.save"))
+                  .executes(this::save))
+        .then(literal("playerinfo")
+                  .requires(subject -> subject.hasPermission("betterjails.playerinfo"))
+                  .then(argument("player", StringArgumentType.word()).executes(this::playerInfo)));
 
     this.commandNode = builder.build();
   }
@@ -73,6 +85,16 @@ public class BetterJailsCommand implements CommandSegment.Literal<MessagingSubje
   }
 
   private int reloadData(final CommandContext<MessagingSubject> context) {
+
+    return 1;
+  }
+
+  private int save(final CommandContext<MessagingSubject> context) {
+
+    return 1;
+  }
+
+  private int playerInfo(final CommandContext<MessagingSubject> context) {
 
     return 1;
   }
