@@ -87,20 +87,17 @@ public interface Message {
       text()
           .color(GRAY)
           .append(text("================================================="),
-                  newline(), newline(),
-                  text().append(space(), space(), text('_', GOLD)),
                   newline(),
-                  text()
-                      .append(space(),
-                              text("|_)   _   _|_  _|_   _   ._", GOLD),
-                              text("    |   _.  o  |   _", YELLOW)),
                   newline(),
-                  text()
-                      .append(space(),
-                              text()
-                                  .append(text("|_)  (/_   |_   |_  (/_  | ", GOLD),
-                                          text("  \\_|  (_|  |  |  _>", YELLOW))),
-                  newline(), newline(),
+                  text("  _", GOLD),
+                  newline(),
+                  text(" |_)   _   _|_  _|_   _   ._", GOLD),
+                  text("    |   _.  o  |   _", YELLOW),
+                  newline(),
+                  text(" |_)  (/_   |_   |_  (/_  | ", GOLD),
+                  text("  \\_|  (_|  |  |  _>", YELLOW),
+                  newline(),
+                  newline(),
                   text("================================================="))
           .build();
 
@@ -161,7 +158,7 @@ public interface Message {
     ComponentLike build();
 
     default void send(final MessagingSubject subject) {
-      subject.sendMessage(build());
+      subject.sendMessage(build().asComponent());
     }
   }
 
@@ -171,7 +168,7 @@ public interface Message {
     ComponentLike build(T t);
 
     default void send(final MessagingSubject subject, final T t) {
-      subject.sendMessage(build(t));
+      subject.sendMessage(build(t).asComponent());
     }
   }
 
@@ -181,7 +178,7 @@ public interface Message {
     ComponentLike build(T t, U u);
 
     default void send(final MessagingSubject subject, final T t, final U u) {
-      subject.sendMessage(build(t, u));
+      subject.sendMessage(build(t, u).asComponent());
     }
   }
 
@@ -191,7 +188,7 @@ public interface Message {
     ComponentLike build(T t, U u, V v);
 
     default void send(final MessagingSubject subject, final T t, final U u, final V v) {
-      subject.sendMessage(build(t, u, v));
+      subject.sendMessage(build(t, u, v).asComponent());
     }
   }
 
@@ -201,7 +198,7 @@ public interface Message {
     ComponentLike build(T t, U u, V v, W w);
 
     default void send(final MessagingSubject subject, final T t, final U u, final V v, final W w) {
-      subject.sendMessage(build(t, u, v, w));
+      subject.sendMessage(build(t, u, v, w).asComponent());
     }
   }
 
@@ -211,7 +208,7 @@ public interface Message {
     ComponentLike build(T t, U u, V v, W w, X x);
 
     default void send(final MessagingSubject subject, final T t, final U u, final V v, final W w, final X x) {
-      subject.sendMessage(build(t, u, v, w, x));
+      subject.sendMessage(build(t, u, v, w, x).asComponent());
     }
   }
 }

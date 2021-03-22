@@ -86,7 +86,7 @@ public class BetterJailsPlugin {
     this.configurationAdapter = this.bootstrapPlugin.getConfigurationAdapter();
 
     getConsoleSubject().sendMessage(Message.STARTUP_BANNER);
-    getConsoleSubject().sendMessage(Message.PLUGIN_INFO.build(this));
+    getConsoleSubject().sendMessage(Message.PLUGIN_INFO.build(this).asComponent());
   }
 
   public void disable() {
