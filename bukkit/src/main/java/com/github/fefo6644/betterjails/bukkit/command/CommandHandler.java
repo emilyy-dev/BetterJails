@@ -145,6 +145,7 @@ public class CommandHandler implements TabExecutor, Listener {
       return;
     }
 
+    buffer = buffer.substring(buffer.indexOf(':') + 1); // get rid of fallback prefix if any
     event.setHandled(true);
     event.setCompletions(this.suggestionsRecorder.apply(this.platformAdapter.adaptSubject(event.getSender()), buffer));
   }
