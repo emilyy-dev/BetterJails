@@ -25,9 +25,10 @@
 
 package com.github.fefo6644.betterjails.common.plugin;
 
+import com.github.fefo6644.betterjails.common.command.CommandBridge;
 import com.github.fefo6644.betterjails.common.configuration.ConfigurationAdapter;
 import com.github.fefo6644.betterjails.common.message.Message;
-import com.github.fefo6644.betterjails.common.message.MessagingSubject;
+import com.github.fefo6644.betterjails.common.message.Subject;
 import com.github.fefo6644.betterjails.common.message.TranslationManager;
 import com.github.fefo6644.betterjails.common.model.cell.CellManager;
 import com.github.fefo6644.betterjails.common.model.prisoner.PrisonerManager;
@@ -51,6 +52,7 @@ public class BetterJailsPlugin {
 
   public static final Logger LOGGER = LoggerFactory.getLogger(BetterJailsPlugin.class);
 
+  private final CommandBridge commandBridge = new CommandBridge(this);
   private final TranslationManager translationManager = new TranslationManager(this);
   private final BetterJailsBootstrap bootstrapPlugin;
 
@@ -86,11 +88,11 @@ public class BetterJailsPlugin {
     this.configurationAdapter = this.bootstrapPlugin.getConfigurationAdapter();
 
     getConsoleSubject().sendMessage(Message.STARTUP_BANNER);
-    getConsoleSubject().sendMessage(Message.PLUGIN_INFO.build(this).asComponent());
+    Message.PLUGIN_INFO.send(getConsoleSubject(), this);
   }
 
   public void disable() {
-    getAudienceProvider().close();
+
   }
 
   public BetterJailsBootstrap getBootstrapPlugin() {
@@ -99,6 +101,10 @@ public class BetterJailsPlugin {
 
   public AudienceProvider getAudienceProvider() {
     return this.bootstrapPlugin.getAudienceProvider();
+  }
+
+  public CommandBridge getCommandBridge() {
+    return this.commandBridge;
   }
 
   public Path getPluginFolder() {
@@ -129,7 +135,7 @@ public class BetterJailsPlugin {
     return this.bootstrapPlugin.getPlatformAdapter();
   }
 
-  public MessagingSubject getConsoleSubject() {
+  public Subject getConsoleSubject() {
     return this.bootstrapPlugin.getConsoleSubject();
   }
 
@@ -139,6 +145,10 @@ public class BetterJailsPlugin {
 
   public String getVersion() {
     return this.bootstrapPlugin.getVersion();
+  }
+
+  public <P> List<Player<P>> getOnlinePlayers() {
+    return this.bootstrapPlugin.getOnlinePlayers();
   }
 
   public List<String> getAuthors() {
@@ -151,9 +161,5 @@ public class BetterJailsPlugin {
 
   public @Nullable URL getResourceURL(final String name) {
     return this.getClass().getClassLoader().getResource(name);
-  }
-
-  public List<Player> getOnlinePlayers() {
-    return this.bootstrapPlugin.getOnlinePlayers();
   }
 }

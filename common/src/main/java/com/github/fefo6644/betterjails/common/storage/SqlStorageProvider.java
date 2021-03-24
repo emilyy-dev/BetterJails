@@ -28,31 +28,15 @@ package com.github.fefo6644.betterjails.common.storage;
 import com.github.fefo6644.betterjails.common.model.cell.Cell;
 import com.github.fefo6644.betterjails.common.model.prisoner.Prisoner;
 import com.google.common.collect.BiMap;
-import org.jetbrains.annotations.NotNull;
-import org.yaml.snakeyaml.LoaderOptions;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.UUID;
 
-public class YamlStorageProvider implements StorageProvider {
-
-  private static final Yaml YAML;
-
-  static {
-    final LoaderOptions loaderOptions = new LoaderOptions();
-    loaderOptions.setAllowRecursiveKeys(false);
-    loaderOptions.setAllowDuplicateKeys(false);
-    YAML = new Yaml(loaderOptions);
-  }
-
-  private final Path folder;
-
-  public YamlStorageProvider(final @NotNull Path folder) {
-    this.folder = folder;
-  }
+/**
+ * Generic storage provider for any SQL medium (H2, SQLite, MariaDB, PostgreSQL, MySQL).
+ */
+public class SqlStorageProvider implements StorageProvider {
 
   @Override
   public Collection<Cell> loadAllCells() throws IOException {

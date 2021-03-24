@@ -98,10 +98,9 @@ public abstract class ConfigurationAdapter {
    * Reloads the config file from storage into {@link #rootRaw}, without attempting to do any kind
    * of object deserialization other than {@code Map}s and {@code List}s.
    *
-   * @throws IOException if an {@code I/O} error occurs
+   * @throws IOException if an {@code IO} error occurs
    */
-  // don't expose
-  protected abstract void reload0() throws IOException;
+  protected abstract void reload0() throws IOException; // don't expose
 
   public @Nullable Boolean getBoolean(final @NotNull String key) {
     Validate.notNull(key);

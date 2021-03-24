@@ -95,7 +95,7 @@ public class TranslationManager {
       localeFolderStream
           .forEach(path -> {
             final String fileName = path.getFileName().toString();
-            final String localeString = fileName.substring(0, fileName.length() - ".properties".length());
+            final String localeString = fileName.substring("messages_".length(), fileName.length() - ".properties".length());
             final Locale locale = Translator.parseLocale(localeString);
             this.registry.registerAll(locale != null ? locale : DEFAULT_LOCALE, path, false);
           });

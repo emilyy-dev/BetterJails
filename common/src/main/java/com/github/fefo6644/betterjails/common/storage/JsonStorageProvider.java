@@ -25,19 +25,75 @@
 
 package com.github.fefo6644.betterjails.common.storage;
 
+import com.github.fefo6644.betterjails.common.model.cell.Cell;
+import com.github.fefo6644.betterjails.common.model.prisoner.Prisoner;
+import com.google.common.collect.BiMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.UUID;
 
 public class JsonStorageProvider implements StorageProvider {
 
   private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-  private Path file;
+  private final Path folder;
 
-  public JsonStorageProvider(final @NotNull Path file) {
-    this.file = file;
+  public JsonStorageProvider(final @NotNull Path folder) {
+    this.folder = folder;
+  }
+
+  @Override
+  public Collection<Cell> loadAllCells() throws IOException {
+    return null;
+  }
+
+  @Override
+  public void loadCell(final String name) throws IOException {
+
+  }
+
+  @Override
+  public void saveCell(final Cell cell) throws IOException {
+
+  }
+
+  @Override
+  public <P> Collection<Prisoner<P>> loadAllPrisoners() throws IOException {
+    return null;
+  }
+
+  @Override
+  public <P> Prisoner<P> loadPrisoner(final UUID uuid) throws IOException {
+    return null;
+  }
+
+  @Override
+  public <P> void savePrisoner(final Prisoner<P> prisoner) throws IOException {
+
+  }
+
+  @Override
+  public BiMap<UUID, String> loadAllPlayers() throws IOException {
+    return null;
+  }
+
+  @Override
+  public UUID lookupUuid(final String name) throws IOException {
+    return null;
+  }
+
+  @Override
+  public String lookupName(final UUID uuid) throws IOException {
+    return null;
+  }
+
+  @Override
+  public void savePlayer(final UUID uuid, final String name) throws IOException {
+
   }
 }

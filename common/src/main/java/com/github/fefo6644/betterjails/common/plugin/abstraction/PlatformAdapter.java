@@ -25,18 +25,18 @@
 
 package com.github.fefo6644.betterjails.common.plugin.abstraction;
 
-import com.github.fefo6644.betterjails.common.message.MessagingSubject;
+import com.github.fefo6644.betterjails.common.message.Subject;
 import org.jetbrains.annotations.NotNull;
 
 public interface PlatformAdapter<S, P, L, W> {
 
-  S adaptSubject(@NotNull MessagingSubject subject);
-  P adaptPlayer(@NotNull Player player);
+  S adaptSubject(@NotNull Subject subject);
+  P adaptPlayer(@NotNull Player<P> player);
   L adaptLocation(@NotNull Location location);
   W adaptWorld(@NotNull World world);
 
-  MessagingSubject adaptSubject(@NotNull S subject);
-  Player adaptPlayer(@NotNull P player);
+  Subject adaptSubject(@NotNull S subject);
+  Player<P> adaptPlayer(@NotNull P player);
   Location adaptLocation(@NotNull L location);
   World adaptWorld(@NotNull W world);
 }

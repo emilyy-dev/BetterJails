@@ -23,27 +23,27 @@
 // SOFTWARE.
 //
 
-package com.github.fefo6644.betterjails.common.plugin;
+package com.github.fefo6644.betterjails.common.plugin.abstraction;
 
-import com.github.fefo6644.betterjails.common.configuration.ConfigurationAdapter;
-import com.github.fefo6644.betterjails.common.message.Subject;
-import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
-import com.github.fefo6644.betterjails.common.plugin.abstraction.Player;
-import com.github.fefo6644.betterjails.common.plugin.abstraction.TaskScheduler;
-import net.kyori.adventure.platform.AudienceProvider;
+import net.kyori.adventure.text.Component;
 
-import java.nio.file.Path;
-import java.util.List;
+import java.util.UUID;
 
-public interface BetterJailsBootstrap {
+public final class DummyPlayer extends Player<Object> {
 
-  AudienceProvider getAudienceProvider();
-  Subject getConsoleSubject();
-  TaskScheduler getTaskScheduler();
-  <S, P, L, W> PlatformAdapter<S, P, L, W> getPlatformAdapter();
-  Path getPluginFolder();
-  ConfigurationAdapter getConfigurationAdapter();
-  String getVersion();
-  <P> List<Player<P>> getOnlinePlayers();
-  BetterJailsPlugin getPlugin();
+  public static final DummyPlayer DUMMY_PLAYER = new DummyPlayer();
+
+  private DummyPlayer() {
+    super(new UUID(0L, 0L), "dummy", null, new Object());
+  }
+
+  @Override
+  public void teleport(final Location location, final World world) {
+    // no-op
+  }
+
+  @Override
+  public void sendMessage(final Component component) {
+    // no-op
+  }
 }

@@ -67,42 +67,42 @@
     }
   },
 
-  "commands": {
-    "jail": {
-      "permission": "betterjails.jail",
-      "description": "Sends a player to the provided jail/cell."
-    },
-    "unjail": {
-      "aliases": [
-        "release"
-      ],
-      "permission": "betterjails.unjail",
-      "description": "Teleports a jailed player back to where they were before being jailed."
-    },
-    "setjail": {
-      "aliases": [
-        "addcell",
-        "addjail",
-        "setcell"
-      ],
-      "permission": "betterjails.setjail",
-      "description": "Adds a new"
-    },
-    "listjails": {
-      "aliases": [
-        "cells",
-        "jails",
-        "listcells"
-      ],
-      "permission": "betterjails.listjails;betterjails.jails",
-      "description": "Prints a list of available jails."
-    },
-    "betterjails": {
-      "aliases": [
-        "bj"
-      ],
-      "permission": "betterjails.betterjails;betterjails.playerinfo;betterjails.reloadconfig;betterjails.reloaddata;betterjails.save",
-      "description": "Prints the version of the plugin."
-    }
-  }
+#  "commands": {
+#    "jail": {
+#      "permission": "betterjails.jail",
+#      "description": "Sends a player to the provided jail/cell."
+#    },
+#    "unjail": {
+#      "aliases": [
+#        "release"
+#      ],
+#      "permission": "betterjails.unjail",
+#      "description": "Teleports a jailed player back to where they were before being jailed."
+#    },
+#    "setjail": {
+#      "aliases": [
+#        "addcell",
+#        "addjail",
+#        "setcell"
+#      ],
+#      "permission": "betterjails.setjail",
+#      "description": "Adds a new"
+#    },
+#    "listjails": {
+#      "aliases": [
+#        "cells",
+#        "jails",
+#        "listcells"
+#      ],
+#      "permission": "betterjails.listjails;betterjails.jails",
+#      "description": "Prints a list of available jails."
+#    },
+#    "betterjails": {
+#      "aliases": [
+#        "bj"
+#      ],
+#      "permission": "betterjails.betterjails;betterjails.playerinfo;betterjails.reloadconfig;betterjails.reloaddata;betterjails.save",
+#      "description": "Prints the version of the plugin."
+#    }
+#  }
 }

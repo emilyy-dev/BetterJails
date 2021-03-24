@@ -74,7 +74,7 @@ public class LuckPermsHook extends PermissionsHook {
       }
     });
 
-    return this.userManager.loadUser(player.uuid(), player.getName())
+    return this.userManager.loadUser(player.uuid(), player.name())
                            .thenApply(user -> user.getInheritedGroups(user.getQueryOptions().toBuilder()
                                                                      .flag(Flag.RESOLVE_INHERITANCE,
                                                                            false)

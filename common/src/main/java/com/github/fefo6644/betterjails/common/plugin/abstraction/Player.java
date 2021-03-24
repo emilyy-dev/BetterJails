@@ -25,7 +25,7 @@
 
 package com.github.fefo6644.betterjails.common.plugin.abstraction;
 
-import com.github.fefo6644.betterjails.common.message.MessagingSubject;
+import com.github.fefo6644.betterjails.common.message.Subject;
 import com.github.fefo6644.betterjails.common.model.prisoner.Prisoner;
 import net.kyori.adventure.audience.Audience;
 import org.apache.commons.lang.Validate;
@@ -35,7 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.ref.WeakReference;
 import java.util.UUID;
 
-public abstract class Player<P> extends MessagingSubject {
+public abstract class Player<P> extends Subject {
 
   private final UUID uuid;
   private final WeakReference<P> playerReference;
@@ -54,10 +54,6 @@ public abstract class Player<P> extends MessagingSubject {
     return this.uuid;
   }
 
-  public @Nullable String getName() {
-    return this.name;
-  }
-
   // Implementation detail: no-op if the player reference is null
   public abstract void teleport(Location location, World world);
 
@@ -65,8 +61,18 @@ public abstract class Player<P> extends MessagingSubject {
     return false;
   }
 
+  @Override
+  public boolean isPlayerSubject() {
+    return true;
+  }
+
+  @Override
+  public Player<P> asPlayerSubject() {
+    return this;
+  }
+
   public Prisoner<P> asPrisoner() {
-    return isJailed() ? (Prisoner<P>) this : null;
+    return null;
   }
 
   protected final @Nullable P getPlayerHandle() {

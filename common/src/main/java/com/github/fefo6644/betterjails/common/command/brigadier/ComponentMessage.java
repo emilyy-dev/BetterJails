@@ -23,26 +23,40 @@
 // SOFTWARE.
 //
 
-package com.github.fefo6644.betterjails.common.command;
+package com.github.fefo6644.betterjails.common.command.brigadier;
 
-import com.github.fefo6644.betterjails.common.command.segment.CommandSegment;
-import com.github.fefo6644.betterjails.common.message.MessagingSubject;
-import com.google.common.collect.ImmutableList;
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.tree.RootCommandNode;
+import com.mojang.brigadier.Message;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 
-public class CommandHandler implements CommandSegment.Root<MessagingSubject> {
+public class ComponentMessage implements Message {
 
-  private final CommandDispatcher<MessagingSubject> dispatcher = new CommandDispatcher<>();
-  private final RootCommandNode<MessagingSubject> rootCommandNode = this.dispatcher.getRoot();
+  public static ComponentMessage of(final @NotNull ComponentLike like) {
+    return new ComponentMessage(like);
+  }
 
-  {
-    ImmutableList.of();
+  private final Component component;
+
+  private ComponentMessage(final ComponentLike like) {
+    this.component = like.asComponent();
   }
 
   @Override
-  public @NotNull RootCommandNode<MessagingSubject> getCommandNode() {
-    return this.rootCommandNode;
+  public String getString() {
+    return PlainComponentSerializer.plain().serialize(this.component);
+  }
+
+  public @NotNull Component component() {
+    return this.component;
+  }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("ComponentMessage{");
+    sb.append("component=").append(this.component);
+    sb.append('}');
+    return sb.toString();
   }
 }

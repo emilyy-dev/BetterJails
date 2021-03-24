@@ -26,8 +26,8 @@
 package com.github.fefo6644.betterjails.common.command.command;
 
 import com.github.fefo6644.betterjails.common.command.segment.CommandSegment;
-import com.github.fefo6644.betterjails.common.configuration.ConfigurationAdapter;
-import com.github.fefo6644.betterjails.common.message.MessagingSubject;
+import com.github.fefo6644.betterjails.common.message.Message;
+import com.github.fefo6644.betterjails.common.message.Subject;
 import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -37,15 +37,16 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-public class BetterJailsCommand implements CommandSegment.Literal<MessagingSubject> {
+public class BetterJailsCommand implements CommandSegment.Literal<Subject> {
 
-  private final ConfigurationAdapter configurationAdapter;
-  private final LiteralCommandNode<MessagingSubject> commandNode;
+  private final BetterJailsPlugin plugin;
+  private final LiteralCommandNode<Subject> commandNode;
 
   {
-    final LiteralArgumentBuilder<MessagingSubject> builder = literal("betterjails");
+    final LiteralArgumentBuilder<Subject> builder = literal("betterjails");
     builder
         .requires(subject -> subject.hasPermission("betterjails.betterjails"))
+        .executes(this::pluginInfo)
         .then(literal("reloadconfig")
                   .requires(subject -> subject.hasPermission("betterjails.reloadconfig"))
                   .executes(this::reloadConfig))
@@ -63,38 +64,70 @@ public class BetterJailsCommand implements CommandSegment.Literal<MessagingSubje
   }
 
   public BetterJailsCommand(final BetterJailsPlugin plugin) {
-    this.configurationAdapter = plugin.getConfigurationAdapter();
+    this.plugin = plugin;
   }
 
   @Override
-  public @NotNull LiteralCommandNode<MessagingSubject> getCommandNode() {
+  public @NotNull LiteralCommandNode<Subject> getCommandNode() {
     return this.commandNode;
   }
 
-  private int reloadConfig(final CommandContext<MessagingSubject> context) {
-    final MessagingSubject subject = context.getSource();
+  private int pluginInfo(final CommandContext<Subject> context) {
+    Message.PLUGIN_INFO.send(context.getSource(), this.plugin);
+    return 1;
+  }
+
+  private int reloadConfig(final CommandContext<Subject> context) {
+    final Subject subject = context.getSource();
 
     try {
-      this.configurationAdapter.reload();
+      this.plugin.getConfigurationAdapter().reload();
+      Message.CONFIG_RELOADED.send(subject);
+      Message.CONFIG_RELOAD_NOTICE.send(subject);
     } catch (final IOException exception) {
-      // messages blah blah
       exception.printStackTrace();
+      Message.GENERIC_ERROR.send(subject, "reloadconfig");
+      Message.CHECK_CONSOLE.send(subject);
     }
 
     return 1;
   }
 
-  private int reloadData(final CommandContext<MessagingSubject> context) {
+  private int reloadData(final CommandContext<Subject> context) {
+    final Subject subject = context.getSource();
+
+    try {
+      // get managers & reload
+      if (false) {
+        throw new IOException();
+      }
+    } catch (final IOException exception) {
+      exception.printStackTrace();
+      Message.GENERIC_ERROR.send(subject, "reloaddata");
+      Message.CHECK_CONSOLE.send(subject);
+    }
 
     return 1;
   }
 
-  private int save(final CommandContext<MessagingSubject> context) {
+  private int save(final CommandContext<Subject> context) {
+    final Subject subject = context.getSource();
+
+    try {
+      // get managers & save
+      if (false) {
+        throw new IOException();
+      }
+    } catch (final IOException exception) {
+      exception.printStackTrace();
+      Message.GENERIC_ERROR.send(subject, "save");
+      Message.CHECK_CONSOLE.send(subject);
+    }
 
     return 1;
   }
 
-  private int playerInfo(final CommandContext<MessagingSubject> context) {
+  private int playerInfo(final CommandContext<Subject> context) {
 
     return 1;
   }

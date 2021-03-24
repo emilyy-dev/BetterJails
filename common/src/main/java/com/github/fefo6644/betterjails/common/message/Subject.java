@@ -25,6 +25,7 @@
 
 package com.github.fefo6644.betterjails.common.message;
 
+import com.github.fefo6644.betterjails.common.plugin.abstraction.DummyPlayer;
 import com.github.fefo6644.betterjails.common.plugin.abstraction.Player;
 import com.google.common.collect.ImmutableList;
 import net.kyori.adventure.audience.Audience;
@@ -35,29 +36,28 @@ import net.kyori.adventure.text.format.Style;
 import org.apache.commons.lang.Validate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.function.Consumer;
 
-public class MessagingSubject {
+public class Subject {
 
-  public static MessagingSubject of(final @NonNull Audience audience, final @NotNull String name, final boolean isConsoleSubject) {
+  public static Subject of(final @NonNull Audience audience, final @NotNull String name, final boolean isConsoleSubject) {
     Validate.notNull(audience, "audience");
     Validate.notNull(name, "name");
-    return new MessagingSubject(audience, name, isConsoleSubject);
+    return new Subject(audience, name, isConsoleSubject);
   }
 
   protected final String name;
   private final Audience audience;
   private final boolean isConsoleSubject;
 
-  protected MessagingSubject(final Audience audience, final String name) {
+  protected Subject(final Audience audience, final String name) {
     this(audience, name, false);
   }
 
-  private MessagingSubject(final Audience audience, final String name, final boolean isConsoleSubject) {
+  private Subject(final Audience audience, final String name, final boolean isConsoleSubject) {
     this.audience = audience;
     this.name = name;
     this.isConsoleSubject = isConsoleSubject;
@@ -91,7 +91,7 @@ public class MessagingSubject {
             temp = otherTemp;
           }
 
-          MessagingSubject.this.audience.sendMessage(temp.build());
+          Subject.this.audience.sendMessage(temp.build());
 
           this.builderStack.clear();
           for (final Style style : this.styleStack) {
@@ -101,6 +101,23 @@ public class MessagingSubject {
           return;
         }
 
+        // If it does not contain a Component.newline() just append it to the last builder in the stack
+        // There is nothing to split
+        if (!component.contains(Component.newline())) {
+          ComponentBuilder<?, ?> temp = this.builderStack.peek();
+          if (temp != null) {
+            temp.append(component);
+          } else {
+            temp = Component.text();
+            // apply style from non-buildable component to parent component
+            // so other children also inherit from them
+            temp.style(component.style());
+            temp.append(component);
+            this.builderStack.push(temp);
+          }
+
+          return;
+        }
 
         final ComponentBuilder<?, ?> temp;
         if (component instanceof BuildableComponent<?, ?>) {
@@ -133,14 +150,10 @@ public class MessagingSubject {
   }
 
   public boolean isPlayerSubject() {
-    return this instanceof Player;
+    return false;
   }
 
-  public @Nullable Player<?> asPlayerSubject() {
-    try {
-      return (Player<?>) this;
-    } catch (final ClassCastException exception) {
-      return null;
-    }
+  public Player<?> asPlayerSubject() {
+    return DummyPlayer.DUMMY_PLAYER;
   }
 }

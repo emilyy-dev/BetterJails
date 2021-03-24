@@ -25,13 +25,17 @@
 
 package com.github.fefo6644.betterjails.common.message;
 
+import com.github.fefo6644.betterjails.common.command.brigadier.ComponentMessage;
 import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.TextComponent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.newline;
 import static net.kyori.adventure.text.Component.space;
 import static net.kyori.adventure.text.Component.text;
@@ -49,6 +53,8 @@ import static net.kyori.adventure.text.format.TextDecoration.ITALIC;
 import static net.kyori.adventure.text.format.TextDecoration.UNDERLINED;
 
 public interface Message {
+
+  Component FULL_STOP = text('.');
 
   // &7[&6&nB&e&nJ&7]
   Component SHORT_PREFIX =
@@ -105,30 +111,30 @@ public interface Message {
   Args1<BetterJailsPlugin> PLUGIN_INFO = plugin ->
       text()
           .color(GOLD)
-          .append(text("BetterJails"),
-                  space(),
-                  text("by", YELLOW),
-                  space(),
-                  text("Fefo6644 &"),
-                  space(),
-                  text()
-                      .content("contributors")
-                      .apply(builder -> {
-                        final List<String> authors = plugin.getAuthors();
-                        final List<String> contributors = authors.subList(1, authors.size());
-                        builder
-                            .hoverEvent(contributors
-                                            .stream().map(Component::text)
-                                            .collect(Component.toComponent(Component.text(", ")))
-                                            .color(GREEN));
-                      }),
-                  space(),
-                  text("-", YELLOW),
-                  space(),
-                  text("v" + plugin.getVersion()))
-          .build();
+          .append(join(space(),
+                       text("BetterJails"),
+                       text("by", YELLOW),
+                       text("Fefo6644 &"),
+                       text()
+                           .content("contributors")
+                           .apply(builder -> {
+                             final List<String> authors = plugin.getAuthors();
+                             final List<String> contributors = authors.subList(1, authors.size());
+                             builder
+                                 .hoverEvent(contributors
+                                                 .stream().map(Component::text)
+                                                 .collect(Component.toComponent(Component.text(", ")))
+                                                 .color(GREEN));
+                           }),
+                       text("-", YELLOW),
+                       text("v" + plugin.getVersion())));
 
-  Args0 USAGE_TITLE = () -> prefixed(translatable("betterjails.command.usage.title", RED));
+  // &fUsage:
+  Args0 USAGE_TITLE = () -> prefixed(
+      translatable()
+          .key("betterjails.command.usage.title")
+          .color(WHITE)
+          .append(Component.text(':')));
 
   // &7/{0}
   // Hover: &fClick to run: &7/{0}
@@ -139,16 +145,52 @@ public interface Message {
           .hoverEvent(translatable("betterjails.command.usage.element.hover", WHITE, text(command, GRAY)))
           .clickEvent(suggestCommand("/" + command)));
 
-  // &cOnly players can run this command
-  Args0 PLAYERS_ONLY = () -> prefixed(translatable("betterjails.command.generic.players-only", RED));
+  Args1<CommandSyntaxException> COMMAND_ERROR = exception -> {
+    if (exception.getRawMessage() instanceof ComponentMessage) {
+      return prefixed(((ComponentMessage) exception.getRawMessage()).component().color(RED));
+    } else {
+      return prefixed(text(exception.getMessage(), RED));
+    }
+  };
 
-  // &bConfiguration file reloaded successfully.
-  Args0 CONFIG_RELOADED = () -> prefixed(translatable("betterjails.reloadconfig", AQUA));
+  // &cOnly players can run this command.
+  Args0 PLAYERS_ONLY = () -> prefixed(
+      translatable()
+          .key("betterjails.command.generic.players-only")
+          .color(RED)
+          .append(FULL_STOP));
+
+  // &cThere was an error while reloading the configuration file.
+  Args1<String> GENERIC_ERROR = action -> prefixed(
+      translatable()
+          .key("betterjails.generic.error")
+          .args(Component.translatable("betterjails.generic.error." + action))
+          .color(RED)
+          .append(FULL_STOP));
+
+  // &bConfiguration file reloaded successfully
+  Args0 CONFIG_RELOADED = () -> prefixed(
+      translatable()
+          .key("betterjails.reloadconfig.success")
+          .color(AQUA)
+          .append(FULL_STOP));
 
   // &7&o&nNote that not all configuration settings are reloadable and some will not take effect until the next server restart!
-  Args0 CONFIG_RELOAD_NOTICE = () -> prefixed(translatable("betterjails.reloadconfig.notice", GRAY, ITALIC, UNDERLINED));
+  Args0 CONFIG_RELOAD_NOTICE = () -> prefixed(
+      translatable()
+          .key("betterjails.reloadconfig.notice")
+          .color(GRAY)
+          .decorate(ITALIC, UNDERLINED)
+          .append(Component.text('!')));
 
-  static TextComponent.Builder prefixed(final ComponentLike component) {
+  // &cIf you are a server admin, please check the server console for any errors.
+  Args0 CHECK_CONSOLE = () -> prefixed(
+      translatable()
+          .key("betterjails.generic.check-console-for-errors")
+          .color(RED)
+          .append(FULL_STOP));
+
+  static TextComponent.Builder prefixed(final @NotNull ComponentLike component) {
     return TextComponent.ofChildren(SHORT_PREFIX, space(), component).toBuilder();
   }
 
@@ -157,7 +199,7 @@ public interface Message {
 
     ComponentLike build();
 
-    default void send(final MessagingSubject subject) {
+    default void send(final Subject subject) {
       subject.sendMessage(build().asComponent());
     }
   }
@@ -167,7 +209,7 @@ public interface Message {
 
     ComponentLike build(T t);
 
-    default void send(final MessagingSubject subject, final T t) {
+    default void send(final Subject subject, final T t) {
       subject.sendMessage(build(t).asComponent());
     }
   }
@@ -177,7 +219,7 @@ public interface Message {
 
     ComponentLike build(T t, U u);
 
-    default void send(final MessagingSubject subject, final T t, final U u) {
+    default void send(final Subject subject, final T t, final U u) {
       subject.sendMessage(build(t, u).asComponent());
     }
   }
@@ -187,7 +229,7 @@ public interface Message {
 
     ComponentLike build(T t, U u, V v);
 
-    default void send(final MessagingSubject subject, final T t, final U u, final V v) {
+    default void send(final Subject subject, final T t, final U u, final V v) {
       subject.sendMessage(build(t, u, v).asComponent());
     }
   }
@@ -197,7 +239,7 @@ public interface Message {
 
     ComponentLike build(T t, U u, V v, W w);
 
-    default void send(final MessagingSubject subject, final T t, final U u, final V v, final W w) {
+    default void send(final Subject subject, final T t, final U u, final V v, final W w) {
       subject.sendMessage(build(t, u, v, w).asComponent());
     }
   }
@@ -207,7 +249,7 @@ public interface Message {
 
     ComponentLike build(T t, U u, V v, W w, X x);
 
-    default void send(final MessagingSubject subject, final T t, final U u, final V v, final W w, final X x) {
+    default void send(final Subject subject, final T t, final U u, final V v, final W w, final X x) {
       subject.sendMessage(build(t, u, v, w, x).asComponent());
     }
   }

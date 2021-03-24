@@ -25,11 +25,12 @@
 
 package com.github.fefo6644.betterjails.bukkit;
 
+import com.github.fefo6644.betterjails.bukkit.command.CommandHandler;
 import com.github.fefo6644.betterjails.bukkit.platform.BukkitPlatformAdapter;
 import com.github.fefo6644.betterjails.bukkit.platform.BukkitTaskScheduler;
 import com.github.fefo6644.betterjails.common.configuration.ConfigurationAdapter;
 import com.github.fefo6644.betterjails.common.configuration.adapter.YamlConfigurationAdapter;
-import com.github.fefo6644.betterjails.common.message.MessagingSubject;
+import com.github.fefo6644.betterjails.common.message.Subject;
 import com.github.fefo6644.betterjails.common.plugin.BetterJailsBootstrap;
 import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
 import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
@@ -42,15 +43,19 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Consumer;
 
 public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBootstrap {
 
   private BukkitAudiences audiences;
-  private MessagingSubject console;
+  private Subject console;
 
   private final BukkitPlatformAdapter platformAdapter = new BukkitPlatformAdapter(this);
   private final BetterJailsPlugin betterJailsPlugin = new BetterJailsPlugin(this);
@@ -65,9 +70,11 @@ public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBo
   @Override
   public void onEnable() {
     this.audiences = BukkitAudiences.create(this);
-    this.console = MessagingSubject.of(this.audiences.console(), Bukkit.getConsoleSender().getName(), true);
+    this.console = Subject.of(this.audiences.console(), Bukkit.getConsoleSender().getName(), true);
 
     this.betterJailsPlugin.enable();
+
+    new CommandHandler(this);
 
 //    final Metrics metrics = new Metrics(this, 9015);
 //    metrics.addCustomChart(new Metrics.SingleLineChart("total-jails", null));
@@ -79,12 +86,17 @@ public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBo
   }
 
   @Override
+  public BetterJailsPlugin getPlugin() {
+    return this.betterJailsPlugin;
+  }
+
+  @Override
   public AudienceProvider getAudienceProvider() {
     return this.audiences;
   }
 
   @Override
-  public MessagingSubject getConsoleSubject() {
+  public Subject getConsoleSubject() {
     return this.console;
   }
 
@@ -115,9 +127,26 @@ public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBo
   }
 
   @Override
-  public List<com.github.fefo6644.betterjails.common.plugin.abstraction.Player> getOnlinePlayers() {
-    final ImmutableList.Builder<com.github.fefo6644.betterjails.common.plugin.abstraction.Player> builder = ImmutableList.builder();
+  @SuppressWarnings("unchecked")
+  public List<com.github.fefo6644.betterjails.common.plugin.abstraction.Player<Player>> getOnlinePlayers() {
+    final ImmutableList.Builder<com.github.fefo6644.betterjails.common.plugin.abstraction.Player<Player>> builder = ImmutableList.builder();
     Bukkit.getOnlinePlayers().forEach(player -> builder.add(this.platformAdapter.adaptPlayer(player)));
     return builder.build();
+  }
+
+  public <T extends Event> void registerListener(final Class<T> eventType, final Listener listener, final Consumer<T> handler) {
+    registerListener(eventType, listener, handler, EventPriority.NORMAL, false);
+  }
+
+  public <T extends Event> void registerListener(final Class<T> eventType, final Listener listener, final Consumer<T> handler, final boolean ignoreIfCancelled) {
+    registerListener(eventType, listener, handler, EventPriority.NORMAL, ignoreIfCancelled);
+  }
+
+  public <T extends Event> void registerListener(final Class<T> eventType, final Listener listener, final Consumer<T> handler, final EventPriority priority) {
+    registerListener(eventType, listener, handler, priority, false);
+  }
+
+  public <T extends Event> void registerListener(final Class<T> eventType, final Listener listener, final Consumer<T> handler, final EventPriority priority, final boolean ignoreIfCancelled) {
+    Bukkit.getPluginManager().registerEvent(eventType, listener, priority, (l, e) -> handler.accept(eventType.cast(e)), this, ignoreIfCancelled);
   }
 }

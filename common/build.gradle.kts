@@ -11,6 +11,8 @@ dependencies {
 
     compileOnlyApi("com.mojang:brigadier:1.0.17")
     api("net.kyori:adventure-api:4.7.0")
+    compileOnly("net.kyori:adventure-text-serializer-gson:4.7.0")
+    compileOnly("net.kyori:adventure-text-serializer-plain:4.7.0")
     compileOnly("net.kyori:adventure-platform-api:4.0.0-SNAPSHOT")
 
     api("org.slf4j:slf4j-api:1.7.30")

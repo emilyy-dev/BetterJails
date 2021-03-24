@@ -25,7 +25,29 @@
 
 package com.github.fefo6644.betterjails.common.storage;
 
+import com.github.fefo6644.betterjails.common.model.cell.Cell;
+import com.github.fefo6644.betterjails.common.model.prisoner.Prisoner;
+import com.google.common.collect.BiMap;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.UUID;
+
 public interface StorageProvider {
 
-  // idek...
+  /* cell methods */
+  Collection<Cell> loadAllCells() throws IOException;
+  void loadCell(String name) throws IOException;
+  void saveCell(Cell cell) throws IOException;
+
+  /* prisoner methods */
+  <P> Collection<Prisoner<P>> loadAllPrisoners() throws IOException;
+  <P> Prisoner<P> loadPrisoner(UUID uuid) throws IOException;
+  <P> void savePrisoner(Prisoner<P> prisoner) throws IOException;
+
+  /* uuid <--> name bimap cache methods */
+  BiMap<UUID, String> loadAllPlayers() throws IOException;
+  UUID lookupUuid(String name) throws IOException;
+  String lookupName(UUID uuid) throws IOException;
+  void savePlayer(UUID uuid, String name) throws IOException;
 }

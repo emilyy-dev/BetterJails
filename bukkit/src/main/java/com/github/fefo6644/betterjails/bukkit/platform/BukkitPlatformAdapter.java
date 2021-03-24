@@ -26,7 +26,7 @@
 package com.github.fefo6644.betterjails.bukkit.platform;
 
 import com.github.fefo6644.betterjails.bukkit.BetterJailsBukkit;
-import com.github.fefo6644.betterjails.common.message.MessagingSubject;
+import com.github.fefo6644.betterjails.common.message.Subject;
 import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -44,16 +44,17 @@ public final class BukkitPlatformAdapter implements PlatformAdapter<CommandSende
   }
 
   @Override
-  public CommandSender adaptSubject(final @NotNull MessagingSubject subject) {
+  @SuppressWarnings("unchecked")
+  public CommandSender adaptSubject(final @NotNull Subject subject) {
     if (subject.isPlayerSubject()) {
-      return adaptPlayer(subject.asPlayerSubject());
+      return adaptPlayer((com.github.fefo6644.betterjails.common.plugin.abstraction.Player<Player>) subject.asPlayerSubject());
     }
 
     return Bukkit.getConsoleSender();
   }
 
   @Override
-  public Player adaptPlayer(final @NotNull com.github.fefo6644.betterjails.common.plugin.abstraction.Player player) {
+  public Player adaptPlayer(final @NotNull com.github.fefo6644.betterjails.common.plugin.abstraction.Player<Player> player) {
     return Bukkit.getPlayer(player.uuid());
   }
 
@@ -69,7 +70,7 @@ public final class BukkitPlatformAdapter implements PlatformAdapter<CommandSende
   }
 
   @Override
-  public MessagingSubject adaptSubject(final @NotNull CommandSender subject) {
+  public Subject adaptSubject(final @NotNull CommandSender subject) {
     if (subject instanceof Player) {
       return adaptPlayer((Player) subject);
     }
@@ -78,7 +79,7 @@ public final class BukkitPlatformAdapter implements PlatformAdapter<CommandSende
   }
 
   @Override
-  public com.github.fefo6644.betterjails.common.plugin.abstraction.Player adaptPlayer(final @NotNull Player player) {
+  public com.github.fefo6644.betterjails.common.plugin.abstraction.Player<Player> adaptPlayer(final @NotNull Player player) {
     return new BukkitPlayer(player, this.plugin.getAudienceProvider().player(player.getUniqueId()));
   }
 

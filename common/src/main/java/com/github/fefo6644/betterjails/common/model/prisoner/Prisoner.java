@@ -65,6 +65,11 @@ public abstract class Prisoner<P> extends Player<P> {
     return true;
   }
 
+  @Override
+  public Prisoner<P> asPrisoner() {
+    return this;
+  }
+
   public Set<String> groups() {
     return this.groups;
   }
