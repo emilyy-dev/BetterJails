@@ -25,6 +25,7 @@
 
 package com.github.fefo6644.betterjails.bukkit.reflection;
 
+import com.github.fefo6644.betterjails.common.command.brigadier.ComponentMessage;
 import com.mojang.brigadier.LiteralMessage;
 import com.mojang.brigadier.Message;
 import net.kyori.adventure.text.Component;
@@ -69,6 +70,10 @@ public final class ReflectionHelper {
     } catch (final ReflectiveOperationException exception) {
       return new LiteralMessage(PlainComponentSerializer.plain().serialize(component));
     }
+  }
+
+  public static Message messageFromComponent(final ComponentMessage message) {
+    return messageFromComponent(message.component());
   }
 
   private static String generateNmsClassFormat() {

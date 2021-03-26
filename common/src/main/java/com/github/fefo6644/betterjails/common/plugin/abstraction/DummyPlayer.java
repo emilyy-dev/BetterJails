@@ -25,6 +25,7 @@
 
 package com.github.fefo6644.betterjails.common.plugin.abstraction;
 
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 
 import java.util.UUID;
@@ -34,7 +35,7 @@ public final class DummyPlayer extends Player<Object> {
   public static final DummyPlayer DUMMY_PLAYER = new DummyPlayer();
 
   private DummyPlayer() {
-    super(new UUID(0L, 0L), "dummy", null, new Object());
+    super(new UUID(0L, 0L), "dummy", Audience.empty(), new Object());
   }
 
   @Override

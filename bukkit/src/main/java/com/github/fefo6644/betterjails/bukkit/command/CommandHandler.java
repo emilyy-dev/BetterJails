@@ -30,9 +30,11 @@ import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import com.github.fefo6644.betterjails.bukkit.BetterJailsBukkit;
 import com.github.fefo6644.betterjails.bukkit.reflection.ReflectionHelper;
 import com.github.fefo6644.betterjails.common.command.CommandBridge;
+import com.github.fefo6644.betterjails.common.command.brigadier.ComponentMessage;
 import com.github.fefo6644.betterjails.common.message.Subject;
 import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
 import com.google.common.collect.ImmutableList;
+import com.mojang.brigadier.Message;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
@@ -49,13 +51,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiFunction;
-import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class CommandHandler implements TabExecutor, Listener {
 
-  private final List<Predicate<String>> commandPatterns;
+  private final List<Pattern> commandPatterns;
   private final PlatformAdapter<CommandSender, ?, ?, ?> platformAdapter;
   private final CommandBridge commandBridge;
 
@@ -68,14 +70,12 @@ public class CommandHandler implements TabExecutor, Listener {
 
     final String prefix = bukkitPlugin.getName().toLowerCase(Locale.ROOT);
     final CommandMap commandMap = ReflectionHelper.getCommandMap();
-    final ImmutableList.Builder<Predicate<String>> builder = ImmutableList.builder();
+    final ImmutableList.Builder<Pattern> builder = ImmutableList.builder();
     for (final CommandNode<Subject> node : this.commandBridge.getCommandNode().getChildren()) {
-      builder.add(
-          Pattern.compile("^/?(?:" + prefix + ":)?(?:" + node.getName() + ") ")
-                 .asPredicate());
+      builder.add(Pattern.compile("^(?:" + prefix + ":)?(" + node.getName() + ") "));
 
-      final CommandBase commandBase = new CommandBase(node.getName(), this, this.platformAdapter, node);
-      commandMap.register(prefix, commandBase);
+      final BukkitCommand bukkitCommand = new BukkitCommand(node.getName(), this, this.platformAdapter, node);
+      commandMap.register(prefix, bukkitCommand);
     }
     this.commandPatterns = builder.build();
 
@@ -133,26 +133,48 @@ public class CommandHandler implements TabExecutor, Listener {
       buffer = buffer.substring(1);
     }
 
-    boolean matched = false;
-    for (final Predicate<String> predicate : this.commandPatterns) {
-      if (predicate.test(buffer)) {
-        matched = true;
+    String commandName = null;
+    for (final Pattern pattern : this.commandPatterns) {
+      final Matcher matcher = pattern.matcher(buffer);
+      if (matcher.find()) {
+        commandName = matcher.group(1);
         break;
       }
     }
 
-    if (!matched) {
+    if (commandName == null) {
       return;
     }
 
-    buffer = buffer.substring(buffer.indexOf(':') + 1); // get rid of fallback prefix if any
+    // get rid of typed alias, use registered command name
+    // this is temporary until I figure out a way to support command aliases
+    // https://github.com/Mojang/brigadier/issues/46
+    // if that ever gets fixed I'll just probably shade brig in, no aliases 'till then
+    // (or I'll just register multiple literal nodes with the same command & children nodes)
+    buffer = commandName + buffer.substring(buffer.indexOf(' '));
     event.setHandled(true);
     event.setCompletions(this.suggestionsRecorder.apply(this.platformAdapter.adaptSubject(event.getSender()), buffer));
   }
 
   private void asyncSendSuggestions(final AsyncPlayerSendSuggestionsEvent event) {
-    // TODO: intercept and put tooltips in
-    // keep the map clean for now
-    this.suggestionMap.remove(event.getPlayer().getUniqueId());
+    final Suggestions suggestions = this.suggestionMap.remove(event.getPlayer().getUniqueId());
+    if (suggestions == null) {
+      return;
+    }
+
+    final Map<String, Message> suggestionTooltips = suggestions.getList().stream().collect(Collectors.toMap(Suggestion::getText, Suggestion::getTooltip));
+    final List<Suggestion> eventSuggestions = event.getSuggestions().getList();
+    eventSuggestions.replaceAll(suggestion -> {
+      final Message tooltip = suggestionTooltips.get(suggestion.getText());
+      if (tooltip == null) {
+        return suggestion;
+      }
+
+      if (tooltip instanceof ComponentMessage) {
+        return new Suggestion(suggestion.getRange(), suggestion.getText(), ReflectionHelper.messageFromComponent((ComponentMessage) tooltip));
+      } else {
+        return suggestion;
+      }
+    });
   }
 }

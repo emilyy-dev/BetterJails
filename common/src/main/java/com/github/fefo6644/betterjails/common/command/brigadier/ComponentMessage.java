@@ -28,6 +28,7 @@ package com.github.fefo6644.betterjails.common.command.brigadier;
 import com.mojang.brigadier.Message;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 
@@ -52,11 +53,16 @@ public class ComponentMessage implements Message {
     return this.component;
   }
 
+  public @NotNull String json() {
+    return GsonComponentSerializer.gson().serialize(this.component);
+  }
+
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("ComponentMessage{");
-    sb.append("component=").append(this.component);
-    sb.append('}');
-    return sb.toString();
+    final StringBuilder builder = new StringBuilder("ComponentMessage{");
+    builder
+        .append("component=").append(this.component)
+        .append('}');
+    return builder.toString();
   }
 }

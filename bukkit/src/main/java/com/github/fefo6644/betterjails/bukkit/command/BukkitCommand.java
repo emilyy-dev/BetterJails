@@ -37,15 +37,15 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class CommandBase extends Command {
+public class BukkitCommand extends Command {
 
   private final TabExecutor executor;
   private final Predicate<Subject> requirement;
   private final PlatformAdapter<CommandSender, ?, ?, ?> platformAdapter;
 
-  public CommandBase(final String name, final TabExecutor executor,
-                     final PlatformAdapter<CommandSender, ?, ?, ?> platformAdapter,
-                     final CommandNode<Subject> node) {
+  public BukkitCommand(final String name, final TabExecutor executor,
+                       final PlatformAdapter<CommandSender, ?, ?, ?> platformAdapter,
+                       final CommandNode<Subject> node) {
     super(name);
     this.executor = executor;
     this.requirement = node.getRequirement();

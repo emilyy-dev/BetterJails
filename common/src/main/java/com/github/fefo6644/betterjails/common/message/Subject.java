@@ -37,8 +37,10 @@ import org.apache.commons.lang.Validate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class Subject {
@@ -68,13 +70,15 @@ public class Subject {
     if (this.isConsoleSubject && !component.children().isEmpty()) {
       // append newline so it sends the last line too
       // it sends lines on line breaks, no line break = no complete line
-      sendMessageConsole(component.append(Component.newline()));
+      splitNewline(component.append(Component.newline())).forEach(this.audience::sendMessage);
     } else {
       this.audience.sendMessage(component);
     }
   }
 
-  private void sendMessageConsole(final Component original) {
+  private Iterable<Component> splitNewline(final Component original) {
+
+    final List<Component> lines = new ArrayList<>();
 
     final class Recurrent implements Consumer<Component> {
 
@@ -91,7 +95,7 @@ public class Subject {
             temp = otherTemp;
           }
 
-          Subject.this.audience.sendMessage(temp.build());
+          lines.add(temp.build());
 
           this.builderStack.clear();
           for (final Style style : this.styleStack) {
@@ -139,6 +143,7 @@ public class Subject {
     }
 
     new Recurrent().accept(original);
+    return lines;
   }
 
   public boolean hasPermission(final String permission) {
