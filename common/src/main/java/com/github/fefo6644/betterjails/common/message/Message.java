@@ -31,7 +31,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.TextComponent;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -39,6 +38,7 @@ import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.newline;
 import static net.kyori.adventure.text.Component.space;
 import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.toComponent;
 import static net.kyori.adventure.text.Component.translatable;
 import static net.kyori.adventure.text.event.ClickEvent.suggestCommand;
 import static net.kyori.adventure.text.format.NamedTextColor.AQUA;
@@ -123,27 +123,27 @@ public interface Message {
                              builder
                                  .hoverEvent(contributors
                                                  .stream().map(Component::text)
-                                                 .collect(Component.toComponent(Component.text(", ")))
+                                                 .collect(toComponent(text(", ")))
                                                  .color(GREEN));
                            }),
-                       text("-", YELLOW),
-                       text("v" + plugin.getVersion())));
+                       text('-', YELLOW),
+                       text('v' + plugin.getVersion())));
 
   // &fUsage:
-  Args0 USAGE_TITLE = () -> prefixed(
+  Args0 COMMAND_USAGE_TITLE = () -> prefixed(
       translatable()
           .key("betterjails.command.usage.title")
           .color(WHITE)
-          .append(Component.text(':')));
+          .append(text(':')));
 
   // &7/{0}
   // Hover: &fClick to run: &7/{0}
-  Args1<String> USAGE_COMMAND = command -> prefixed(
+  Args1<String> COMMAND_USAGE_ELEMENT = command -> prefixed(
       text()
           .color(GRAY)
-          .content("/" + command)
-          .hoverEvent(translatable("betterjails.command.usage.element.hover", WHITE, text(command, GRAY)))
-          .clickEvent(suggestCommand("/" + command)));
+          .content('/' + command)
+          .hoverEvent(translatable("betterjails.command.usage.element.hover", WHITE, text('/' + command, GRAY)))
+          .clickEvent(suggestCommand('/' + command)));
 
   Args1<CommandSyntaxException> COMMAND_ERROR = exception -> {
     if (exception.getRawMessage() instanceof ComponentMessage) {
@@ -160,11 +160,18 @@ public interface Message {
           .color(RED)
           .append(FULL_STOP));
 
+  // &cYou do not have the permission to execute this command.
+  Args0 NO_PERMISSION = () -> prefixed(
+      translatable()
+          .key("betterjails.command.generic.no-permission")
+          .color(RED)
+          .append(FULL_STOP));
+
   // &cThere was an error while reloading the configuration file.
   Args1<String> GENERIC_ERROR = action -> prefixed(
       translatable()
           .key("betterjails.generic.error")
-          .args(Component.translatable("betterjails.generic.error." + action))
+          .args(translatable("betterjails.generic.error." + action))
           .color(RED)
           .append(FULL_STOP));
 
@@ -181,7 +188,7 @@ public interface Message {
           .key("betterjails.reloadconfig.notice")
           .color(GRAY)
           .decorate(ITALIC, UNDERLINED)
-          .append(Component.text('!')));
+          .append(text('!')));
 
   // &cIf you are a server admin, please check the server console for any errors.
   Args0 CHECK_CONSOLE = () -> prefixed(
@@ -190,7 +197,7 @@ public interface Message {
           .color(RED)
           .append(FULL_STOP));
 
-  static TextComponent.Builder prefixed(final @NotNull ComponentLike component) {
+  static TextComponent.Builder prefixed(final ComponentLike component) {
     return TextComponent.ofChildren(SHORT_PREFIX, space(), component).toBuilder();
   }
 

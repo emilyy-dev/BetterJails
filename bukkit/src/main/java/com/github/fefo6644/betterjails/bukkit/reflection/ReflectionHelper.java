@@ -42,7 +42,7 @@ import java.util.function.Supplier;
 public final class ReflectionHelper {
 
   private static final String NMS_CLASS_FORMAT;
-  // use a supplier, if the server runs Paper, they expose the getCommandMap method
+  // use a supplier, if the server runs Paper, they expose the getCommandMap method and we can avoid reflection
   private static final Supplier<CommandMap> COMMAND_MAP_SUPPLIER;
   private static final Method JSON_TO_COMPONENT_METHOD;
 

@@ -23,30 +23,26 @@
 // SOFTWARE.
 //
 
-package com.github.fefo6644.betterjails.common.plugin.abstraction;
+package com.github.fefo6644.betterjails.common.util;
 
 import com.github.fefo6644.betterjails.common.message.Subject;
-import org.jetbrains.annotations.NotNull;
 
-/**
- * Main abstraction layer between the platform types and BetterJail's representation/adaptation of them.
- * <p>
- * Allows for translating and transforming objects of the types listed in the type parameters.
- *
- * @param <S> "sender" - the platform command sender/source type. Adapts to a messaging {@link Subject}.
- * @param <P> "player" - the platform player type. Adapts to an abstracted {@link Player} which also holds the platform player instance.
- * @param <L> "location" - the platform location type. Adapts to an abstracted, immutable {@link Location}.
- * @param <W> "world" - the platform world type. Adapts to a {@link World} identifying object.
- */
-public interface PlatformAdapter<S, P, L, W> {
+import java.util.Locale;
+import java.util.Objects;
+import java.util.function.Predicate;
 
-  S adaptSubject(@NotNull Subject subject);
-  P adaptPlayer(@NotNull Player<P> player);
-  L adaptLocation(@NotNull Location location);
-  W adaptWorld(@NotNull World world);
+public final class Permission {
 
-  Subject adaptSubject(@NotNull S subject);
-  Player<P> adaptPlayer(@NotNull P player);
-  Location adaptLocation(@NotNull L location);
-  World adaptWorld(@NotNull W world);
+  public static Predicate<Subject> has(final String permission) {
+    Objects.requireNonNull(permission);
+    return subject -> subject.hasPermission(permission.toLowerCase(Locale.ROOT));
+  }
+
+  public static Predicate<Subject> lacks(final String permission) {
+    return has(permission).negate();
+  }
+
+  private Permission() {
+    throw new UnsupportedOperationException();
+  }
 }

@@ -113,8 +113,6 @@ public class Subject {
             temp.append(component);
           } else {
             temp = Component.text();
-            // apply style from non-buildable component to parent component
-            // so other children also inherit from them
             temp.style(component.style());
             temp.append(component);
             this.builderStack.push(temp);

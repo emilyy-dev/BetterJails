@@ -26,10 +26,10 @@
 package com.github.fefo6644.betterjails.common.hook.permissions.luckperms;
 
 import com.github.fefo6644.betterjails.common.model.cell.CellManager;
+import com.github.fefo6644.betterjails.common.model.prisoner.Prisoner;
 import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
 import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
 import com.github.fefo6644.betterjails.common.plugin.abstraction.Player;
-import com.github.fefo6644.betterjails.common.model.prisoner.Prisoner;
 import net.luckperms.api.context.ContextCalculator;
 import net.luckperms.api.context.ContextConsumer;
 import net.luckperms.api.context.ContextSet;
@@ -38,7 +38,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class AvailableContexts<P> implements ContextCalculator<P> {
 
-  private static final String KEY_JAILED_FOR = "betterjails:jailed-for";
+  private static final String KEY_JAILED_UNTIL = "betterjails:jailed-until";
   private static final String KEY_IS_JAILED = "betterjails:is-jailed";
   private static final String KEY_IN_JAIL = "betterjails:in-jail";
 
@@ -52,13 +52,13 @@ public final class AvailableContexts<P> implements ContextCalculator<P> {
 
   @Override
   public void calculate(final @NotNull P target, final @NotNull ContextConsumer consumer) {
-    final Player player = this.adapter.adaptPlayer(target);
+    final Player<P> player = this.adapter.adaptPlayer(target);
 
     consumer.accept(KEY_IS_JAILED, Boolean.toString(player.isJailed()));
     if (player.isJailed()) {
-      final Prisoner prisoner = player.asPrisoner();
-      consumer.accept(KEY_JAILED_FOR, prisoner.jailedFor().toString());
-//      consumer.accept(KEY_IN_JAIL);
+      final Prisoner<P> prisoner = player.asPrisoner();
+      consumer.accept(KEY_JAILED_UNTIL, prisoner.jailedUntil().toString());
+      consumer.accept(KEY_IN_JAIL, prisoner.jail());
     }
   }
 
@@ -68,6 +68,8 @@ public final class AvailableContexts<P> implements ContextCalculator<P> {
 
     builder.add(KEY_IS_JAILED, "true");
     builder.add(KEY_IS_JAILED, "false");
+
+    // TODO: add available jails
 
     return builder.build();
   }

@@ -57,9 +57,8 @@ public class CommandBridge implements CommandSegment.Root<Subject> {
   private final ExecutorService commandExecutor =
       Executors.newSingleThreadExecutor(
           new ThreadFactoryBuilder()
-              .setNameFormat("betterjails-command-thread-%d")
+              .setNameFormat("betterjails-command-executor")
               .setDaemon(false)
-              .setPriority(Thread.NORM_PRIORITY)
               .build());
 
   public CommandBridge(final BetterJailsPlugin plugin) {
@@ -95,14 +94,14 @@ public class CommandBridge implements CommandSegment.Root<Subject> {
     });
   }
 
-  public CompletableFuture<Suggestions> completionSuggestions(final Subject subject, final String input) {
+  public CompletableFuture<Suggestions> suggestionsFuture(final Subject subject, final String input) {
     final ParseResults<Subject> results = this.dispatcher.parse(input, subject);
     return this.dispatcher.getCompletionSuggestions(results);
   }
 
   public List<String> getCompletionSuggestions(final Subject subject, final String input) {
-    return completionSuggestions(subject, input).join().getList().stream()
-                                                .map(Suggestion::getText)
-                                                .collect(Collectors.toList());
+    return suggestionsFuture(subject, input).join().getList().stream()
+                                            .map(Suggestion::getText)
+                                            .collect(Collectors.toList());
   }
 }

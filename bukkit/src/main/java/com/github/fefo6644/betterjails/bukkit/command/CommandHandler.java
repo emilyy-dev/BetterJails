@@ -74,7 +74,7 @@ public class CommandHandler implements TabExecutor, Listener {
     for (final CommandNode<Subject> node : this.commandBridge.getCommandNode().getChildren()) {
       builder.add(Pattern.compile("^(?:" + prefix + ":)?(" + node.getName() + ") "));
 
-      final BukkitCommand bukkitCommand = new BukkitCommand(node.getName(), this, this.platformAdapter, node);
+      final BukkitCommand bukkitCommand = new BukkitCommand(node.getName(), this, this.platformAdapter, node, bukkitPlugin);
       commandMap.register(prefix, bukkitCommand);
     }
     this.commandPatterns = builder.build();
@@ -82,7 +82,7 @@ public class CommandHandler implements TabExecutor, Listener {
 
     try {
       Class.forName("com.destroystokyo.paper.event.server.AsyncTabCompleteEvent");
-      bukkitPlugin.registerListener(AsyncTabCompleteEvent.class, this, this::asyncTabComplete, true);
+      bukkitPlugin.registerListener(AsyncTabCompleteEvent.class, this::asyncTabComplete);
     } catch (final ClassNotFoundException exception) {
       // ignore; we just won't calculate suggestion completions async
     }
@@ -91,10 +91,10 @@ public class CommandHandler implements TabExecutor, Listener {
     BiFunction<Subject, String, List<String>> suggestionsRecorder;
     try {
       Class.forName("com.destroystokyo.paper.event.brigadier.AsyncPlayerSendSuggestionsEvent");
-      bukkitPlugin.registerListener(AsyncPlayerSendSuggestionsEvent.class, this, this::asyncSendSuggestions, true);
+      bukkitPlugin.registerListener(AsyncPlayerSendSuggestionsEvent.class, this::asyncPlayerSendSuggestions);
 
       suggestionsRecorder = (subject, input) -> {
-        final Suggestions suggestions = this.commandBridge.completionSuggestions(subject, input).join();
+        final Suggestions suggestions = this.commandBridge.suggestionsFuture(subject, input).join();
         this.suggestionMap.put(subject.asPlayerSubject().uuid(), suggestions);
         return suggestions.getList().stream().map(Suggestion::getText).collect(Collectors.toList());
       };
@@ -149,14 +149,16 @@ public class CommandHandler implements TabExecutor, Listener {
     // get rid of typed alias, use registered command name
     // this is temporary until I figure out a way to support command aliases
     // https://github.com/Mojang/brigadier/issues/46
-    // if that ever gets fixed I'll just probably shade brig in, no aliases 'till then
+    // if that ever gets fixed I'll just probably shade brig in
+    // (something I'll have to do anyway for pre-1.13/legacy builds)
+    // no aliases 'till then
     // (or I'll just register multiple literal nodes with the same command & children nodes)
     buffer = commandName + buffer.substring(buffer.indexOf(' '));
     event.setHandled(true);
     event.setCompletions(this.suggestionsRecorder.apply(this.platformAdapter.adaptSubject(event.getSender()), buffer));
   }
 
-  private void asyncSendSuggestions(final AsyncPlayerSendSuggestionsEvent event) {
+  private void asyncPlayerSendSuggestions(final AsyncPlayerSendSuggestionsEvent event) {
     final Suggestions suggestions = this.suggestionMap.remove(event.getPlayer().getUniqueId());
     if (suggestions == null) {
       return;
@@ -166,10 +168,6 @@ public class CommandHandler implements TabExecutor, Listener {
     final List<Suggestion> eventSuggestions = event.getSuggestions().getList();
     eventSuggestions.replaceAll(suggestion -> {
       final Message tooltip = suggestionTooltips.get(suggestion.getText());
-      if (tooltip == null) {
-        return suggestion;
-      }
-
       if (tooltip instanceof ComponentMessage) {
         return new Suggestion(suggestion.getRange(), suggestion.getText(), ReflectionHelper.messageFromComponent((ComponentMessage) tooltip));
       } else {

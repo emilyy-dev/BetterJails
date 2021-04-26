@@ -29,6 +29,7 @@ import com.github.fefo6644.betterjails.common.command.segment.CommandSegment;
 import com.github.fefo6644.betterjails.common.message.Message;
 import com.github.fefo6644.betterjails.common.message.Subject;
 import com.github.fefo6644.betterjails.common.plugin.BetterJailsPlugin;
+import com.github.fefo6644.betterjails.common.util.Permission;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -45,19 +46,19 @@ public class BetterJailsCommand implements CommandSegment.Literal<Subject> {
   {
     final LiteralArgumentBuilder<Subject> builder = literal("betterjails");
     builder
-        .requires(subject -> subject.hasPermission("betterjails.betterjails"))
+        .requires(Permission.has("betterjails.betterjails"))
         .executes(this::pluginInfo)
         .then(literal("reloadconfig")
-                  .requires(subject -> subject.hasPermission("betterjails.reloadconfig"))
+                  .requires(Permission.has("betterjails.reloadconfig"))
                   .executes(this::reloadConfig))
         .then(literal("reloaddata")
-                  .requires(subject -> subject.hasPermission("betterjails.reloaddata"))
+                  .requires(Permission.has("betterjails.reloaddata"))
                   .executes(this::reloadData))
         .then(literal("save")
-                  .requires(subject -> subject.hasPermission("betterjails.save"))
+                  .requires(Permission.has("betterjails.save"))
                   .executes(this::save))
         .then(literal("playerinfo")
-                  .requires(subject -> subject.hasPermission("betterjails.playerinfo"))
+                  .requires(Permission.has("betterjails.playerinfo"))
                   .then(argument("player", StringArgumentType.word()).executes(this::playerInfo)));
 
     this.commandNode = builder.build();

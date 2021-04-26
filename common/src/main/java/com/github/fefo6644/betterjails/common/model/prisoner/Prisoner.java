@@ -29,7 +29,6 @@ import com.github.fefo6644.betterjails.common.plugin.abstraction.Location;
 import com.github.fefo6644.betterjails.common.plugin.abstraction.Player;
 import net.kyori.adventure.audience.Audience;
 import org.apache.commons.lang.Validate;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -41,19 +40,21 @@ public abstract class Prisoner<P> extends Player<P> {
 
   private final Set<String> groups;
   private final String jailedBy;
+  private final String jail;
   private final Duration jailedFor;
   private final Instant jailedUntil;
   private final Location lastLocation;
 
-  public Prisoner(final @NotNull UUID uuid, final @Nullable String name,
-                  final @NotNull String jailedBy, final @NotNull Location lastLocation,
-                  final @NotNull Duration duration, final @NotNull Set<String> groups,
-                  final @NotNull Audience audience, final @NotNull P player) {
+  public Prisoner(final UUID uuid, final @Nullable String name,
+                  final String jailedBy, final Location lastLocation,
+                  final Duration duration, final Set<String> groups,
+                  final String jail, final Audience audience, final P player) {
     super(uuid, name, audience, player);
     Validate.notNull(jailedBy);
     Validate.notNull(lastLocation);
 
     this.groups = groups;
+    this.jail = jail;
     this.jailedBy = jailedBy;
     this.jailedFor = duration;
     this.jailedUntil = Instant.now().plus(duration);
@@ -76,6 +77,10 @@ public abstract class Prisoner<P> extends Player<P> {
 
   public String jailedBy() {
     return this.jailedBy;
+  }
+
+  public String jail() {
+    return this.jail;
   }
 
   public Duration jailedFor() {

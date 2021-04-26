@@ -25,41 +25,56 @@
 
 package com.github.fefo6644.betterjails.bukkit.command;
 
+import com.github.fefo6644.betterjails.bukkit.BetterJailsBukkit;
+import com.github.fefo6644.betterjails.common.message.Message;
 import com.github.fefo6644.betterjails.common.message.Subject;
 import com.github.fefo6644.betterjails.common.plugin.abstraction.PlatformAdapter;
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.tree.CommandNode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.command.TabExecutor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.Predicate;
 
-public class BukkitCommand extends Command {
+public class BukkitCommand extends Command implements PluginIdentifiableCommand {
 
+  private final BetterJailsBukkit plugin;
   private final TabExecutor executor;
   private final Predicate<Subject> requirement;
   private final PlatformAdapter<CommandSender, ?, ?, ?> platformAdapter;
 
   public BukkitCommand(final String name, final TabExecutor executor,
                        final PlatformAdapter<CommandSender, ?, ?, ?> platformAdapter,
-                       final CommandNode<Subject> node) {
+                       final CommandNode<Subject> node, final BetterJailsBukkit plugin) {
     super(name);
     this.executor = executor;
     this.requirement = node.getRequirement();
     this.platformAdapter = platformAdapter;
-  }
-
-  @Override
-  public boolean testPermission(final @NotNull CommandSender target) {
-    return this.requirement.test(this.platformAdapter.adaptSubject(target));
+    this.plugin = plugin;
   }
 
   @Override
   public boolean testPermissionSilent(final @NotNull CommandSender target) {
     return this.requirement.test(this.platformAdapter.adaptSubject(target));
+  }
+
+  @Override
+  public boolean testPermission(final @NotNull CommandSender target) {
+    if (testPermissionSilent(target)) {
+      return true;
+    }
+
+    Message.NO_PERMISSION.send(this.platformAdapter.adaptSubject(target));
+    return false;
+  }
+
+  @Override
+  public @NotNull BetterJailsBukkit getPlugin() {
+    return this.plugin;
   }
 
   @Override

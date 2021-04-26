@@ -52,7 +52,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 
-public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBootstrap {
+public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBootstrap, Listener {
 
   private BukkitAudiences audiences;
   private Subject console;
@@ -134,19 +134,24 @@ public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBo
     return builder.build();
   }
 
-  public <T extends Event> void registerListener(final Class<T> eventType, final Listener listener, final Consumer<T> handler) {
-    registerListener(eventType, listener, handler, EventPriority.NORMAL, false);
+  public <T extends Event> void registerListener(final Class<T> eventType, final Consumer<T> handler) {
+    registerListener(eventType, handler, EventPriority.NORMAL, false);
   }
 
-  public <T extends Event> void registerListener(final Class<T> eventType, final Listener listener, final Consumer<T> handler, final boolean ignoreIfCancelled) {
-    registerListener(eventType, listener, handler, EventPriority.NORMAL, ignoreIfCancelled);
+  public <T extends Event> void registerListener(final Class<T> eventType, final Consumer<T> handler, final boolean callIfCancelled) {
+    registerListener(eventType, handler, EventPriority.NORMAL, callIfCancelled);
   }
 
-  public <T extends Event> void registerListener(final Class<T> eventType, final Listener listener, final Consumer<T> handler, final EventPriority priority) {
-    registerListener(eventType, listener, handler, priority, false);
+  public <T extends Event> void registerListener(final Class<T> eventType, final Consumer<T> handler, final EventPriority priority) {
+    registerListener(eventType, handler, priority, false);
   }
 
-  public <T extends Event> void registerListener(final Class<T> eventType, final Listener listener, final Consumer<T> handler, final EventPriority priority, final boolean ignoreIfCancelled) {
-    Bukkit.getPluginManager().registerEvent(eventType, listener, priority, (l, e) -> handler.accept(eventType.cast(e)), this, ignoreIfCancelled);
+  public <T extends Event> void registerListener(final Class<T> eventType, final Consumer<T> handler, final EventPriority priority, final boolean ignoreIfCancelled) {
+    Bukkit.getPluginManager().registerEvent(eventType, this, priority,
+                                            (l, e) -> {
+                                              if (eventType.isInstance(e)) {
+                                                handler.accept(eventType.cast(e));
+                                              }
+                                            }, this, !ignoreIfCancelled);
   }
 }
