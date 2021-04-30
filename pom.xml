@@ -21,7 +21,7 @@
 		</license>
 	</licenses>
 
-	<groupId>com.github.fefo6644</groupId>
+	<groupId>io.github.emilyy-dev</groupId>
 	<artifactId>betterjails-parent</artifactId>
 	<version>1.5-SNAPSHOT</version>
 	<packaging>pom</packaging>

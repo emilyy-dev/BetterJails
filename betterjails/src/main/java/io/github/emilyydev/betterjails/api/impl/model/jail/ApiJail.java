@@ -22,27 +22,56 @@
 // SOFTWARE.
 //
 
-package com.github.fefo.betterjails.api.event.prisoner;
+package io.github.emilyydev.betterjails.api.impl.model.jail;
 
-import com.github.fefo.betterjails.api.event.BetterJailsEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
-import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
-import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
+import com.github.fefo.betterjails.api.util.ImmutableLocation;
+import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.Duration;
-import java.util.UUID;
+import java.util.Objects;
 
-/**
- * Dispatched when jailing a player by running {@code /jail <player> <jail> <time>} or calling
- * {@link PrisonerManager#jailPlayer(UUID, Jail, Duration)}.
- */
-public interface PlayerImprisonEvent extends BetterJailsEvent {
+public class ApiJail implements Jail {
 
-  /**
-   * Gets the prisoner being imprisoned.
-   *
-   * @return the prisoner being imprisoned
-   */
-  @NotNull Prisoner prisoner();
+  private final String name;
+  private ImmutableLocation location;
+
+  public ApiJail(final String name, final Location location) {
+    this.name = name;
+    this.location = ImmutableLocation.copyOf(location);
+  }
+
+  @Override
+  public @NotNull ImmutableLocation location() {
+    return this.location;
+  }
+
+  @Override
+  public void location(final @NotNull ImmutableLocation location) {
+    Objects.requireNonNull(location, "location");
+    this.location = location;
+  }
+
+  @Override
+  public @NotNull String name() {
+    return this.name;
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (this == other) {
+      return true;
+    }
+    if (!(other instanceof ApiJail)) {
+      return false;
+    }
+
+    final ApiJail that = (ApiJail) other;
+    return this.name.equals(that.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return this.name.hashCode();
+  }
 }

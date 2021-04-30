@@ -122,10 +122,10 @@ while offline, they will be executed when they get online.**
 BetterJails now ships with a developer API! Plugin developers can now interact with B.J., listen to
 specific events, create jails, release prisoners and much more.
 
-The [`BetterJails` interface](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/BetterJails.java) is the heart of the API, in there you can access all the other interfaces you need to work with B.J.:
-* A [`PrisonerManager`](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/prisoner/PrisonerManager.java) in which you can retrieve prisoners, jail players and release prisoners
-* A [`JailManager`](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/jail/JailManager.java) in which you can create and delete jails
-* An [`EventBus`](https://github.com/Fefo6644/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/event/EventBus.java) where you can subscribe (or "listen") to certain events dispatched throughout the functioning of the plugin.
+The [`BetterJails` interface](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/BetterJails.java) is the heart of the API, in there you can access all the other interfaces you need to work with B.J.:
+* A [`PrisonerManager`](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/prisoner/PrisonerManager.java) in which you can retrieve prisoners, jail players and release prisoners
+* A [`JailManager`](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/jail/JailManager.java) in which you can create and delete jails
+* An [`EventBus`](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/event/EventBus.java) where you can subscribe (or "listen") to certain events dispatched throughout the functioning of the plugin.
 
 You can get an instance of the `BetterJails` interface like so:
 
@@ -135,12 +135,12 @@ public class MyPlugin extends JavaPlugin {
   private BetterJails betterJails;
 
   public BetterJails getBetterJails() {
-    return betterJails;
+    return this.betterJails;
   }
 
   @Override
   public void onEnable() {
-    betterJails = Bukkit.getServicesManager().load(BetterJails.class);
+    this.betterJails = Bukkit.getServicesManager().load(BetterJails.class);
   }
 }
 ````
@@ -163,7 +163,7 @@ If you are using Maven, you need to add the (new) Sonatype repository to your `p
 You also need to add the dependency itself that will be pulled from Sonatype
 ```xml
 <dependency>
-    <groupId>com.github.fefo6644</groupId>
+    <groupId>io.github.emilyy-dev</groupId>
     <artifactId>betterjails-api</artifactId>
     <version>1.5-SNAPSHOT</version>
     <scope>provided</scope>
@@ -184,7 +184,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.github.fefo6644:betterjails-api:1.5-SNAPSHOT'
+    compileOnly 'io.github.emilyy-dev:betterjails-api:1.5-SNAPSHOT'
 }
 ```
 
@@ -197,14 +197,14 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.github.fefo6644:betterjails-api:1.5-SNAPSHOT")
+    compileOnly("io.github.emilyy-dev:betterjails-api:1.5-SNAPSHOT")
 }
 ```
 
 
 ### Manually
 
-If you want to manually add the API dependency to your classpath, you can obtain the jar by [downloading it from here](https://s01.oss.sonatype.org/content/repositories/snapshots/com/github/fefo6644/betterjails-api/1.5-SNAPSHOT/).
+If you want to manually add the API dependency to your classpath, you can obtain the jar by [downloading it from here](https://s01.oss.sonatype.org/content/repositories/snapshots/io/github/emilyy-dev/betterjails-api/1.5-SNAPSHOT/).
 
 
 ## Compiling

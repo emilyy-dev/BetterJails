@@ -22,27 +22,42 @@
 // SOFTWARE.
 //
 
-package com.github.fefo.betterjails.api.event.prisoner;
+package io.github.emilyydev.betterjails.api.impl;
 
-import com.github.fefo.betterjails.api.event.BetterJailsEvent;
-import com.github.fefo.betterjails.api.model.jail.Jail;
-import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import com.github.fefo.betterjails.api.BetterJails;
+import com.github.fefo.betterjails.api.event.EventBus;
+import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJailManager;
+import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisonerManager;
+import com.github.fefo.betterjails.api.model.jail.JailManager;
 import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.Duration;
-import java.util.UUID;
+public class BetterJailsApi implements BetterJails {
 
-/**
- * Dispatched when jailing a player by running {@code /jail <player> <jail> <time>} or calling
- * {@link PrisonerManager#jailPlayer(UUID, Jail, Duration)}.
- */
-public interface PlayerImprisonEvent extends BetterJailsEvent {
+  private final JailManager jailManager;
+  private final PrisonerManager prisonerManager;
+  private final EventBus eventBus;
 
-  /**
-   * Gets the prisoner being imprisoned.
-   *
-   * @return the prisoner being imprisoned
-   */
-  @NotNull Prisoner prisoner();
+  public BetterJailsApi(final BetterJailsPlugin plugin) {
+    this.jailManager = new ApiJailManager(plugin);
+    this.prisonerManager = new ApiPrisonerManager(plugin);
+    this.eventBus = plugin.getEventBus();
+    plugin.getEventBus().setApi(this);
+  }
+
+  @Override
+  public @NotNull JailManager getJailManager() {
+    return this.jailManager;
+  }
+
+  @Override
+  public @NotNull PrisonerManager getPrisonerManager() {
+    return this.prisonerManager;
+  }
+
+  @Override
+  public @NotNull EventBus getEventBus() {
+    return this.eventBus;
+  }
 }

@@ -22,27 +22,34 @@
 // SOFTWARE.
 //
 
-package com.github.fefo.betterjails.api.event.prisoner;
+package io.github.emilyydev.betterjails.api.impl.event.jail;
 
+import com.github.fefo.betterjails.api.BetterJails;
 import com.github.fefo.betterjails.api.event.BetterJailsEvent;
-import com.github.fefo.betterjails.api.model.jail.Jail;
-import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
-import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
+import com.github.fefo.betterjails.api.event.jail.JailCreateEvent;
+import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
+import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.Duration;
-import java.util.UUID;
+public class JailCreateEventImpl extends SimpleBetterJailsEvent implements JailCreateEvent {
 
-/**
- * Dispatched when jailing a player by running {@code /jail <player> <jail> <time>} or calling
- * {@link PrisonerManager#jailPlayer(UUID, Jail, Duration)}.
- */
-public interface PlayerImprisonEvent extends BetterJailsEvent {
+  private final String jailName;
+  private final ImmutableLocation jailLocation;
 
-  /**
-   * Gets the prisoner being imprisoned.
-   *
-   * @return the prisoner being imprisoned
-   */
-  @NotNull Prisoner prisoner();
+  public JailCreateEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
+                             final String jailName, final ImmutableLocation jailLocation) {
+    super(api, eventType);
+    this.jailName = jailName;
+    this.jailLocation = jailLocation;
+  }
+
+  @Override
+  public @NotNull String jailName() {
+    return this.jailName;
+  }
+
+  @Override
+  public @NotNull ImmutableLocation jailLocation() {
+    return this.jailLocation;
+  }
 }

@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>betterjails-parent</artifactId>
-		<groupId>com.github.fefo6644</groupId>
+		<groupId>io.github.emilyy-dev</groupId>
 		<version>1.5-SNAPSHOT</version>
 	</parent>
 
@@ -73,7 +73,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.github.fefo6644</groupId>
+			<groupId>io.github.emilyy-dev</groupId>
 			<artifactId>betterjails-api</artifactId>
 			<version>1.5-SNAPSHOT</version>
 			<scope>compile</scope>

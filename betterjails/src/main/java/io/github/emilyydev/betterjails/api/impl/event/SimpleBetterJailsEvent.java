@@ -22,27 +22,29 @@
 // SOFTWARE.
 //
 
-package com.github.fefo.betterjails.api.event.prisoner;
+package io.github.emilyydev.betterjails.api.impl.event;
 
+import com.github.fefo.betterjails.api.BetterJails;
 import com.github.fefo.betterjails.api.event.BetterJailsEvent;
-import com.github.fefo.betterjails.api.model.jail.Jail;
-import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
-import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.Duration;
-import java.util.UUID;
+public abstract class SimpleBetterJailsEvent implements BetterJailsEvent {
 
-/**
- * Dispatched when jailing a player by running {@code /jail <player> <jail> <time>} or calling
- * {@link PrisonerManager#jailPlayer(UUID, Jail, Duration)}.
- */
-public interface PlayerImprisonEvent extends BetterJailsEvent {
+  private final BetterJails api;
+  private final Class<? extends BetterJailsEvent> eventType;
 
-  /**
-   * Gets the prisoner being imprisoned.
-   *
-   * @return the prisoner being imprisoned
-   */
-  @NotNull Prisoner prisoner();
+  protected SimpleBetterJailsEvent(final BetterJails api, final Class<? extends BetterJailsEvent> eventType) {
+    this.api = api;
+    this.eventType = eventType;
+  }
+
+  @Override
+  public @NotNull BetterJails getBetterJails() {
+    return this.api;
+  }
+
+  @Override
+  public @NotNull Class<? extends BetterJailsEvent> getEventType() {
+    return this.eventType;
+  }
 }

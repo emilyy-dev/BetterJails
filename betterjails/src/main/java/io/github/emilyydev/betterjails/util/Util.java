@@ -22,27 +22,17 @@
 // SOFTWARE.
 //
 
-package com.github.fefo.betterjails.api.event.prisoner;
+package io.github.emilyydev.betterjails.util;
 
-import com.github.fefo.betterjails.api.event.BetterJailsEvent;
-import com.github.fefo.betterjails.api.model.jail.Jail;
-import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
-import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
-import org.jetbrains.annotations.NotNull;
+import net.md_5.bungee.api.ChatColor;
 
-import java.time.Duration;
-import java.util.UUID;
+public final class Util {
 
-/**
- * Dispatched when jailing a player by running {@code /jail <player> <jail> <time>} or calling
- * {@link PrisonerManager#jailPlayer(UUID, Jail, Duration)}.
- */
-public interface PlayerImprisonEvent extends BetterJailsEvent {
+  public static String color(final String text, final Object... args) {
+    return ChatColor.translateAlternateColorCodes('&', String.format(text, args));
+  }
 
-  /**
-   * Gets the prisoner being imprisoned.
-   *
-   * @return the prisoner being imprisoned
-   */
-  @NotNull Prisoner prisoner();
+  private Util() {
+    throw new UnsupportedOperationException();
+  }
 }

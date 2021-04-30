@@ -1,7 +1,7 @@
 name: "BetterJails"
-authors: [ "Fehfo" ]
+authors: [ "emilyy-dev" ]
 version: "${project.version}"
-main: "com.github.fefo.betterjails.BetterJailsPlugin"
+main: "io.github.emilyydev.betterjails.BetterJailsPlugin"
 api-version: "1.13"
 load: "POSTWORLD"
 softdepend: [ "Essentials", "Vault" ]

@@ -22,27 +22,27 @@
 // SOFTWARE.
 //
 
-package com.github.fefo.betterjails.api.event.prisoner;
+package io.github.emilyydev.betterjails.api.impl.event.plugin;
 
+import com.github.fefo.betterjails.api.BetterJails;
 import com.github.fefo.betterjails.api.event.BetterJailsEvent;
-import com.github.fefo.betterjails.api.model.jail.Jail;
-import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
-import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
+import com.github.fefo.betterjails.api.event.plugin.PluginReloadEvent;
+import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
+import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.Duration;
-import java.util.UUID;
+public class PluginReloadEventImpl extends SimpleBetterJailsEvent implements PluginReloadEvent {
 
-/**
- * Dispatched when jailing a player by running {@code /jail <player> <jail> <time>} or calling
- * {@link PrisonerManager#jailPlayer(UUID, Jail, Duration)}.
- */
-public interface PlayerImprisonEvent extends BetterJailsEvent {
+  private final CommandSender sender;
 
-  /**
-   * Gets the prisoner being imprisoned.
-   *
-   * @return the prisoner being imprisoned
-   */
-  @NotNull Prisoner prisoner();
+  public PluginReloadEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
+                               final CommandSender sender) {
+    super(api, eventType);
+    this.sender = sender;
+  }
+
+  @Override
+  public @NotNull CommandSender sender() {
+    return this.sender;
+  }
 }

@@ -22,27 +22,56 @@
 // SOFTWARE.
 //
 
-package com.github.fefo.betterjails.api.event.prisoner;
+package io.github.emilyydev.betterjails.api.impl.event;
 
 import com.github.fefo.betterjails.api.event.BetterJailsEvent;
-import com.github.fefo.betterjails.api.model.jail.Jail;
-import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
-import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
+import com.github.fefo.betterjails.api.event.EventSubscription;
+import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.Duration;
-import java.util.UUID;
+import java.util.function.Consumer;
 
-/**
- * Dispatched when jailing a player by running {@code /jail <player> <jail> <time>} or calling
- * {@link PrisonerManager#jailPlayer(UUID, Jail, Duration)}.
- */
-public interface PlayerImprisonEvent extends BetterJailsEvent {
+public class ApiEventSubscription<T extends BetterJailsEvent> implements EventSubscription<T> {
 
-  /**
-   * Gets the prisoner being imprisoned.
-   *
-   * @return the prisoner being imprisoned
-   */
-  @NotNull Prisoner prisoner();
+  private static final Consumer<?> ILLEGAL_HANDLER = t -> {
+    throw new IllegalStateException("Inactive subscription");
+  };
+
+  private boolean active = true;
+  private Consumer<? super T> handler;
+  private final Plugin plugin;
+  private final Class<T> eventType;
+
+  public ApiEventSubscription(final Plugin plugin, final Class<T> eventType, final Consumer<? super T> handler) {
+    this.plugin = plugin;
+    this.eventType = eventType;
+    this.handler = handler;
+  }
+
+  @Override
+  public @NotNull Consumer<? super T> handler() {
+    return this.handler;
+  }
+
+  @Override
+  public @NotNull Class<T> eventType() {
+    return this.eventType;
+  }
+
+  @Override
+  public @NotNull Plugin plugin() {
+    return this.plugin;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public void unsubscribe() {
+    this.active = false;
+    this.handler = (Consumer<? super T>) ILLEGAL_HANDLER;
+  }
+
+  @Override
+  public boolean isActive() {
+    return this.active;
+  }
 }

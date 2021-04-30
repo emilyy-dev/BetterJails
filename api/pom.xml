@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<artifactId>betterjails-parent</artifactId>
-		<groupId>com.github.fefo6644</groupId>
+		<groupId>io.github.emilyy-dev</groupId>
 		<version>1.5-SNAPSHOT</version>
 	</parent>
 
@@ -48,6 +48,13 @@
 						<goals>
 							<goal>jar</goal>
 						</goals>
+						<configuration>
+							<links>
+								<link>https://docs.oracle.com/javase/8/docs/api/</link>
+								<link>https://jd.andross.fr/1.8.8/</link>
+								<link>https://javadoc.io/doc/org.jetbrains/annotations/20.1.0/</link>
+							</links>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -67,6 +74,7 @@
 			<artifactId>spigot-api</artifactId>
 			<version>1.8.8-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
