@@ -1,10 +1,10 @@
 {
   "name": "BetterJails",
   "authors": [
-    "Fefo6644"
+    "emilyy-dev"
   ],
   "version": "${pluginVersion}",
-  "main": "com.github.fefo6644.betterjails.bukkit.BetterJailsBukkit",
+  "main": "io.github.emilyydev.betterjails.bukkit.BetterJailsBukkit",
 
   "api-version": "1.13",
   "load": "POSTWORLD",

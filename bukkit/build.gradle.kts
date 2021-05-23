@@ -1,13 +1,14 @@
 tasks.shadowJar {
-    relocate("net.kyori", "com.github.fefo6644.betterjails.lib.kyori")
-    relocate("com.zaxxer.hikari", "com.github.fefo6644.betterjails.lib.hikari")
-    relocate("org.bstats", "com.github.fefo6644.betterjails.lib.bstats")
-    relocate("io.papermc.lib", "com.github.fefo6644.betterjails.lib.paperlib")
+    listOf(
+        "net.kyori",
+        "com.zaxxer.hikari",
+        "org.bstats",
+        "io.papermc.lib"
+    ).forEach { relocate(it, "io.github.emilyydev.betterjails.lib.$it") }
 }
 
 repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
-    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
 }
 
 dependencies {
@@ -15,8 +16,9 @@ dependencies {
 
     compileOnly("com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT")
     compileOnly("com.destroystokyo.paper:paper-mojangapi:1.16.5-R0.1-SNAPSHOT")
-    compileOnly("com.github.MilkBowl:VaultAPI:1.7")
-    compileOnly("me.clip:placeholderapi:2.10.9")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
+        exclude("org.bukkit", "bukkit")
+    }
 
     implementation("io.papermc:paperlib:1.0.6")
     implementation("org.bstats:bstats-bukkit:1.7")

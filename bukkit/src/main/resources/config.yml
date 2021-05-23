@@ -13,7 +13,7 @@ offline-time: false
 # Time after which the player will be released if they don't join the server in said time.
 # Set to 0 to disable.
 # The time duration format in here is the same as in the command.
-# Examples: "12d", "25mins", "8.5ys", "3mo5ws2days4.045secs"
+# Examples: "12d", "25mins", "8.5ys", "3mo 5ws2days 4.045secs"
 discard-data-after: 0d
 
 

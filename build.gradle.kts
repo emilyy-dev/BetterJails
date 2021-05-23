@@ -2,8 +2,8 @@ defaultTasks("clean", "licenseMain", "shadowJar")
 
 plugins {
     `java-library`
-    id("com.github.johnrengelman.shadow") version "6.1.0"
-    id("com.github.hierynomus.license-base") version "0.15.0"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("com.github.hierynomus.license-base") version "0.16.1"
 }
 
 subprojects {
@@ -24,7 +24,7 @@ subprojects {
         include("**/*.java")
     }
 
-    group = "com.github.fefo6644.betterjails"
+    group = "io.github.emilyy-dev.betterjails"
     version = "2.0-SNAPSHOT"
 
     tasks {
@@ -35,7 +35,7 @@ subprojects {
         processResources {
             duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
-            from(sourceSets.main.get().resources.srcDirs) {
+            filesNotMatching("**/*.zip") {
                 expand("pluginVersion" to version)
             }
         }

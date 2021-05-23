@@ -1,3 +1,7 @@
 rootProject.name = "betterjails"
-include("common")
-include("bukkit")
+
+listOf(
+    "common",
+    "bukkit",
+    "fabric"
+).forEach { include(it) }
