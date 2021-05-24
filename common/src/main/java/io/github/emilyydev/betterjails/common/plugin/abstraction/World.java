@@ -25,17 +25,16 @@
 
 package io.github.emilyydev.betterjails.common.plugin.abstraction;
 
-import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
+import static java.util.Objects.requireNonNull;
+
 public class World {
 
   public static World world(final @NotNull String name, final @NotNull UUID uuid) {
-    Validate.notNull(name, "name");
-    Validate.notNull(uuid, "uuid");
-    return new World(name, uuid);
+    return new World(requireNonNull(name, "name"), requireNonNull(uuid, "uuid"));
   }
 
   private final String name;

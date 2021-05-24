@@ -33,9 +33,11 @@ import java.util.UUID;
 public final class DummyPlayer extends Player<Object> {
 
   public static final DummyPlayer DUMMY_PLAYER = new DummyPlayer();
+  private static final UUID NIL = new UUID(0L, 0L);
+  private static final Object DUMMY_REF = new Object();
 
   private DummyPlayer() {
-    super(new UUID(0L, 0L), "dummy", Audience.empty(), new Object());
+    super(NIL, "dummy", Audience.empty(), DUMMY_REF);
   }
 
   @Override
@@ -46,5 +48,10 @@ public final class DummyPlayer extends Player<Object> {
   @Override
   public void sendMessage(final Component component) {
     // no-op
+  }
+
+  @Override
+  public boolean hasPermission(final String permission) {
+    return false;
   }
 }

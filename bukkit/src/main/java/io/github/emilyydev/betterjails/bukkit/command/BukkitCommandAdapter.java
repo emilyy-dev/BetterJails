@@ -31,7 +31,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
 import io.github.emilyydev.betterjails.bukkit.BetterJailsBukkit;
 import io.github.emilyydev.betterjails.bukkit.reflection.ReflectionHelper;
-import io.github.emilyydev.betterjails.common.command.CommandBridge;
+import io.github.emilyydev.betterjails.common.command.CommandHandler;
 import io.github.emilyydev.betterjails.common.message.Subject;
 import io.github.emilyydev.betterjails.common.plugin.abstraction.PlatformAdapter;
 import org.bukkit.command.Command;
@@ -50,23 +50,23 @@ import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class CommandHandler implements TabExecutor, Listener {
+public class BukkitCommandAdapter implements TabExecutor, Listener {
 
   private final List<Pattern> commandPatterns;
   private final PlatformAdapter<CommandSender, ?, ?, ?> platformAdapter;
-  private final CommandBridge commandBridge;
+  private final CommandHandler commandHandler;
 
   private final Map<UUID, Suggestions> suggestionMap = new HashMap<>();
   private final BiFunction<Subject, String, List<String>> suggestionsRecorder;
 
-  public CommandHandler(final BetterJailsBukkit bukkitPlugin) {
+  public BukkitCommandAdapter(final BetterJailsBukkit bukkitPlugin) {
     this.platformAdapter = bukkitPlugin.getPlatformAdapter();
-    this.commandBridge = bukkitPlugin.getPlugin().getCommandBridge();
+    this.commandHandler = bukkitPlugin.getPlugin().getCommandHandler();
 
     final String prefix = bukkitPlugin.getName().toLowerCase(Locale.ROOT);
     final CommandMap commandMap = ReflectionHelper.getCommandMap();
     final ImmutableList.Builder<Pattern> builder = ImmutableList.builder();
-    for (final CommandNode<Subject> node : this.commandBridge.getCommandNode().getChildren()) {
+    for (final CommandNode<Subject> node : this.commandHandler.getCommandNode().getChildren()) {
       builder.add(Pattern.compile("^(?:" + prefix + ":)?(" + node.getName() + ") "));
 
       final BukkitCommand bukkitCommand = new BukkitCommand(node.getName(), this, this.platformAdapter, node, bukkitPlugin);
@@ -87,7 +87,7 @@ public class CommandHandler implements TabExecutor, Listener {
     try {
       throw new ClassNotFoundException();
     } catch (final ClassNotFoundException exception) {
-      suggestionsRecorder = this.commandBridge::getCompletionSuggestions;
+      suggestionsRecorder = this.commandHandler::getCompletionSuggestions;
     }
     this.suggestionsRecorder = suggestionsRecorder;
   }
@@ -98,7 +98,7 @@ public class CommandHandler implements TabExecutor, Listener {
                            final @NotNull String alias,
                            final @NotNull String[] args) {
     final String cmd = command.getName() + ' ' + String.join(" ", args);
-    this.commandBridge.execute(this.platformAdapter.adaptSubject(sender), cmd);
+    this.commandHandler.execute(this.platformAdapter.adaptSubject(sender), cmd);
     return true;
   }
 

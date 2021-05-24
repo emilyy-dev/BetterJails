@@ -53,7 +53,7 @@ public class Subject {
 
   protected final String name;
   private final Audience audience;
-  private final boolean isConsoleSubject;
+  private final boolean isConsoleSubject; // TODO: change this wtf
 
   protected Subject(final Audience audience, final String name) {
     this(audience, name, false);

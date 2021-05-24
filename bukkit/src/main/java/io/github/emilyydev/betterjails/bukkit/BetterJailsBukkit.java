@@ -25,7 +25,8 @@
 
 package io.github.emilyydev.betterjails.bukkit;
 
-import io.github.emilyydev.betterjails.bukkit.command.CommandHandler;
+import com.google.common.collect.ImmutableList;
+import io.github.emilyydev.betterjails.bukkit.command.BukkitCommandAdapter;
 import io.github.emilyydev.betterjails.bukkit.platform.BukkitPlatformAdapter;
 import io.github.emilyydev.betterjails.bukkit.platform.BukkitTaskScheduler;
 import io.github.emilyydev.betterjails.common.configuration.ConfigurationAdapter;
@@ -35,7 +36,6 @@ import io.github.emilyydev.betterjails.common.plugin.BetterJailsBootstrap;
 import io.github.emilyydev.betterjails.common.plugin.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.common.plugin.abstraction.PlatformAdapter;
 import io.github.emilyydev.betterjails.common.plugin.abstraction.TaskScheduler;
-import com.google.common.collect.ImmutableList;
 import net.kyori.adventure.platform.AudienceProvider;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bukkit.Bukkit;
@@ -73,7 +73,7 @@ public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBo
 
     this.betterJailsPlugin.enable();
 
-    new CommandHandler(this);
+    new BukkitCommandAdapter(this);
 
 //    final Metrics metrics = new Metrics(this, 9015);
 //    metrics.addCustomChart(new Metrics.SingleLineChart("total-jails", null));

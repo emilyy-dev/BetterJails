@@ -53,7 +53,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-public class CommandBridge implements CommandSegment.Root<Subject>, AutoCloseable {
+public class CommandHandler implements CommandSegment.Root<Subject>, AutoCloseable {
 
   private final AtomicBoolean closedState = new AtomicBoolean(false);
   private final CommandDispatcher<Subject> dispatcher = new CommandDispatcher<>();
@@ -65,7 +65,7 @@ public class CommandBridge implements CommandSegment.Root<Subject>, AutoCloseabl
               .setDaemon(false)
               .build());
 
-  public CommandBridge(final BetterJailsPlugin plugin) {
+  public CommandHandler(final BetterJailsPlugin plugin) {
     ImmutableList.of(new BetterJailsCommand(plugin))
                  .forEach(command -> this.rootCommandNode.addChild(command.getCommandNode()));
   }

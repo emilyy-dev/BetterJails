@@ -28,11 +28,11 @@ package io.github.emilyydev.betterjails.common.model.prisoner;
 import io.github.emilyydev.betterjails.common.plugin.abstraction.Location;
 import io.github.emilyydev.betterjails.common.plugin.abstraction.Player;
 import net.kyori.adventure.audience.Audience;
-import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -50,15 +50,13 @@ public abstract class Prisoner<P> extends Player<P> {
                   final Duration duration, final Set<String> groups,
                   final String jail, final Audience audience, final P player) {
     super(uuid, name, audience, player);
-    Validate.notNull(jailedBy);
-    Validate.notNull(lastLocation);
 
     this.groups = groups;
     this.jail = jail;
-    this.jailedBy = jailedBy;
+    this.jailedBy = Objects.requireNonNull(jailedBy, "jailedBy");
     this.jailedFor = duration;
     this.jailedUntil = Instant.now().plus(duration);
-    this.lastLocation = lastLocation;
+    this.lastLocation = Objects.requireNonNull(lastLocation, "lastLocation");
   }
 
   @Override

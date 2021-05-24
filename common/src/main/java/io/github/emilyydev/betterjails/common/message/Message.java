@@ -30,7 +30,6 @@ import io.github.emilyydev.betterjails.common.command.brigadier.ComponentMessage
 import io.github.emilyydev.betterjails.common.plugin.BetterJailsPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.text.TextComponent;
 
 import java.util.List;
 
@@ -111,26 +110,31 @@ public interface Message {
   // &6BetterJails &eby&6 emilyy-dev & contributors &e-&6 v{0}
   Args1<BetterJailsPlugin> PLUGIN_INFO = plugin ->
       text()
-          .hoverEvent(text("github.com/emilyy-dev/BetterJails"))
-          .clickEvent(openUrl("https://github.com/emilyy-dev/BetterJails"))
+          .hoverEvent(text(plugin.getWebsite()))
+          .clickEvent(openUrl(plugin.getWebsite()))
           .color(GOLD)
           .append(join(space(),
                        text("BetterJails"),
                        text("by", YELLOW),
-                       text("emilyy-dev &"),
-                       text()
-                           .content("contributors")
-                           .apply(builder -> {
-                             final List<String> authors = plugin.getAuthors();
-                             final List<String> contributors = authors.subList(1, authors.size());
-                             builder
-                                 .hoverEvent(contributors
-                                                 .stream().map(Component::text)
-                                                 .collect(toComponent(text(", ")))
-                                                 .color(GREEN));
-                           }),
-                       text('-', YELLOW),
-                       text('v' + plugin.getVersion())));
+                       text(plugin.getAuthors().get(0))))
+          .apply(builder -> {
+            final List<String> authors = plugin.getAuthors();
+            final List<String> contributors = authors.subList(1, authors.size());
+            if (!contributors.isEmpty()) {
+              builder.append(text(" & "),
+                             text()
+                                 .content("contributors")
+                                 .apply(contributorsBuilder -> {
+                                   contributorsBuilder
+                                       .hoverEvent(contributors
+                                                       .stream().map(Component::text)
+                                                       .collect(toComponent(text(", ")))
+                                                       .color(GREEN));
+                                 }));
+            }
+          })
+          .append(text(" - ", YELLOW),
+                  text('v' + plugin.getVersion()));
 
   // &fUsage:
   Args0 COMMAND_USAGE_TITLE = () -> prefixed(
@@ -200,8 +204,27 @@ public interface Message {
           .color(RED)
           .append(FULL_STOP));
 
-  static TextComponent.Builder prefixed(final ComponentLike component) {
-    return TextComponent.ofChildren(SHORT_PREFIX, space(), component).toBuilder();
+  Args2<Object, Object> DURATION_TOO_SMALL = (found, min) -> prefixed(
+      translatable()
+          .key("betterjails.command.error.duration-too-small")
+          .args(text(String.valueOf(found)), text(String.valueOf(min)))
+          .color(RED)
+          .append(FULL_STOP));
+
+  Args2<Object, Object> DURATION_TOO_BIG = (found, max) -> prefixed(
+      translatable()
+          .key("betterjails.command.error.duration-too-big")
+          .args(text(String.valueOf(found)), text(String.valueOf(max)))
+          .color(RED)
+          .append(FULL_STOP));
+
+  static Component prefixed(final ComponentLike first, final ComponentLike... rest) {
+    return text()
+        .append(SHORT_PREFIX)
+        .append(space())
+        .append(first)
+        .append(rest)
+        .build();
   }
 
   @FunctionalInterface

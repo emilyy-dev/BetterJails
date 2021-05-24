@@ -44,8 +44,8 @@ subprojects {
     repositories {
         mavenCentral()
         maven("https://oss.sonatype.org/content/groups/public/")
-        maven("https://jitpack.io")
-        maven("https://libraries.minecraft.net")
-        maven("https://repo.codemc.org/repository/maven-public")
+        maven("https://jitpack.io/")
+        maven("https://libraries.minecraft.net/")
+        maven("https://repo.codemc.org/repository/maven-public/")
     }
 }

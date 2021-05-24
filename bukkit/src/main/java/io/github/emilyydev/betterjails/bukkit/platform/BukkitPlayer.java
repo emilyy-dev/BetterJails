@@ -34,7 +34,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
-public class BukkitPlayer extends io.github.emilyydev.betterjails.common.plugin.abstraction.Player<Player> {
+public class BukkitPlayer extends Player<org.bukkit.entity.Player> {
 
   public BukkitPlayer(final @NotNull org.bukkit.entity.Player bukkitPlayer, final @NotNull Audience audience) {
     super(bukkitPlayer.getUniqueId(), bukkitPlayer.getName(), audience, bukkitPlayer);
@@ -45,7 +45,7 @@ public class BukkitPlayer extends io.github.emilyydev.betterjails.common.plugin.
     Validate.notNull(location, "location");
     Validate.notNull(world, "world");
 
-    final org.bukkit.entity.Player bukkitPlayer = getPlayerHandle();
+    final org.bukkit.entity.Player bukkitPlayer = getHandle();
     if (bukkitPlayer == null) {
       return;
     }
@@ -58,7 +58,7 @@ public class BukkitPlayer extends io.github.emilyydev.betterjails.common.plugin.
 
   @Override
   public boolean hasPermission(final String permission) {
-    final org.bukkit.entity.Player bukkitPlayer = getPlayerHandle();
+    final org.bukkit.entity.Player bukkitPlayer = getHandle();
     return bukkitPlayer != null && bukkitPlayer.hasPermission(permission);
   }
 }

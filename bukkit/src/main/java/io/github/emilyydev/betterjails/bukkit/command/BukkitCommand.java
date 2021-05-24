@@ -25,12 +25,12 @@
 
 package io.github.emilyydev.betterjails.bukkit.command;
 
+import com.google.common.collect.ImmutableList;
+import com.mojang.brigadier.tree.CommandNode;
 import io.github.emilyydev.betterjails.bukkit.BetterJailsBukkit;
 import io.github.emilyydev.betterjails.common.message.Message;
 import io.github.emilyydev.betterjails.common.message.Subject;
 import io.github.emilyydev.betterjails.common.plugin.abstraction.PlatformAdapter;
-import com.google.common.collect.ImmutableList;
-import com.mojang.brigadier.tree.CommandNode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginIdentifiableCommand;

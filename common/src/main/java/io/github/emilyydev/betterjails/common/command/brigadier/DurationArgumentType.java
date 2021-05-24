@@ -33,35 +33,33 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.Dynamic2CommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import io.github.emilyydev.betterjails.common.message.Message;
 import io.github.emilyydev.betterjails.common.util.Utils;
-import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DurationArgumentType implements ArgumentType<Duration> {
 
-  private static final Map<String, ChronoUnit> SCALES;
+  private static final Map<String, TemporalUnit> SCALES;
   private static final List<String> SCALES_SUGGESTIONS;
   private static final Dynamic2CommandExceptionType DURATION_TOO_SMALL =
-      new Dynamic2CommandExceptionType((found, min) -> {
-        return ComponentMessage.of(Component.text("Duration must not be less than " + min + ", found " + found));
-      });
+      new Dynamic2CommandExceptionType((found, min) -> ComponentMessage.of(Message.DURATION_TOO_SMALL.build(found, min)));
   private static final Dynamic2CommandExceptionType DURATION_TOO_BIG =
-      new Dynamic2CommandExceptionType((found, max) -> {
-        return ComponentMessage.of(Component.text("Duration must not be more than " + max + ", found " + found));
-      });
-  private static final Collection<String> EXAMPLES = ImmutableList.of("12d", "25mins", "8.5ys", "3mo5ws2days4.045secs");
+      new Dynamic2CommandExceptionType((found, max) -> ComponentMessage.of(Message.DURATION_TOO_BIG.build(found, max)));
+  private static final Collection<String> EXAMPLES = ImmutableList.of("12d", "25mins", "8.5ys", "\"3mo 5ws 2days 4.045secs\"", "3mo5ws2days4.045secs");
   private static final Pattern DURATION_PATTERN =
       Pattern.compile("^" +
                       "(?:(\\d+(?:\\.\\d+)?)(y)(?:ear)?s?)?" +
@@ -116,20 +114,25 @@ public class DurationArgumentType implements ArgumentType<Duration> {
     this.maximum = maximum;
   }
 
-  public @Nullable Duration minimum() {
-    return this.minimum;
+  public @Nullable Optional<Duration> minimum() {
+    return Optional.ofNullable(this.minimum);
   }
 
-  public @Nullable Duration maximum() {
-    return this.maximum;
+  public @Nullable Optional<Duration> maximum() {
+    return Optional.ofNullable(this.maximum);
   }
 
   @Override
   public Duration parse(final StringReader reader) throws CommandSyntaxException {
-    final String input = reader.readUnquotedString().toLowerCase(Locale.ROOT);
+    final String input;
+    if (StringReader.isQuotedStringStart(reader.peek())) {
+      input = reader.readQuotedString().toLowerCase(Locale.ROOT).replaceAll("\\s", "");
+    } else {
+      input = reader.readUnquotedString().toLowerCase(Locale.ROOT);
+    }
+
     if (input.isEmpty()) {
-      throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument()
-                                                      .createWithContext(reader);
+      throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument().createWithContext(reader);
     }
 
     final Matcher matcher = DURATION_PATTERN.matcher(input);
@@ -143,25 +146,22 @@ public class DurationArgumentType implements ArgumentType<Duration> {
         }
 
         // Defaults to seconds if no scale is provided (ergo: group is null)
-        final ChronoUnit unit = SCALES.getOrDefault(matcher.group(i * 2), ChronoUnit.SECONDS);
+        final TemporalUnit unit = SCALES.getOrDefault(matcher.group(i * 2), ChronoUnit.SECONDS);
         final double parsedCurrent = Double.parseDouble(current) * unit.getDuration().getSeconds();
         // Whacky workaround because you can't use ChronoUnits
         // larger than DAYS in Duration#plus(long, TemporalUnit)
         duration = duration.plus(Math.round(parsedCurrent), ChronoUnit.SECONDS);
       }
     } else {
-      throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument()
-                                                      .createWithContext(reader);
+      throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument().createWithContext(reader);
     }
 
     if (this.minimum != null && duration.compareTo(this.minimum) < 0) {
-      throw DURATION_TOO_SMALL.createWithContext(reader, Utils.shortDuration(duration),
-                                                 Utils.shortDuration(this.minimum));
+      throw DURATION_TOO_SMALL.createWithContext(reader, Utils.shortDuration(duration), Utils.shortDuration(this.minimum));
     }
 
     if (this.maximum != null && duration.compareTo(this.maximum) >= 0) {
-      throw DURATION_TOO_BIG.createWithContext(reader, Utils.shortDuration(duration),
-                                               Utils.shortDuration(this.maximum));
+      throw DURATION_TOO_BIG.createWithContext(reader, Utils.shortDuration(duration), Utils.shortDuration(this.maximum));
     }
 
     return duration;
@@ -170,7 +170,15 @@ public class DurationArgumentType implements ArgumentType<Duration> {
   @Override
   public <S> CompletableFuture<Suggestions> listSuggestions(final CommandContext<S> context, final SuggestionsBuilder builder) {
     final String current = builder.getRemaining().toLowerCase(Locale.ROOT);
-    final Matcher matcher = DURATION_PATTERN.matcher(current);
+    if (StringReader.isQuotedStringStart(current.charAt(0))) {
+      for (int i = 1; i < current.toCharArray().length; ++i) {
+        if (StringReader.isQuotedStringStart(current.charAt(i))) {
+          return Suggestions.empty();
+        }
+      }
+    }
+    final String sanitized = current.replaceAll("\\s", "");
+    final Matcher matcher = DURATION_PATTERN.matcher(sanitized);
 
     if (matcher.find()) {
       int nullGroups = 0;

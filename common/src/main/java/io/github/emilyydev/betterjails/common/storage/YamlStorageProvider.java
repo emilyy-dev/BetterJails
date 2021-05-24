@@ -25,9 +25,9 @@
 
 package io.github.emilyydev.betterjails.common.storage;
 
+import com.google.common.collect.BiMap;
 import io.github.emilyydev.betterjails.common.model.cell.Cell;
 import io.github.emilyydev.betterjails.common.model.prisoner.Prisoner;
-import com.google.common.collect.BiMap;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;

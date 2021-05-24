@@ -47,7 +47,12 @@ public class Permission implements Predicate<Subject> {
 
   private final Predicate<Subject> delegate;
 
-  private Permission(final Predicate<Subject> delegate) {
+  private Permission(Predicate<Subject> delegate) {
+    // we only need the root delegate predicate
+    while (delegate instanceof Permission) {
+      delegate = ((Permission) delegate).delegate;
+    }
+
     this.delegate = delegate;
   }
 
@@ -58,8 +63,7 @@ public class Permission implements Predicate<Subject> {
 
   @Override
   public @NotNull Permission and(final @NotNull Predicate<? super Subject> other) {
-    requireNonNull(other, "other");
-    return new Permission(this.delegate.and(other));
+    return new Permission(this.delegate.and(requireNonNull(other, "other")));
   }
 
   public @NotNull Permission and(final @NotNull String other) {
@@ -68,8 +72,7 @@ public class Permission implements Predicate<Subject> {
 
   @Override
   public @NotNull Permission or(final @NotNull Predicate<? super Subject> other) {
-    requireNonNull(other, "other");
-    return new Permission(this.delegate.or(other));
+    return new Permission(this.delegate.or(requireNonNull(other, "other")));
   }
 
   public @NotNull Permission or(final @NotNull String other) {

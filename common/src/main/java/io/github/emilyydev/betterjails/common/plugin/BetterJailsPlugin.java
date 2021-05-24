@@ -26,7 +26,7 @@
 package io.github.emilyydev.betterjails.common.plugin;
 
 import com.google.common.collect.ImmutableList;
-import io.github.emilyydev.betterjails.common.command.CommandBridge;
+import io.github.emilyydev.betterjails.common.command.CommandHandler;
 import io.github.emilyydev.betterjails.common.configuration.ConfigurationAdapter;
 import io.github.emilyydev.betterjails.common.message.Message;
 import io.github.emilyydev.betterjails.common.message.Subject;
@@ -52,7 +52,7 @@ public class BetterJailsPlugin {
 
   public static final Logger LOGGER = LoggerFactory.getLogger(BetterJailsPlugin.class);
 
-  private final CommandBridge commandBridge = new CommandBridge(this);
+  private final CommandHandler commandHandler = new CommandHandler(this);
   private final TranslationManager translationManager = new TranslationManager(this);
   private final BetterJailsBootstrap bootstrapPlugin;
 
@@ -105,8 +105,8 @@ public class BetterJailsPlugin {
     return this.bootstrapPlugin.getAudienceProvider();
   }
 
-  public CommandBridge getCommandBridge() {
-    return this.commandBridge;
+  public CommandHandler getCommandHandler() {
+    return this.commandHandler;
   }
 
   public Path getPluginFolder() {
@@ -153,15 +153,19 @@ public class BetterJailsPlugin {
     return this.bootstrapPlugin.getOnlinePlayers();
   }
 
-  public List<String> getAuthors() {
-    return ImmutableList.of("emilyy-dev");
-  }
-
   public @Nullable InputStream getResource(final String name) {
     return this.getClass().getClassLoader().getResourceAsStream(name);
   }
 
   public @Nullable URL getResourceURL(final String name) {
     return this.getClass().getClassLoader().getResource(name);
+  }
+
+  public List<String> getAuthors() {
+    return ImmutableList.of("emilyy-dev");
+  }
+
+  public String getWebsite() {
+    return "https://github.com/emilyy-dev/BetterJails";
   }
 }

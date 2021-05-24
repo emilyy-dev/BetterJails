@@ -9,7 +9,7 @@ dependencies {
 
     compileOnlyApi("org.yaml:snakeyaml:1.27")
     compileOnlyApi("com.google.code.gson:gson:2.8.0")
-    compileOnlyApi("mysql:mysql-connector-java:5.1.49")
+    compileOnlyApi("mysql:mysql-connector-java:8.0.25")
     api("com.zaxxer:HikariCP:4.0.3")
 
     compileOnlyApi("com.mojang:brigadier:1.0.17")

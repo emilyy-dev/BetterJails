@@ -25,11 +25,11 @@
 
 package io.github.emilyydev.betterjails.common.storage;
 
-import io.github.emilyydev.betterjails.common.model.cell.Cell;
-import io.github.emilyydev.betterjails.common.model.prisoner.Prisoner;
 import com.google.common.collect.BiMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.github.emilyydev.betterjails.common.model.cell.Cell;
+import io.github.emilyydev.betterjails.common.model.prisoner.Prisoner;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

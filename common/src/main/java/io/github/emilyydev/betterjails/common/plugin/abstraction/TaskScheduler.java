@@ -25,8 +25,8 @@
 
 package io.github.emilyydev.betterjails.common.plugin.abstraction;
 
-import io.github.emilyydev.betterjails.common.plugin.BetterJailsPlugin;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import io.github.emilyydev.betterjails.common.plugin.BetterJailsPlugin;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;

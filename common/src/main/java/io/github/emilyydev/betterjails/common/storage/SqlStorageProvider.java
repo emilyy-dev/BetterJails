@@ -25,9 +25,9 @@
 
 package io.github.emilyydev.betterjails.common.storage;
 
+import com.google.common.collect.BiMap;
 import io.github.emilyydev.betterjails.common.model.cell.Cell;
 import io.github.emilyydev.betterjails.common.model.prisoner.Prisoner;
-import com.google.common.collect.BiMap;
 
 import java.io.IOException;
 import java.util.Collection;

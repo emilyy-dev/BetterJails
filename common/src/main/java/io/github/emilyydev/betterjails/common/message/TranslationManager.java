@@ -114,8 +114,7 @@ public class TranslationManager {
   }
 
   private Locale getFileTargetLocale(final Path file) {
-    final String fileName = file.getFileName().toString();
-    final Matcher matcher = MESSAGES_FILE_PATTERN.matcher(fileName);
+    final Matcher matcher = MESSAGES_FILE_PATTERN.matcher(file.getFileName().toString());
     if (matcher.matches()) {
       return Translator.parseLocale(matcher.group(1));
     } else {

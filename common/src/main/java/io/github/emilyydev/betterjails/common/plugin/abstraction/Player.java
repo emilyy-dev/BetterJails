@@ -28,11 +28,11 @@ package io.github.emilyydev.betterjails.common.plugin.abstraction;
 import io.github.emilyydev.betterjails.common.message.Subject;
 import io.github.emilyydev.betterjails.common.model.prisoner.Prisoner;
 import net.kyori.adventure.audience.Audience;
-import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
+import java.util.Objects;
 import java.util.UUID;
 
 public abstract class Player<P> extends Subject {
@@ -43,11 +43,9 @@ public abstract class Player<P> extends Subject {
   protected Player(final @NotNull UUID uuid, final @Nullable String name,
                    final @NotNull Audience audience, final @NotNull P player) {
     super(audience, name);
-    Validate.notNull(uuid, "uuid");
-    Validate.notNull(player, "player");
 
-    this.uuid = uuid;
-    this.playerReference = new WeakReference<>(player);
+    this.uuid = Objects.requireNonNull(uuid, "uuid");
+    this.playerReference = new WeakReference<>(Objects.requireNonNull(player, "player"));
   }
 
   public @NotNull UUID uuid() {
@@ -75,7 +73,7 @@ public abstract class Player<P> extends Subject {
     return null;
   }
 
-  protected final @Nullable P getPlayerHandle() {
+  protected final @Nullable P getHandle() {
     return this.playerReference.get();
   }
 }

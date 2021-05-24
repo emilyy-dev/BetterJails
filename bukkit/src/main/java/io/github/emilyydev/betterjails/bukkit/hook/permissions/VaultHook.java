@@ -25,12 +25,12 @@
 
 package io.github.emilyydev.betterjails.bukkit.hook.permissions;
 
+import com.google.common.collect.ImmutableList;
 import io.github.emilyydev.betterjails.bukkit.hook.BukkitServiceProvider;
 import io.github.emilyydev.betterjails.common.hook.permissions.PermissionsHook;
 import io.github.emilyydev.betterjails.common.plugin.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.common.plugin.abstraction.PlatformAdapter;
 import io.github.emilyydev.betterjails.common.plugin.abstraction.TaskScheduler;
-import com.google.common.collect.ImmutableList;
 import net.milkbowl.vault.permission.Permission;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;

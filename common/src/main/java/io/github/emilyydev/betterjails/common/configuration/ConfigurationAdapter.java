@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 public abstract class ConfigurationAdapter {
 
   private static final String SEPARATOR = ".";
-  private static final Pattern SEPARATOR_PATTERN = Pattern.compile(SEPARATOR, Pattern.LITERAL);
+  private static final String SEPARATOR_LITERAL_PATTERN = Pattern.quote(SEPARATOR);
 
   protected final BetterJailsPlugin plugin;
   protected final Path configFile;
@@ -152,7 +152,7 @@ public abstract class ConfigurationAdapter {
 
   private Object get(final String path, final Map<String, ?> map) {
     Preconditions.checkState(this.initialized, "Cannot query config values at this stage; config not initialized yet");
-    final String[] pathComponents = SEPARATOR_PATTERN.split(path);
+    final String[] pathComponents = path.split(SEPARATOR_LITERAL_PATTERN);
 
     if (pathComponents.length == 1) {
       return map.get(path);
