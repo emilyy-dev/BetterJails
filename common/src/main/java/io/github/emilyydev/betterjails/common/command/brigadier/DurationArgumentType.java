@@ -114,11 +114,11 @@ public class DurationArgumentType implements ArgumentType<Duration> {
     this.maximum = maximum;
   }
 
-  public @Nullable Optional<Duration> minimum() {
+  public Optional<Duration> minimum() {
     return Optional.ofNullable(this.minimum);
   }
 
-  public @Nullable Optional<Duration> maximum() {
+  public Optional<Duration> maximum() {
     return Optional.ofNullable(this.maximum);
   }
 
