@@ -46,9 +46,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
-public class BetterJailsPlugin {
+public final class BetterJailsPlugin {
 
   public static final Logger LOGGER = LoggerFactory.getLogger(BetterJailsPlugin.class);
 
@@ -71,7 +72,7 @@ public class BetterJailsPlugin {
     try {
       this.translationManager.loadTranslations();
     } catch (final IOException exception) {
-      // not fatal, idk why tbh
+      // not fatal, the plugin will still work
       exception.printStackTrace();
     }
 
@@ -149,16 +150,16 @@ public class BetterJailsPlugin {
     return this.bootstrapPlugin.getVersion();
   }
 
-  public <P> Iterable<Player<P>> getOnlinePlayers() {
+  public <P> Collection<Player<P>> getOnlinePlayers() {
     return this.bootstrapPlugin.getOnlinePlayers();
   }
 
   public @Nullable InputStream getResource(final String name) {
-    return this.getClass().getClassLoader().getResourceAsStream(name);
+    return BetterJailsPlugin.class.getClassLoader().getResourceAsStream(name);
   }
 
   public @Nullable URL getResourceURL(final String name) {
-    return this.getClass().getClassLoader().getResource(name);
+    return BetterJailsPlugin.class.getClassLoader().getResource(name);
   }
 
   public List<String> getAuthors() {

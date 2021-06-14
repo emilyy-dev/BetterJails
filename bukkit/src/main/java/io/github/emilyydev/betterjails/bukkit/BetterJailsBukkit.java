@@ -25,7 +25,6 @@
 
 package io.github.emilyydev.betterjails.bukkit;
 
-import com.google.common.collect.ImmutableList;
 import io.github.emilyydev.betterjails.bukkit.command.BukkitCommandAdapter;
 import io.github.emilyydev.betterjails.bukkit.platform.BukkitPlatformAdapter;
 import io.github.emilyydev.betterjails.bukkit.platform.BukkitTaskScheduler;
@@ -49,7 +48,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBootstrap, Listener {
 
@@ -127,10 +128,8 @@ public final class BetterJailsBukkit extends JavaPlugin implements BetterJailsBo
 
   @Override
   @SuppressWarnings("unchecked")
-  public Iterable<io.github.emilyydev.betterjails.common.plugin.abstraction.Player<Player>> getOnlinePlayers() {
-    final ImmutableList.Builder<io.github.emilyydev.betterjails.common.plugin.abstraction.Player<Player>> builder = ImmutableList.builder();
-    Bukkit.getOnlinePlayers().forEach(player -> builder.add(this.platformAdapter.adaptPlayer(player)));
-    return builder.build();
+  public Collection<io.github.emilyydev.betterjails.common.plugin.abstraction.Player<Player>> getOnlinePlayers() {
+    return Bukkit.getOnlinePlayers().stream().map(this.platformAdapter::adaptPlayer).collect(Collectors.toList());
   }
 
   public <T extends Event> void registerListener(final Class<T> eventType, final Consumer<T> handler) {

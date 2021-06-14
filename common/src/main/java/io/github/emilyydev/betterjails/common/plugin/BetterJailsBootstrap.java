@@ -33,6 +33,7 @@ import io.github.emilyydev.betterjails.common.plugin.abstraction.TaskScheduler;
 import net.kyori.adventure.platform.AudienceProvider;
 
 import java.nio.file.Path;
+import java.util.Collection;
 
 public interface BetterJailsBootstrap {
 
@@ -43,6 +44,6 @@ public interface BetterJailsBootstrap {
   Path getPluginFolder();
   ConfigurationAdapter getConfigurationAdapter();
   String getVersion();
-  <P> Iterable<Player<P>> getOnlinePlayers();
+  <P> Collection<Player<P>> getOnlinePlayers();
   BetterJailsPlugin getPlugin();
 }
