@@ -36,7 +36,7 @@ import org.jetbrains.annotations.NotNull;
 
 public interface CommandSegment<S, N extends CommandNode<S>> {
 
-  @NotNull N getCommandNode();
+  @NotNull N commandNode();
 
   default LiteralArgumentBuilder<S> literal(final String name) {
     return LiteralArgumentBuilder.literal(name);
@@ -46,9 +46,7 @@ public interface CommandSegment<S, N extends CommandNode<S>> {
     return RequiredArgumentBuilder.argument(name, type);
   }
 
-  interface Argument<S, T> extends CommandSegment<S, ArgumentCommandNode<S, T>> { }
-
-  interface Literal<S> extends CommandSegment<S, LiteralCommandNode<S>> { }
-
   interface Root<S> extends CommandSegment<S, RootCommandNode<S>> { }
+  interface Literal<S> extends CommandSegment<S, LiteralCommandNode<S>> { }
+  interface Argument<S, T> extends CommandSegment<S, ArgumentCommandNode<S, T>> { }
 }

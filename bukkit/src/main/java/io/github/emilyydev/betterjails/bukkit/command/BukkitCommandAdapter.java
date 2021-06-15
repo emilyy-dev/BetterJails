@@ -66,7 +66,7 @@ public class BukkitCommandAdapter implements TabExecutor, Listener {
     final String prefix = bukkitPlugin.getName().toLowerCase(Locale.ROOT);
     final CommandMap commandMap = ReflectionHelper.getCommandMap();
     final ImmutableList.Builder<Pattern> builder = ImmutableList.builder();
-    for (final CommandNode<Subject> node : this.commandHandler.getCommandNode().getChildren()) {
+    for (final CommandNode<Subject> node : this.commandHandler.commandNode().getChildren()) {
       builder.add(Pattern.compile("^(?:" + prefix + ":)?(" + node.getName() + ") "));
 
       final BukkitCommand bukkitCommand = new BukkitCommand(node.getName(), this, this.platformAdapter, node, bukkitPlugin);

@@ -25,10 +25,10 @@
 
 package io.github.emilyydev.betterjails.common.configuration;
 
-import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
+import java.util.Objects;
 
 public enum GroupChangingBehavior {
   ADD,
@@ -38,9 +38,7 @@ public enum GroupChangingBehavior {
   BLACKLIST;
 
   public static GroupChangingBehavior find(final @NotNull String value) {
-    Validate.notNull(value);
-
-    final String sanitized = value.toUpperCase(Locale.ROOT).replaceAll("[\\s-_]", "");
+    final String sanitized = Objects.requireNonNull(value, "value").toUpperCase(Locale.ROOT).replaceAll("[\\s-_]", "");
     try {
       return valueOf(sanitized);
     } catch (final IllegalArgumentException exception) {

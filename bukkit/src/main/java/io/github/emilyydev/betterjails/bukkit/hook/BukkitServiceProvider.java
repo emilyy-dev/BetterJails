@@ -27,35 +27,19 @@ package io.github.emilyydev.betterjails.bukkit.hook;
 
 import io.github.emilyydev.betterjails.common.plugin.BetterJailsPlugin;
 import org.bukkit.Bukkit;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-public abstract class BukkitServiceProvider {
+public final class BukkitServiceProvider {
 
-  public static <T, U> Optional<U> hook(@NotNull final BetterJailsPlugin plugin,
-                                        @NotNull final Class<T> serviceClass, @NotNull final String serviceName,
-                                        @NotNull final BiFunction<? super T, ? super BetterJailsPlugin, ? extends U> serviceConsumerProvider) {
+  public static <T, U> Optional<U> hook(final @NotNull BetterJailsPlugin plugin, final @NotNull Class<T> serviceClass,
+                                        final @NotNull BiFunction<T, BetterJailsPlugin, U> serviceAdapter) {
     Objects.requireNonNull(plugin, "plugin");
     Objects.requireNonNull(serviceClass, "serviceClass");
-    Objects.requireNonNull(serviceName, "serviceName");
-    Objects.requireNonNull(serviceConsumerProvider, "serviceConsumerProvider");
-
-    if (Bukkit.getPluginManager().isPluginEnabled(serviceName)) {
-      plugin.getLogger().info("Hooking with " + serviceName + "...");
-      final RegisteredServiceProvider<T> serviceProvider = Bukkit.getServicesManager().getRegistration(serviceClass);
-      if (serviceProvider != null) {
-        final U serviceConsumer = serviceConsumerProvider.apply(serviceProvider.getProvider(), plugin);
-        return Optional.of(serviceConsumer);
-      }
-
-      plugin.getLogger().warn(serviceName + " was found but could not hook with it!");
-    }
-
-    return Optional.empty();
+    Objects.requireNonNull(serviceAdapter, "serviceAdapter");
+    return Optional.ofNullable(Bukkit.getServicesManager().load(serviceClass)).map(service -> serviceAdapter.apply(service, plugin));
   }
-
 }

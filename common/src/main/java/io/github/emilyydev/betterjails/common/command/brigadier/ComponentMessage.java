@@ -29,10 +29,10 @@ import com.mojang.brigadier.Message;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 
-public class ComponentMessage implements Message, ComponentLike {
+public final class ComponentMessage implements Message, ComponentLike {
 
   public static ComponentMessage of(final @NotNull ComponentLike like) {
     return new ComponentMessage(like);
@@ -46,7 +46,7 @@ public class ComponentMessage implements Message, ComponentLike {
 
   @Override
   public String getString() {
-    return PlainComponentSerializer.plain().serialize(this.component);
+    return PlainTextComponentSerializer.plainText().serialize(this.component);
   }
 
   public @NotNull Component component() {

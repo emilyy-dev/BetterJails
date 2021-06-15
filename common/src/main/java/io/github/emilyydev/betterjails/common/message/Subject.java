@@ -75,7 +75,7 @@ public class Subject {
     }
   }
 
-  private Iterable<Component> splitNewline(final Component original) {
+  private List<Component> splitNewline(final Component original) {
 
     final List<Component> lines = new ArrayList<>();
 

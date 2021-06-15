@@ -25,6 +25,7 @@
 
 package io.github.emilyydev.betterjails.common.command.command;
 
+import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -69,13 +70,13 @@ public class BetterJailsCommand implements CommandSegment.Literal<Subject> {
   }
 
   @Override
-  public @NotNull LiteralCommandNode<Subject> getCommandNode() {
+  public @NotNull LiteralCommandNode<Subject> commandNode() {
     return this.commandNode;
   }
 
   private int pluginInfo(final CommandContext<Subject> context) {
     Message.PLUGIN_INFO.send(context.getSource(), this.plugin);
-    return 1;
+    return Command.SINGLE_SUCCESS;
   }
 
   private int reloadConfig(final CommandContext<Subject> context) {
@@ -91,7 +92,7 @@ public class BetterJailsCommand implements CommandSegment.Literal<Subject> {
       Message.CHECK_CONSOLE.send(subject);
     }
 
-    return 1;
+    return Command.SINGLE_SUCCESS;
   }
 
   private int reloadData(final CommandContext<Subject> context) {
@@ -108,7 +109,7 @@ public class BetterJailsCommand implements CommandSegment.Literal<Subject> {
       Message.CHECK_CONSOLE.send(subject);
     }
 
-    return 1;
+    return Command.SINGLE_SUCCESS;
   }
 
   private int save(final CommandContext<Subject> context) {
@@ -125,11 +126,11 @@ public class BetterJailsCommand implements CommandSegment.Literal<Subject> {
       Message.CHECK_CONSOLE.send(subject);
     }
 
-    return 1;
+    return Command.SINGLE_SUCCESS;
   }
 
   private int playerInfo(final CommandContext<Subject> context) {
 
-    return 1;
+    return Command.SINGLE_SUCCESS;
   }
 }

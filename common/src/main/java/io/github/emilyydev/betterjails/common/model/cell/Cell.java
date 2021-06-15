@@ -33,7 +33,7 @@ public final class Cell {
   private final String name;
   private final Location location;
 
-  public Cell(@NotNull final String name, @NotNull final Location location) {
+  public Cell(final @NotNull String name, final @NotNull Location location) {
     this.name = name;
     this.location = location;
   }

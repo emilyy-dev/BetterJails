@@ -31,10 +31,26 @@ import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class PermissionsHook {
+public interface PermissionPlatformInterface {
 
-  public abstract CompletableFuture<Collection<String>> getParentGroups(final Player player);
-  public abstract CompletableFuture<Collection<String>> getParentGroups(final UUID uuid);
-  public abstract CompletableFuture<Void> setParentGroup(final Player player, final String group);
-  public abstract CompletableFuture<Void> setParentGroup(final UUID uuid, final String group);
+  CompletableFuture<Collection<String>> getParentGroups(final UUID uuid);
+  CompletableFuture<Void> setParentGroup(final UUID uuid, final String group);
+  CompletableFuture<Void> addParentGroup(final UUID uuid, final String group);
+  CompletableFuture<Void> removeParentGroup(final UUID uuid, final String group);
+
+  default CompletableFuture<Collection<String>> getParentGroups(final Player<?> player) {
+    return getParentGroups(player.uuid());
+  }
+
+  default CompletableFuture<Void> setParentGroup(final Player<?> player, final String groupName) {
+    return setParentGroup(player.uuid(), groupName);
+  }
+
+  default CompletableFuture<Void> addParentGroup(final Player<?> player, final String groupName) {
+    return addParentGroup(player.uuid(), groupName);
+  }
+
+  default CompletableFuture<Void> removeParentGroup(final Player<?> player, final String groupName) {
+    return removeParentGroup(player.uuid(), groupName);
+  }
 }

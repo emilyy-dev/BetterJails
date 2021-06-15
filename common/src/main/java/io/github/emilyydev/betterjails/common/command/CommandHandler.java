@@ -67,11 +67,11 @@ public class CommandHandler implements CommandSegment.Root<Subject>, AutoCloseab
 
   public CommandHandler(final BetterJailsPlugin plugin) {
     ImmutableList.of(new BetterJailsCommand(plugin))
-                 .forEach(command -> this.rootCommandNode.addChild(command.getCommandNode()));
+                 .forEach(command -> this.rootCommandNode.addChild(command.commandNode()));
   }
 
   @Override
-  public @NotNull RootCommandNode<Subject> getCommandNode() {
+  public @NotNull RootCommandNode<Subject> commandNode() {
     return this.rootCommandNode;
   }
 

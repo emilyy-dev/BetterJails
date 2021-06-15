@@ -57,8 +57,8 @@ public final class CellManager {
    * @throws IllegalArgumentException if either {@code name} or {@code location} are {@code null}.
    * @throws IllegalArgumentException if {@code name} doesn't match {@link #VALID_CELL_NAME}.
    */
-  public @NotNull Cell createCell(@NotNull final String name,
-                                  @NotNull final Location location,
+  public @NotNull Cell createCell(final @NotNull String name,
+                                  final @NotNull Location location,
                                   final boolean overwrite) throws IllegalArgumentException {
     Validate.notNull(name, "Cell name cannot be null");
     Validate.notNull(location, "Cell location cannot be null");
@@ -79,7 +79,7 @@ public final class CellManager {
     return this.loadedCells.get(sanitized);
   }
 
-  public @Nullable Cell getCell(@NotNull final String name) {
+  public @Nullable Cell getCell(final @NotNull String name) {
     Validate.notNull(name, "Cell name cannot be null");
     return this.loadedCells.get(Utils.sanitize(name));
   }

@@ -104,7 +104,7 @@ public class TranslationManager {
     GlobalTranslator.get().addSource(this.registry);
 
     try (final Stream<Path> translationsFolderStream = Files.list(this.translationsFolder)) {
-      translationsFolderStream.parallel().forEach(file -> {
+      translationsFolderStream.forEach(file -> {
         final Locale targetLocale = getFileTargetLocale(file);
         if (targetLocale != null) {
           this.registry.registerAll(targetLocale, file, false);
