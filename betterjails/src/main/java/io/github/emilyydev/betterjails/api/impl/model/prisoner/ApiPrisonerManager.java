@@ -71,7 +71,7 @@ public class ApiPrisonerManager implements PrisonerManager {
     final String jailedBy = config.getString(DataHandler.FIELD_JAILEDBY);
     final Instant jailedUntil = config.getBoolean(DataHandler.FIELD_UNJAILED)
                                 ? Instant.MIN
-                                : Instant.now().plusSeconds(config.getLong(DataHandler.FIELD_SECONDSLEFT));
+                                : Instant.now().plusSeconds(this.plugin.dataHandler.getSecondsLeft(uuid, 0));
 
     return new ApiPrisoner(uuid, name, group, jail, jailedBy, jailedUntil, lastLocation);
   }
