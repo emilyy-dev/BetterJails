@@ -59,13 +59,8 @@ public class ApiJail implements Jail {
 
   @Override
   public boolean equals(final Object other) {
-    if (this == other) {
-      return true;
-    }
-    if (!(other instanceof ApiJail)) {
-      return false;
-    }
-
+    if (this == other) { return true; }
+    if (other == null || other.getClass() != this.getClass()) { return false; }
     final ApiJail that = (ApiJail) other;
     return this.name.equals(that.name);
   }

@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
-import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -53,10 +52,6 @@ import static java.util.Objects.requireNonNull;
  */
 @Unmodifiable
 public final class ImmutableLocation implements ConfigurationSerializable {
-
-  static {
-    ConfigurationSerialization.registerClass(ImmutableLocation.class);
-  }
 
   @Contract("_ -> new")
   public static @NotNull ImmutableLocation copyOf(final @NotNull Location location) {

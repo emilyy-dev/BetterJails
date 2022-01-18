@@ -21,7 +21,7 @@ public class PluginDisableListener implements Listener {
 
   public void register(final Plugin plugin) {
     Bukkit.getPluginManager().registerEvent(PluginDisableEvent.class, this, EventPriority.NORMAL,
-                                            (l, e) -> pluginDisable((PluginDisableEvent) e), plugin);
+        (l, e) -> pluginDisable((PluginDisableEvent) e), plugin);
   }
 
   private void pluginDisable(final PluginDisableEvent event) {

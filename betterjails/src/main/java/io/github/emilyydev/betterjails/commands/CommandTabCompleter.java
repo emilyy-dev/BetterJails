@@ -24,8 +24,8 @@
 
 package io.github.emilyydev.betterjails.commands;
 
-import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import com.google.common.collect.ImmutableList;
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -44,9 +44,9 @@ public class CommandTabCompleter implements TabCompleter {
 
   @Override
   public List<String> onTabComplete(final @NotNull CommandSender sender,
-                                    final @NotNull Command cmd,
-                                    final @NotNull String alias,
-                                    final @NotNull String @NotNull [] args) {
+      final @NotNull Command cmd,
+      final @NotNull String alias,
+      final @NotNull String @NotNull [] args) {
     final ImmutableList.Builder<String> suggestionsBuilder = ImmutableList.builder();
 
     switch (cmd.getName()) {
@@ -126,13 +126,11 @@ public class CommandTabCompleter implements TabCompleter {
             break;
           }
 
-          if (reloadPerms &&
-              "reload".startsWith(args[0].toLowerCase())) {
+          if (reloadPerms && "reload".startsWith(args[0].toLowerCase())) {
             suggestionsBuilder.add("reload");
           }
 
-          if (savePerms &&
-              "save".startsWith(args[0].toLowerCase())) {
+          if (savePerms && "save".startsWith(args[0].toLowerCase())) {
             suggestionsBuilder.add("save");
           }
 

@@ -44,7 +44,7 @@ public class ApiPrisoner implements Prisoner {
   private final ImmutableLocation lastLocation;
 
   public ApiPrisoner(final UUID uuid, final String name, final String primaryGroup, final Jail jail,
-                     final String jailedBy, final Instant jailedUntil, final ImmutableLocation lastLocation) {
+      final String jailedBy, final Instant jailedUntil, final ImmutableLocation lastLocation) {
     this.uuid = uuid;
     this.name = name;
     this.primaryGroup = primaryGroup;

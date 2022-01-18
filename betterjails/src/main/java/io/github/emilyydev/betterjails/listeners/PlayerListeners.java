@@ -25,9 +25,8 @@
 package io.github.emilyydev.betterjails.listeners;
 
 import com.earth2me.essentials.User;
-import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import com.github.fefo.betterjails.api.model.jail.Jail;
-import io.github.emilyydev.betterjails.util.UpdateChecker;
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -58,11 +57,11 @@ public class PlayerListeners implements Listener {
   public void register() {
     final PluginManager pluginManager = Bukkit.getPluginManager();
     pluginManager.registerEvent(PlayerJoinEvent.class, this, EventPriority.HIGH,
-                                (l, e) -> playerJoin((PlayerJoinEvent) e), this.plugin);
+        (l, e) -> playerJoin((PlayerJoinEvent) e), this.plugin);
     pluginManager.registerEvent(PlayerQuitEvent.class, this, EventPriority.NORMAL,
-                                (l, e) -> playerQuit((PlayerQuitEvent) e), this.plugin);
+        (l, e) -> playerQuit((PlayerQuitEvent) e), this.plugin);
     pluginManager.registerEvent(PlayerRespawnEvent.class, this, EventPriority.HIGH,
-                                (l, e) -> playerRespawn((PlayerRespawnEvent) e), this.plugin);
+        (l, e) -> playerRespawn((PlayerRespawnEvent) e), this.plugin);
   }
 
   private void playerJoin(final PlayerJoinEvent event) {
@@ -79,7 +78,7 @@ public class PlayerListeners implements Listener {
             this.plugin.dataHandler.addJailedPlayer(player, jailName, null, this.plugin.dataHandler.getSecondsLeft(uuid, 0));
           } else {
             this.plugin.dataHandler.addJailedPlayer(player, this.plugin.dataHandler.getJails().values().iterator().next().name(),
-                                                    null, this.plugin.dataHandler.getSecondsLeft(uuid, 0));
+                null, this.plugin.dataHandler.getSecondsLeft(uuid, 0));
           }
 
         } catch (final IOException exception) {
@@ -93,7 +92,7 @@ public class PlayerListeners implements Listener {
     if (player.hasPermission("betterjails.receivebroadcast")
         && !this.plugin.getDescription().getVersion().endsWith("-SNAPSHOT")) {
       Bukkit.getScheduler().runTaskLater(this.plugin, () ->
-          new UpdateChecker(this.plugin, 76001).getVersion(version -> {
+          Util.checkVersion(this.plugin, 76001, version -> {
             if (!this.plugin.getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {
               player.sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
             }

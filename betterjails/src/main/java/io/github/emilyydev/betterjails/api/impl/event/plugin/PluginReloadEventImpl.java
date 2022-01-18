@@ -36,7 +36,7 @@ public class PluginReloadEventImpl extends SimpleBetterJailsEvent implements Plu
   private final CommandSender sender;
 
   public PluginReloadEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
-                               final CommandSender sender) {
+      final CommandSender sender) {
     super(api, eventType);
     this.sender = sender;
   }

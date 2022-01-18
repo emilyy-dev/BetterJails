@@ -27,8 +27,8 @@ package io.github.emilyydev.betterjails.api.impl.event.prisoner;
 import com.github.fefo.betterjails.api.BetterJails;
 import com.github.fefo.betterjails.api.event.BetterJailsEvent;
 import com.github.fefo.betterjails.api.event.prisoner.PrisonerReleaseEvent;
-import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
+import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
 import org.jetbrains.annotations.NotNull;
 
 public class PrisonerReleaseEventImpl extends SimpleBetterJailsEvent implements PrisonerReleaseEvent {
@@ -36,7 +36,7 @@ public class PrisonerReleaseEventImpl extends SimpleBetterJailsEvent implements 
   private final Prisoner prisoner;
 
   public PrisonerReleaseEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
-                                  final Prisoner prisoner) {
+      final Prisoner prisoner) {
     super(api, eventType);
     this.prisoner = prisoner;
   }

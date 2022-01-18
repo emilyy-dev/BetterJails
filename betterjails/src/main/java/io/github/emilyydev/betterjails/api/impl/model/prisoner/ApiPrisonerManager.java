@@ -24,13 +24,14 @@
 
 package io.github.emilyydev.betterjails.api.impl.model.prisoner;
 
-import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
-import io.github.emilyydev.betterjails.util.DataHandler;
 import com.google.common.base.Preconditions;
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.api.impl.event.ApiEventBus;
+import io.github.emilyydev.betterjails.util.DataHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -43,10 +44,8 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class ApiPrisonerManager implements PrisonerManager {
 
@@ -70,15 +69,16 @@ public class ApiPrisonerManager implements PrisonerManager {
     final Jail jail = this.plugin.dataHandler.getJail(config.getString(DataHandler.FIELD_JAIL));
     final String jailedBy = config.getString(DataHandler.FIELD_JAILEDBY);
     final Instant jailedUntil = config.getBoolean(DataHandler.FIELD_UNJAILED)
-                                ? Instant.MIN
-                                : Instant.now().plusSeconds(this.plugin.dataHandler.getSecondsLeft(uuid, 0));
+        ? Instant.MIN
+        : Instant.now().plusSeconds(this.plugin.dataHandler.getSecondsLeft(uuid, 0));
 
     return new ApiPrisoner(uuid, name, group, jail, jailedBy, jailedUntil, lastLocation);
   }
 
   @Override
   @SuppressWarnings("ConstantConditions")
-  public @NotNull Prisoner jailPlayer(final @NotNull UUID uuid, final @NotNull Jail jail, final @NotNull Duration duration) {
+  public @NotNull Prisoner jailPlayer(final @NotNull UUID uuid, final @NotNull Jail jail,
+      final @NotNull Duration duration) {
     Objects.requireNonNull(uuid, "uuid");
     Objects.requireNonNull(jail, "jail");
     Objects.requireNonNull(duration, "duration");
@@ -111,10 +111,9 @@ public class ApiPrisonerManager implements PrisonerManager {
 
   @Override
   public @NotNull @Unmodifiable Collection<@NotNull Prisoner> getAllPrisoners() {
-    return Collections.unmodifiableSet(this.plugin.dataHandler.getAllJailedPlayers()
-                                                              .keySet().stream()
-                                                              .map(this::getPrisoner)
-                                                              .filter(Objects::nonNull)
-                                                              .collect(Collectors.toSet()));
+    return this.plugin.dataHandler.getAllJailedPlayers().keySet().stream()
+        .map(this::getPrisoner)
+        .filter(Objects::nonNull)
+        .collect(ApiEventBus.toImmutableSet());
   }
 }

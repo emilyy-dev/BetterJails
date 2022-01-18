@@ -24,13 +24,13 @@
 
 package io.github.emilyydev.betterjails.api.impl;
 
-import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import com.github.fefo.betterjails.api.BetterJails;
 import com.github.fefo.betterjails.api.event.EventBus;
-import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJailManager;
-import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisonerManager;
 import com.github.fefo.betterjails.api.model.jail.JailManager;
 import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJailManager;
+import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisonerManager;
 import org.jetbrains.annotations.NotNull;
 
 public class BetterJailsApi implements BetterJails {

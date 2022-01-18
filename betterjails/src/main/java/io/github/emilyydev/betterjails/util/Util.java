@@ -25,14 +25,34 @@
 package io.github.emilyydev.betterjails.util;
 
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
 
-public final class Util {
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
+import java.util.function.Consumer;
 
-  public static String color(final String text, final Object... args) {
+public interface Util {
+
+  static String color(final String text, final Object... args) {
     return ChatColor.translateAlternateColorCodes('&', String.format(text, args));
   }
 
-  private Util() {
-    throw new UnsupportedOperationException();
+  static void checkVersion(final Plugin plugin, final int id, final Consumer<String> consumer) {
+    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+      try (final InputStream stream = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + id).openStream();
+          final InputStream bufferedInput = new BufferedInputStream(stream);
+          final Scanner scanner = new Scanner(bufferedInput, StandardCharsets.UTF_8.name())) {
+        if (scanner.hasNext()) {
+          consumer.accept(scanner.next());
+        }
+      } catch (final IOException exception) {
+        plugin.getLogger().warning("Cannot look for updates: " + exception.getMessage());
+      }
+    });
   }
 }

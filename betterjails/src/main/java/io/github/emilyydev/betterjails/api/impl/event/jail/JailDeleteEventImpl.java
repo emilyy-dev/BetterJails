@@ -27,8 +27,8 @@ package io.github.emilyydev.betterjails.api.impl.event.jail;
 import com.github.fefo.betterjails.api.BetterJails;
 import com.github.fefo.betterjails.api.event.BetterJailsEvent;
 import com.github.fefo.betterjails.api.event.jail.JailDeleteEvent;
-import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
+import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
 import org.jetbrains.annotations.NotNull;
 
 public class JailDeleteEventImpl extends SimpleBetterJailsEvent implements JailDeleteEvent {
@@ -36,7 +36,7 @@ public class JailDeleteEventImpl extends SimpleBetterJailsEvent implements JailD
   private final Jail jail;
 
   public JailDeleteEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
-                             final Jail jail) {
+      final Jail jail) {
     super(api, eventType);
     this.jail = jail;
   }

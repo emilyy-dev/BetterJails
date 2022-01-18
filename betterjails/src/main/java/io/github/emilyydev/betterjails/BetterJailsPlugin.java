@@ -25,6 +25,7 @@
 package io.github.emilyydev.betterjails;
 
 import com.github.fefo.betterjails.api.BetterJails;
+import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.api.impl.BetterJailsApi;
 import io.github.emilyydev.betterjails.api.impl.event.ApiEventBus;
 import io.github.emilyydev.betterjails.commands.CommandHandler;
@@ -32,12 +33,12 @@ import io.github.emilyydev.betterjails.commands.CommandTabCompleter;
 import io.github.emilyydev.betterjails.listeners.PlayerListeners;
 import io.github.emilyydev.betterjails.listeners.PluginDisableListener;
 import io.github.emilyydev.betterjails.util.DataHandler;
-import io.github.emilyydev.betterjails.util.UpdateChecker;
 import io.github.emilyydev.betterjails.util.Util;
 import net.ess3.api.IEssentials;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -48,14 +49,7 @@ import java.util.Map;
 public class BetterJailsPlugin extends JavaPlugin {
 
   static {
-    try {
-      // ensure class loading to register as ConfigurationSerializable
-      // shoulda registered it in here smh...
-      BetterJailsPlugin.class.getClassLoader().loadClass("com.github.fefo.betterjails.api.util.ImmutableLocation");
-    } catch (final Throwable throwable) {
-      // it's bundled in so it won't throw (and if a dev messes up we'll know :D)
-      throw new RuntimeException(throwable);
-    }
+    ConfigurationSerialization.registerClass(ImmutableLocation.class);
   }
 
   public DataHandler dataHandler = null;
@@ -129,7 +123,7 @@ public class BetterJailsPlugin extends JavaPlugin {
 
       if (!getDescription().getVersion().endsWith("-SNAPSHOT")) {
         Bukkit.getScheduler().runTaskLater(this, () ->
-            new UpdateChecker(this, 76001).getVersion(version -> {
+            Util.checkVersion(this, 76001, version -> {
               if (!getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {
                 Bukkit.getConsoleSender().sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
               }

@@ -24,9 +24,9 @@
 
 package io.github.emilyydev.betterjails.api.impl.model.jail;
 
-import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.jail.JailManager;
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.util.DataHandler;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +48,8 @@ public class ApiJailManager implements JailManager {
 
   @Override
   @SuppressWarnings("ConstantConditions")
-  public @NotNull Jail createAndSaveJail(final @NotNull String name, final @NotNull Location location) throws IllegalArgumentException {
+  public @NotNull Jail createAndSaveJail(final @NotNull String name, final @NotNull Location location)
+      throws IllegalArgumentException {
     Objects.requireNonNull(name, "name");
     Objects.requireNonNull(location, "location");
 

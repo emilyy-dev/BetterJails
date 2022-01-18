@@ -27,8 +27,8 @@ package io.github.emilyydev.betterjails.api.impl.event.jail;
 import com.github.fefo.betterjails.api.BetterJails;
 import com.github.fefo.betterjails.api.event.BetterJailsEvent;
 import com.github.fefo.betterjails.api.event.jail.JailCreateEvent;
-import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
+import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
 import org.jetbrains.annotations.NotNull;
 
 public class JailCreateEventImpl extends SimpleBetterJailsEvent implements JailCreateEvent {
@@ -37,7 +37,7 @@ public class JailCreateEventImpl extends SimpleBetterJailsEvent implements JailC
   private final ImmutableLocation jailLocation;
 
   public JailCreateEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
-                             final String jailName, final ImmutableLocation jailLocation) {
+      final String jailName, final ImmutableLocation jailLocation) {
     super(api, eventType);
     this.jailName = jailName;
     this.jailLocation = jailLocation;
