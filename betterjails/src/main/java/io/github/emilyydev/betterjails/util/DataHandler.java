@@ -115,7 +115,9 @@ public class DataHandler {
     this.playerDataFolder.mkdir();
 
     this.subcommandsFile = new File(plugin.getDataFolder(), "subcommands.yml");
-    plugin.saveResource("subcommands.yml", false);
+    if (!this.subcommandsFile.exists()) {
+      plugin.saveResource("subcommands.yml", false);
+    }
     this.subcommandsYaml = YamlConfiguration.loadConfiguration(this.subcommandsFile);
 
     alertNewConfigAvailable();
