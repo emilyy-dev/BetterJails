@@ -32,6 +32,9 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Collection;
 
+/**
+ * A jail manager, for managing jails. Allows for creating, fetching and deleting {@link Jail} instances by name.
+ */
 @ApiStatus.NonExtendable
 public interface JailManager {
 
@@ -40,8 +43,10 @@ public interface JailManager {
    * Jail names are case insensitive and converted to lowercase.
    * <p>
    * If it does exist this method throws an {@link IllegalArgumentException}.
+   * </p>
    * <p>
    * If it does not exist, a new jail will be created, saved to storage and returned.
+   * </p>
    *
    * @param name     the identifying name of the new jail
    * @param location the location of the new jail
@@ -70,6 +75,7 @@ public interface JailManager {
    * Gets a set of all available {@link Jail}s.
    * <p>
    * This collection is unmodifiable and it updates over time as the backend map changes.
+   * </p>
    *
    * @return an unmodifiable view of the jail collection
    */

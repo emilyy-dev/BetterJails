@@ -38,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
  * <p>
  * You can get a hold of an instance of this interface by calling
  * {@code Bukkit.getServicesManager().load(BetterJails.class)}.
+ * </p>
  */
 @ApiStatus.NonExtendable
 public interface BetterJails {
@@ -47,6 +48,7 @@ public interface BetterJails {
    * <p>
    * This manager can be used to create, delete and retrieve instances of a {@link Jail} by name
    * or get all available jails.
+   * </p>
    *
    * @return the jail manager
    */
@@ -57,6 +59,7 @@ public interface BetterJails {
    * <p>
    * This manager can be used to imprison players, retrieve and release {@link Prisoner}s or get
    * all known prisoners.
+   * </p>
    *
    * @return the prisoner manager
    */

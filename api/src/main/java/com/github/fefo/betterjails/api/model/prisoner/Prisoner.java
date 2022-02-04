@@ -38,6 +38,7 @@ import java.util.UUID;
  * <p>
  * It contains all the information about a prisoner such as the name (if known), the UUID, the jail
  * they are in, who imprisoned them, release date and more.
+ * </p>
  */
 public interface Prisoner {
 
@@ -60,6 +61,7 @@ public interface Prisoner {
    * <p>
    * The nullability of this field can be due to platform settings or because it was unknown at the
    * time of jailing.
+   * </p>
    *
    * @return the primary group
    */
@@ -78,6 +80,7 @@ public interface Prisoner {
    * <p>
    * Although it makes more sense for this to be {@code @NotNull}, implementation for whatever
    * reason passes {@code null} <i>sometimes.</i>
+   * </p>
    *
    * @return the name of the {@link CommandSender} that jailed the player or {@code "api"}
    */

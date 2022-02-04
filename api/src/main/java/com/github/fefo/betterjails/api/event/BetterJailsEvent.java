@@ -31,8 +31,10 @@ import org.jetbrains.annotations.NotNull;
  * The superinterface of every event BetterJails posts on its event bus.
  * <p>
  * All events happen after the action takes place (unless noted otherwise).
+ * </p>
  * <p>
  * No events are cancellable, they exist merely for monitoring purposes.
+ * </p>
  */
 public interface BetterJailsEvent {
 

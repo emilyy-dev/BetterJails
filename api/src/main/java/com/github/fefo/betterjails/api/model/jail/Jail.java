@@ -48,6 +48,7 @@ public interface Jail {
    * <p>
    * This method <b>does not</b> teleport the current prisoners to the new location, use
    * {@link PrisonerManager#jailPlayer(UUID, Jail, Duration)} to relocate them.
+   * </p>
    *
    * @param location the new location
    */

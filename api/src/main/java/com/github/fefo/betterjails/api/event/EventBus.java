@@ -42,9 +42,11 @@ public interface EventBus {
    * <p>
    * The plugin instance is used for the purpose of unsubscribing events registered by that plugin
    * when disabled.
+   * </p>
    * <p>
    * Subscribing to an event type accounts for subinterfaces (subscribing to
    * {@link BetterJailsEvent} allows for handling every event of a subtype)
+   * </p>
    *
    * @param plugin    the plugin subscribing to this event
    * @param eventType the interface or subinterface of the events to listen to
@@ -79,6 +81,7 @@ public interface EventBus {
    * This does <b>not</b> account for subinterfaces (unsubscribing from {@link BetterJailsEvent}
    * will unsubscribe those handlers that listen to {@code BetterJailsEvent} exclusively, not those
    * that listen to specific subtypes like {@link PrisonerReleaseEvent}).
+   * </p>
    *
    * @param plugin    The plugin to unsubscribe all listeners from.
    * @param eventType The class of the event to unsubscribe from.

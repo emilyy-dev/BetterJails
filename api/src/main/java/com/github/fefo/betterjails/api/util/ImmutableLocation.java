@@ -46,9 +46,11 @@ import static java.util.Objects.requireNonNull;
  * will be returned instead.
  * <p>
  * This extension also requires the {@link World} to not be {@code null}.
+ * </p>
  * <p>
  * To create a Bukkit {@code Location} out of an {@code ImmutableLocation}
  * use the {@link #mutable()} method
+ * </p>
  */
 @Unmodifiable
 public final class ImmutableLocation implements ConfigurationSerializable {

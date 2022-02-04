@@ -75,6 +75,7 @@ public interface EventSubscription<T extends BetterJailsEvent> {
    * Gets the inverse of the activation state of this subscription.
    * <p>
    * Useful for using as method reference as predicate ({@code EventSubscription::isNotActive}).
+   * </p>
    *
    * @return {@code true} if the subscription is <b>not</b> active
    */

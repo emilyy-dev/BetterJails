@@ -1,10 +1,10 @@
 name: "BetterJails"
-authors: [ "emilyy-dev" ]
+author: "emilyy-dev"
 version: "${project.version}"
 main: "io.github.emilyydev.betterjails.BetterJailsPlugin"
 api-version: "1.13"
 load: "POSTWORLD"
-softdepend: [ "Essentials", "Vault" ]
+softdepend: [ "Essentials", "Vault", "Multiverse", "Hyperverse", "My_Worlds", "SlimeWorldManager" ]
 
 commands:
   jail:
