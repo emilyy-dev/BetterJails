@@ -27,9 +27,9 @@ package io.github.emilyydev.betterjails.commands;
 import com.github.fefo.betterjails.api.event.plugin.PluginReloadEvent;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.util.Util;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -54,17 +55,22 @@ public class CommandHandler implements CommandExecutor, Listener {
   private static final UUID FALLBACK_UUID = new UUID(0L, 0L);
 
   private final BetterJailsPlugin plugin;
+  private final Server server;
   private final Map<String, UUID> namesToUuid = new HashMap<>();
   private ConfigurationSection messages;
 
   public CommandHandler(final BetterJailsPlugin plugin) {
     this.plugin = plugin;
+    this.server = plugin.getServer();
     this.messages = plugin.getConfig().getConfigurationSection("messages");
-    Bukkit.getPluginManager().registerEvent(PlayerJoinEvent.class, this, EventPriority.HIGH,
-        (l, e) -> playerJoin((PlayerJoinEvent) e), this.plugin);
-    for (final OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-      if (offlinePlayer.getName() != null) {
-        this.namesToUuid.put(offlinePlayer.getName(), offlinePlayer.getUniqueId());
+    this.server.getPluginManager().registerEvent(
+        PlayerJoinEvent.class, this, EventPriority.HIGH,
+        (l, e) -> playerJoin((PlayerJoinEvent) e), this.plugin
+    );
+    for (final OfflinePlayer offlinePlayer : this.server.getOfflinePlayers()) {
+      final String name = offlinePlayer.getName();
+      if (name != null) {
+        this.namesToUuid.put(name.toLowerCase(Locale.ROOT), offlinePlayer.getUniqueId());
       }
     }
   }
@@ -145,7 +151,8 @@ public class CommandHandler implements CommandExecutor, Listener {
   }
 
   private boolean jailPlayer(final CommandSender sender, final String prisoner, final String jail, final String time) {
-    final OfflinePlayer player = Bukkit.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner, FALLBACK_UUID));
+    final OfflinePlayer player =
+        this.server.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), FALLBACK_UUID));
     if (!player.getUniqueId().equals(FALLBACK_UUID)) {
       if (player.isOnline() && player.getPlayer().hasPermission("betterjails.jail.exempt")) {
         sender.sendMessage(color(this.messages.getString("jailFailedPlayerExempt")
@@ -203,7 +210,7 @@ public class CommandHandler implements CommandExecutor, Listener {
           exception.printStackTrace();
         }
 
-        for (final Player playerToBroadcast : Bukkit.getOnlinePlayers()) {
+        for (final Player playerToBroadcast : this.server.getOnlinePlayers()) {
           if (playerToBroadcast.hasPermission("betterjails.receivebroadcast")) {
             playerToBroadcast.sendMessage(color(this.messages.getString("jailSuccess")
                 .replace("{prisoner}", prisoner)
@@ -212,7 +219,7 @@ public class CommandHandler implements CommandExecutor, Listener {
                 .replace("{time}", time)));
           }
         }
-        Bukkit.getConsoleSender().sendMessage(color(this.messages.getString("jailSuccess")
+        this.server.getConsoleSender().sendMessage(color(this.messages.getString("jailSuccess")
             .replace("{prisoner}", prisoner)
             .replace("{player}", sender.getName())
             .replace("{jail}", jail)
@@ -235,7 +242,8 @@ public class CommandHandler implements CommandExecutor, Listener {
   }
 
   private boolean jailInfo(final CommandSender sender, final String prisoner) {
-    final OfflinePlayer player = Bukkit.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner, FALLBACK_UUID));
+    final OfflinePlayer player =
+        this.server.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), FALLBACK_UUID));
     if (!player.getUniqueId().equals(FALLBACK_UUID)) {
       final UUID uuid = player.getUniqueId();
       if (this.plugin.dataHandler.isPlayerJailed(prisoner)) {
@@ -331,20 +339,21 @@ public class CommandHandler implements CommandExecutor, Listener {
   }
 
   private boolean unjailPlayer(final CommandSender sender, final String prisoner) {
-    final OfflinePlayer player = Bukkit.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner, FALLBACK_UUID));
+    final OfflinePlayer player =
+        this.server.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), FALLBACK_UUID));
     if (!player.getUniqueId().equals(FALLBACK_UUID)) {
       final boolean wasUnjailed;
       wasUnjailed = this.plugin.dataHandler.removeJailedPlayer(player.getUniqueId());
 
       if (wasUnjailed) {
-        for (final Player playerToBroadcast : Bukkit.getOnlinePlayers()) {
+        for (final Player playerToBroadcast : this.server.getOnlinePlayers()) {
           if (playerToBroadcast.hasPermission("betterjails.receivebroadcast")) {
             playerToBroadcast.sendMessage(color(this.messages.getString("unjailSuccess")
                 .replace("{prisoner}", prisoner)
                 .replace("{player}", sender.getName())));
           }
         }
-        Bukkit.getConsoleSender().sendMessage(color(this.messages.getString("unjailSuccess")
+        this.server.getConsoleSender().sendMessage(color(this.messages.getString("unjailSuccess")
             .replace("{prisoner}", prisoner)
             .replace("{player}", sender.getName())));
       } else {
@@ -402,10 +411,8 @@ public class CommandHandler implements CommandExecutor, Listener {
     return true;
   }
 
-  public void playerJoin(final PlayerJoinEvent event) {
+  private void playerJoin(final PlayerJoinEvent event) {
     final Player player = event.getPlayer();
-    final String name = player.getName();
-    final UUID uuid = player.getUniqueId();
-    this.namesToUuid.put(name, uuid);
+    this.namesToUuid.put(player.getName().toLowerCase(Locale.ROOT), player.getUniqueId());
   }
 }

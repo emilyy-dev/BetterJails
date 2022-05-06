@@ -28,6 +28,8 @@ import com.github.fefo.betterjails.api.BetterJails;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.api.impl.BetterJailsApi;
 import io.github.emilyydev.betterjails.api.impl.event.ApiEventBus;
+import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJailManager;
+import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisonerManager;
 import io.github.emilyydev.betterjails.commands.CommandHandler;
 import io.github.emilyydev.betterjails.commands.CommandTabCompleter;
 import io.github.emilyydev.betterjails.listeners.PlayerListeners;
@@ -36,13 +38,18 @@ import io.github.emilyydev.betterjails.util.DataHandler;
 import io.github.emilyydev.betterjails.util.Util;
 import net.ess3.api.IEssentials;
 import net.milkbowl.vault.permission.Permission;
-import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.JavaPluginLoader;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -52,22 +59,38 @@ public class BetterJailsPlugin extends JavaPlugin {
     ConfigurationSerialization.registerClass(ImmutableLocation.class);
   }
 
-  public DataHandler dataHandler = null;
+  public final DataHandler dataHandler = new DataHandler(this);
   public IEssentials essentials = null;
   public Permission permsInterface = null;
   public String prisonerGroup = null;
   private BukkitTask timerTask = null;
 
-  // Let the plugin handle the event dispatching.
-  private final ApiEventBus eventBus = new ApiEventBus();
+  private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this), new ApiPrisonerManager(this));
+  private final ApiEventBus eventBus = this.api.getEventBus();
+
+  public BetterJailsApi getApi() {
+    return this.api;
+  }
 
   public ApiEventBus getEventBus() {
     return this.eventBus;
   }
 
+  public BetterJailsPlugin() {
+  }
+
+  public BetterJailsPlugin(
+      final @NotNull JavaPluginLoader loader,
+      final @NotNull PluginDescriptionFile description,
+      final @NotNull File dataFolder,
+      final @NotNull File file
+  ) {
+    super(loader, description, dataFolder, file);
+  }
+
   @Override
   public void onLoad() {
-    Bukkit.getServicesManager().register(BetterJails.class, new BetterJailsApi(this), this, ServicePriority.Normal);
+    getServer().getServicesManager().register(BetterJails.class, this.api, this, ServicePriority.Normal);
   }
 
   @Override
@@ -77,14 +100,15 @@ public class BetterJailsPlugin extends JavaPlugin {
     saveDefaultConfig();
 
     try {
-      if (Bukkit.getPluginManager().isPluginEnabled("Essentials")) {
-        this.essentials = (IEssentials) Bukkit.getPluginManager().getPlugin("Essentials");
+      final PluginManager pluginManager = getServer().getPluginManager();
+      if (pluginManager.isPluginEnabled("Essentials")) {
+        this.essentials = (IEssentials) pluginManager.getPlugin("Essentials");
         getLogger().info("Hooked with Essentials successfully!");
       }
 
       if (getConfig().getBoolean("changeGroup")) {
-        if (Bukkit.getPluginManager().isPluginEnabled("Vault")) {
-          this.permsInterface = Bukkit.getServicesManager().load(Permission.class);
+        if (pluginManager.isPluginEnabled("Vault")) {
+          this.permsInterface = getServer().getServicesManager().load(Permission.class);
           this.prisonerGroup = getConfig().getString("prisonerGroup");
           getLogger().info("Hooked with Vault successfully!");
         } else {
@@ -94,7 +118,7 @@ public class BetterJailsPlugin extends JavaPlugin {
         }
       }
 
-      this.dataHandler = new DataHandler(this);
+      this.dataHandler.init();
 
       PlayerListeners.create(this).register();
 
@@ -110,9 +134,10 @@ public class BetterJailsPlugin extends JavaPlugin {
         }
       }
 
-      this.timerTask = Bukkit.getScheduler().runTaskTimer(this, this.dataHandler::timer, 0L, 20L);
+      final BukkitScheduler scheduler = getServer().getScheduler();
+      this.timerTask = scheduler.runTaskTimer(this, this.dataHandler::timer, 0L, 20L);
       if (getConfig().getLong("autoSaveTimeInMinutes") > 0L) {
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+        scheduler.runTaskTimerAsynchronously(this, () -> {
           try {
             this.dataHandler.save();
           } catch (final IOException exception) {
@@ -122,10 +147,10 @@ public class BetterJailsPlugin extends JavaPlugin {
       }
 
       if (!getDescription().getVersion().endsWith("-SNAPSHOT")) {
-        Bukkit.getScheduler().runTaskLater(this, () ->
+        scheduler.runTaskLater(this, () ->
             Util.checkVersion(this, 76001, version -> {
               if (!getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {
-                Bukkit.getConsoleSender().sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
+                getServer().getConsoleSender().sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
               }
             }), 100L);
       }

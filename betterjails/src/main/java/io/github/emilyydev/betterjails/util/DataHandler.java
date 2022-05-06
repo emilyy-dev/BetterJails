@@ -25,7 +25,6 @@
 package io.github.emilyydev.betterjails.util;
 
 import com.earth2me.essentials.User;
-import com.github.fefo.betterjails.api.BetterJails;
 import com.github.fefo.betterjails.api.event.jail.JailCreateEvent;
 import com.github.fefo.betterjails.api.event.jail.JailDeleteEvent;
 import com.github.fefo.betterjails.api.event.plugin.PluginSaveDataEvent;
@@ -37,9 +36,9 @@ import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.base.Strings;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -60,7 +59,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -77,6 +75,7 @@ public class DataHandler {
 
   public final File playerDataFolder;
   private final BetterJailsPlugin plugin;
+  private final Server server;
   private final Set<String> jailedPlayerNames = new HashSet<>();
   private final Set<UUID> jailedPlayerUuids = new HashSet<>();
   private final Map<String, Jail> jails = new HashMap<>();
@@ -88,36 +87,41 @@ public class DataHandler {
   private YamlConfiguration jailsYaml;
   private YamlConfiguration subcommandsYaml;
 
-  public DataHandler(final BetterJailsPlugin plugin) throws IOException {
+  public DataHandler(final BetterJailsPlugin plugin) {
     this.plugin = plugin;
+    this.server = plugin.getServer();
+    this.jailsFile = new File(plugin.getDataFolder(), "jails.yml");
+    this.playerDataFolder = new File(plugin.getDataFolder(), "playerdata");
+    this.subcommandsFile = new File(plugin.getDataFolder(), "subcommands.yml");
+  }
 
+  public void init() throws IOException {
     String world = plugin.getConfig().getString("backupLocation.world");
     if (world == null) {
-      world = Bukkit.getWorlds().stream()
+      world = this.server.getWorlds().stream()
           .findAny()
           .map(World::getName)
           .orElseThrow(() -> new NoSuchElementException("No valid world could be found"));
       plugin.getLogger().warning("Error in config.yml: Couldn't retrieve backupLocation.world");
       plugin.getLogger().warning("Choosing world \"" + world + "\" by default.");
     }
-    this.backupLocation = new Location(Bukkit.getWorld(world),
+
+    this.backupLocation = new Location(this.server.getWorld(world),
         plugin.getConfig().getDouble("backupLocation.x"),
         plugin.getConfig().getDouble("backupLocation.y"),
         plugin.getConfig().getDouble("backupLocation.z"),
         (float) plugin.getConfig().getDouble("backupLocation.yaw"),
         (float) plugin.getConfig().getDouble("backupLocation.pitch"));
 
-    this.jailsFile = new File(plugin.getDataFolder(), "jails.yml");
     plugin.getDataFolder().mkdir();
     loadJails();
 
-    this.playerDataFolder = new File(plugin.getDataFolder(), "playerdata");
     this.playerDataFolder.mkdir();
 
-    this.subcommandsFile = new File(plugin.getDataFolder(), "subcommands.yml");
     if (!this.subcommandsFile.exists()) {
       plugin.saveResource("subcommands.yml", false);
     }
+
     this.subcommandsYaml = YamlConfiguration.loadConfiguration(this.subcommandsFile);
 
     alertNewConfigAvailable();
@@ -134,9 +138,12 @@ public class DataHandler {
             this.playersJailedUntil.put(uuid, now + yaml.getLong(FIELD_SECONDSLEFT, 0L) * 1000L);
           }
         }
-        Optional.ofNullable(yaml.getString(FIELD_NAME))
-            .map(String::toLowerCase)
-            .ifPresent(this.jailedPlayerNames::add);
+
+        final String name = yaml.getString(FIELD_NAME);
+        if (name != null) {
+          this.jailedPlayerNames.add(name.toLowerCase(Locale.ROOT));
+        }
+
         this.jailedPlayerUuids.add(uuid);
       }
     }
@@ -263,7 +270,7 @@ public class DataHandler {
       }
       for (final String cmd : asConsole) {
         if (!cmd.equals("")) {
-          Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+          this.server.dispatchCommand(this.server.getConsoleSender(),
               cmd.replace("{player}", yaml.getString(FIELD_JAILEDBY, ""))
                   .replace("{prisoner}", player.getName()));
         }
@@ -290,7 +297,7 @@ public class DataHandler {
     }
 
     if (this.plugin.permsInterface != null) {
-      Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
+      this.server.getScheduler().runTaskAsynchronously(this.plugin, () -> {
         if (yaml.getString(FIELD_GROUP, null) == null || yaml.getBoolean(FIELD_UNJAILED, true)) {
           final String group = this.plugin.permsInterface.getPrimaryGroup(null, player);
           yaml.set(FIELD_GROUP, group);
@@ -308,10 +315,11 @@ public class DataHandler {
     }
 
     if (!isPlayerJailed) {
-      Optional.of(player)
-          .map(OfflinePlayer::getName)
-          .map(String::toLowerCase)
-          .ifPresent(this.jailedPlayerNames::add);
+      final String name = player.getName();
+      if (name != null) {
+        this.jailedPlayerNames.add(name.toLowerCase(Locale.ROOT));
+      }
+
       this.jailedPlayerUuids.add(player.getUniqueId());
     }
 
@@ -330,7 +338,7 @@ public class DataHandler {
       }
     }
 
-    final Prisoner prisoner = Bukkit.getServicesManager().load(BetterJails.class).getPrisonerManager().getPrisoner(player.getUniqueId());
+    final Prisoner prisoner = this.plugin.getApi().getPrisonerManager().getPrisoner(player.getUniqueId());
     this.plugin.getEventBus().post(PlayerImprisonEvent.class, prisoner);
     return true;
   }
@@ -343,12 +351,12 @@ public class DataHandler {
     final YamlConfiguration yaml = retrieveJailedPlayer(uuid);
     final File playerFile = new File(this.playerDataFolder, uuid + ".yml");
 
-    final OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-    final Prisoner prisoner = Bukkit.getServicesManager().load(BetterJails.class).getPrisonerManager().getPrisoner(player.getUniqueId());
+    final OfflinePlayer player = this.server.getOfflinePlayer(uuid);
+    final Prisoner prisoner = this.plugin.getApi().getPrisonerManager().getPrisoner(player.getUniqueId());
 
     if (this.plugin.permsInterface != null) {
       final String group = yaml.getString(FIELD_GROUP, null);
-      Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
+      this.server.getScheduler().runTaskAsynchronously(this.plugin, () -> {
         if (this.plugin.permsInterface.getPrimaryGroup(null, player).equalsIgnoreCase(group)) {
           return;
         }
@@ -382,7 +390,7 @@ public class DataHandler {
       }
       for (final String command : commandsAsConsole) {
         if (!Strings.isNullOrEmpty(command)) {
-          Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+          this.server.dispatchCommand(this.server.getConsoleSender(),
               command.replace("{player}", yaml.getString(FIELD_JAILEDBY, ""))
                   .replace("{prisoner}", player.getName()));
         }
@@ -395,10 +403,11 @@ public class DataHandler {
       if (yaml.get(FIELD_LASTLOCATION, this.backupLocation).equals(this.backupLocation)) {
         this.yamlsJailedPlayers.remove(uuid);
         playerFile.delete();
-        Optional.of(player)
-            .map(OfflinePlayer::getName)
-            .map(String::toLowerCase)
-            .ifPresent(this.jailedPlayerNames::remove);
+        final String name = player.getName();
+        if (name != null) {
+          this.jailedPlayerNames.remove(name.toLowerCase(Locale.ROOT));
+        }
+
         this.jailedPlayerUuids.remove(uuid);
         this.playersJailedUntil.remove(uuid);
       } else {
@@ -456,7 +465,7 @@ public class DataHandler {
   }
 
   public void updateSecondsLeft(final @NotNull UUID uuid) {
-    final OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+    final OfflinePlayer player = this.server.getOfflinePlayer(uuid);
     if (this.plugin.getConfig().getBoolean("offlineTime")
         && !getLastLocation(uuid).equals(this.backupLocation)
         || player.isOnline()) {
@@ -488,11 +497,11 @@ public class DataHandler {
 
     String unjailWorld = this.plugin.getConfig().getString("backupLocation.world");
     if (unjailWorld == null) {
-      unjailWorld = Bukkit.getWorlds().get(0).getName();
+      unjailWorld = this.server.getWorlds().get(0).getName();
       this.plugin.getLogger().warning("Error in config.yml: Couldn't retrieve backupLocation.world");
       this.plugin.getLogger().warning("Choosing world \"" + unjailWorld + "\" by default.");
     }
-    this.backupLocation = new Location(Bukkit.getWorld(unjailWorld),
+    this.backupLocation = new Location(this.server.getWorld(unjailWorld),
         this.plugin.getConfig().getDouble("backupLocation.x"),
         this.plugin.getConfig().getDouble("backupLocation.y"),
         this.plugin.getConfig().getDouble("backupLocation.z"),
@@ -521,7 +530,7 @@ public class DataHandler {
         }
       }
     } else {
-      for (final Player player : Bukkit.getOnlinePlayers()) {
+      for (final Player player : this.server.getOnlinePlayers()) {
         if (isPlayerJailed(player.getUniqueId())) {
           final YamlConfiguration yaml = retrieveJailedPlayer(player.getUniqueId());
           this.yamlsJailedPlayers.put(player.getUniqueId(), yaml);
@@ -551,9 +560,11 @@ public class DataHandler {
         if (unjailed) {
           iterator.remove();
           new File(this.playerDataFolder, key + ".yml").delete();
-          Optional.ofNullable(value.getString(FIELD_NAME))
-              .map(String::toLowerCase)
-              .ifPresent(this.jailedPlayerNames::remove);
+          final String name = value.getString(FIELD_NAME);
+          if (name != null) {
+            this.jailedPlayerNames.remove(name.toLowerCase(Locale.ROOT));
+          }
+
           this.jailedPlayerUuids.remove(key);
           this.playersJailedUntil.remove(key);
         }

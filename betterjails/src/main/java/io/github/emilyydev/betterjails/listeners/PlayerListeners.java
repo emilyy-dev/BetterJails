@@ -28,7 +28,6 @@ import com.earth2me.essentials.User;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.util.Util;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
@@ -55,7 +54,7 @@ public class PlayerListeners implements Listener {
   }
 
   public void register() {
-    final PluginManager pluginManager = Bukkit.getPluginManager();
+    final PluginManager pluginManager = this.plugin.getServer().getPluginManager();
     pluginManager.registerEvent(PlayerJoinEvent.class, this, EventPriority.HIGH,
         (l, e) -> playerJoin((PlayerJoinEvent) e), this.plugin);
     pluginManager.registerEvent(PlayerQuitEvent.class, this, EventPriority.NORMAL,
@@ -91,7 +90,7 @@ public class PlayerListeners implements Listener {
 
     if (player.hasPermission("betterjails.receivebroadcast")
         && !this.plugin.getDescription().getVersion().endsWith("-SNAPSHOT")) {
-      Bukkit.getScheduler().runTaskLater(this.plugin, () ->
+      this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () ->
           Util.checkVersion(this.plugin, 76001, version -> {
             if (!this.plugin.getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {
               player.sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
@@ -127,7 +126,7 @@ public class PlayerListeners implements Listener {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
 
-    Bukkit.getScheduler().runTaskLater(this.plugin, () -> {
+    this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
       if (this.plugin.dataHandler.isPlayerJailed(uuid)) {
         final YamlConfiguration jailedPlayer = this.plugin.dataHandler.retrieveJailedPlayer(uuid);
         final Jail jail = this.plugin.dataHandler.getJail(jailedPlayer.getString("jail"));

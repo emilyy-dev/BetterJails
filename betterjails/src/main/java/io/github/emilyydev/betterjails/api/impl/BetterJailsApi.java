@@ -25,25 +25,21 @@
 package io.github.emilyydev.betterjails.api.impl;
 
 import com.github.fefo.betterjails.api.BetterJails;
-import com.github.fefo.betterjails.api.event.EventBus;
 import com.github.fefo.betterjails.api.model.jail.JailManager;
 import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
-import io.github.emilyydev.betterjails.BetterJailsPlugin;
-import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJailManager;
-import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisonerManager;
+import io.github.emilyydev.betterjails.api.impl.event.ApiEventBus;
 import org.jetbrains.annotations.NotNull;
 
 public class BetterJailsApi implements BetterJails {
 
   private final JailManager jailManager;
   private final PrisonerManager prisonerManager;
-  private final EventBus eventBus;
+  private final ApiEventBus eventBus;
 
-  public BetterJailsApi(final BetterJailsPlugin plugin) {
-    this.jailManager = new ApiJailManager(plugin);
-    this.prisonerManager = new ApiPrisonerManager(plugin);
-    this.eventBus = plugin.getEventBus();
-    plugin.getEventBus().setApi(this);
+  public BetterJailsApi(final JailManager jailManager, final PrisonerManager prisonerManager) {
+    this.jailManager = jailManager;
+    this.prisonerManager = prisonerManager;
+    this.eventBus = new ApiEventBus(this);
   }
 
   @Override
@@ -57,7 +53,7 @@ public class BetterJailsApi implements BetterJails {
   }
 
   @Override
-  public @NotNull EventBus getEventBus() {
+  public @NotNull ApiEventBus getEventBus() {
     return this.eventBus;
   }
 }

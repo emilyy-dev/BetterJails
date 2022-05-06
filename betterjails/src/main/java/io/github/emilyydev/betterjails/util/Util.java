@@ -25,15 +25,14 @@
 package io.github.emilyydev.betterjails.util;
 
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
-import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
 import java.util.function.Consumer;
 
 public interface Util {
@@ -42,14 +41,13 @@ public interface Util {
     return ChatColor.translateAlternateColorCodes('&', String.format(text, args));
   }
 
-  static void checkVersion(final Plugin plugin, final int id, final Consumer<String> consumer) {
-    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-      try (final InputStream stream = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + id).openStream();
-          final InputStream bufferedInput = new BufferedInputStream(stream);
-          final Scanner scanner = new Scanner(bufferedInput, StandardCharsets.UTF_8.name())) {
-        if (scanner.hasNext()) {
-          consumer.accept(scanner.next());
-        }
+  static void checkVersion(final Plugin plugin, final int id, final Consumer<? super String> consumer) {
+    plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+      try (
+          final InputStream stream = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + id).openStream();
+          final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))
+      ) {
+        consumer.accept(reader.readLine());
       } catch (final IOException exception) {
         plugin.getLogger().warning("Cannot look for updates: " + exception.getMessage());
       }

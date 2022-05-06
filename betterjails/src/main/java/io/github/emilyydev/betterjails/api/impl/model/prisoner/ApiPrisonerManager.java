@@ -32,7 +32,6 @@ import com.google.common.base.Preconditions;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.event.ApiEventBus;
 import io.github.emilyydev.betterjails.util.DataHandler;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.Configuration;
@@ -87,7 +86,7 @@ public class ApiPrisonerManager implements PrisonerManager {
     final Instant jailedUntil = now.plus(duration);
     Preconditions.checkState(jailedUntil.isAfter(now), "duration must be positive");
 
-    final OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+    final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
     try {
       this.plugin.dataHandler.addJailedPlayer(player, jail.name(), "api", duration.getSeconds());
     } catch (final IOException exception) {

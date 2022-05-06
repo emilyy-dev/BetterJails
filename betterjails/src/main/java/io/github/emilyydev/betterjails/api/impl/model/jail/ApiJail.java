@@ -69,4 +69,9 @@ public class ApiJail implements Jail {
   public int hashCode() {
     return this.name.hashCode();
   }
+
+  @Override
+  public String toString() {
+    return "Jail(" + '"' + this.name + '"' + ',' + this.location + ')';
+  }
 }

@@ -216,22 +216,14 @@ public final class ImmutableLocation implements ConfigurationSerializable {
 
   @Override
   public String toString() {
-    final StringBuilder builder = new StringBuilder();
-    builder.append("ImmutableLocation{");
-    builder.append("world=");
-    builder.append(this.world);
-    builder.append(",x=");
-    builder.append(this.x);
-    builder.append(",y=");
-    builder.append(this.y);
-    builder.append(",z=");
-    builder.append(this.z);
-    builder.append(",pitch=");
-    builder.append(this.pitch);
-    builder.append(",yaw=");
-    builder.append(this.yaw);
-    builder.append('}');
-    return builder.toString();
+    return "ImmutableLocation(" +
+           this.world +
+           ',' + this.x +
+           ',' + this.y +
+           ',' + this.z +
+           ',' + this.pitch +
+           ',' + this.yaw +
+           ')';
   }
 
   @Override

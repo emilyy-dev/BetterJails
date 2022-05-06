@@ -106,4 +106,17 @@ public class ApiPrisoner implements Prisoner {
   public int hashCode() {
     return this.uuid.hashCode();
   }
+
+  @Override
+  public String toString() {
+    return "Prisoner(" +
+           this.uuid +
+           ',' + '"' + this.name + '"' +
+           ',' + '"' + this.primaryGroup + '"' +
+           ',' + this.jail +
+           ',' + '"' + this.jailedBy + '"' +
+           ',' + this.jailedUntil +
+           ',' + this.lastLocation +
+           ')';
+  }
 }

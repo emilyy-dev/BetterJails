@@ -52,7 +52,9 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.lang.reflect.Constructor;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -64,7 +66,7 @@ import static com.google.common.collect.Multimaps.synchronizedListMultimap;
 
 public class ApiEventBus implements EventBus {
 
-  private static final Map<Class<? extends BetterJailsEvent>, Constructor<? extends BetterJailsEvent>> KNOWN_EVENT_TYPES;
+  private static final Map<Class<? extends BetterJailsEvent>, MethodHandle> KNOWN_EVENT_TYPES;
   private static final Collector<Object, ImmutableSet.Builder<Object>, ImmutableSet<Object>> IMMUTABLE_SET_COLLECTOR =
       Collector.of(
           ImmutableSet::builder,
@@ -74,17 +76,17 @@ public class ApiEventBus implements EventBus {
       );
 
   static {
-    final ImmutableMap.Builder<Class<? extends BetterJailsEvent>, Constructor<? extends BetterJailsEvent>> builder =
-        ImmutableMap.builder();
+    final ImmutableMap.Builder<Class<? extends BetterJailsEvent>, MethodHandle> builder = ImmutableMap.builder();
+    final MethodHandles.Lookup lookup = MethodHandles.lookup();
 
     try {
       builder
-          .put(JailCreateEvent.class, JailCreateEventImpl.class.getConstructor(BetterJails.class, Class.class, String.class, ImmutableLocation.class))
-          .put(JailDeleteEvent.class, JailDeleteEventImpl.class.getConstructor(BetterJails.class, Class.class, Jail.class))
-          .put(PlayerImprisonEvent.class, PlayerImprisonEventImpl.class.getConstructor(BetterJails.class, Class.class, Prisoner.class))
-          .put(PrisonerReleaseEvent.class, PrisonerReleaseEventImpl.class.getConstructor(BetterJails.class, Class.class, Prisoner.class))
-          .put(PluginReloadEvent.class, PluginReloadEventImpl.class.getConstructor(BetterJails.class, Class.class, CommandSender.class))
-          .put(PluginSaveDataEvent.class, PluginSaveDataEventImpl.class.getConstructor(BetterJails.class, Class.class));
+          .put(JailCreateEvent.class, lookup.findConstructor(JailCreateEventImpl.class, constructor(String.class, ImmutableLocation.class)))
+          .put(JailDeleteEvent.class, lookup.findConstructor(JailDeleteEventImpl.class, constructor(Jail.class)))
+          .put(PlayerImprisonEvent.class, lookup.findConstructor(PlayerImprisonEventImpl.class, constructor(Prisoner.class)))
+          .put(PrisonerReleaseEvent.class, lookup.findConstructor(PrisonerReleaseEventImpl.class, constructor(Prisoner.class)))
+          .put(PluginReloadEvent.class, lookup.findConstructor(PluginReloadEventImpl.class, constructor(CommandSender.class)))
+          .put(PluginSaveDataEvent.class, lookup.findConstructor(PluginSaveDataEventImpl.class, constructor()));
     } catch (final ReflectiveOperationException exception) {
       // ignore, ***shouldn't*** throw
     }
@@ -97,11 +99,15 @@ public class ApiEventBus implements EventBus {
     return (Collector) IMMUTABLE_SET_COLLECTOR;
   }
 
-  private BetterJails api = null;
+  private static MethodType constructor(final Class<?>... args) {
+    return MethodType.methodType(Void.TYPE, args).insertParameterTypes(0, BetterJails.class, Class.class);
+  }
+
+  private final BetterJails api;
   private final ListMultimap<Class<? extends BetterJailsEvent>, EventSubscription<? extends BetterJailsEvent>> subscriptions =
       synchronizedListMultimap(ArrayListMultimap.create());
 
-  public void setApi(final BetterJails api) {
+  public ApiEventBus(final BetterJails api) {
     this.api = api;
   }
 
@@ -185,11 +191,12 @@ public class ApiEventBus implements EventBus {
 
     final T event;
     try {
-      final Object[] allArgs = new Object[args.length + 2];
-      allArgs[0] = this.api;
-      allArgs[1] = type;
-      System.arraycopy(args, 0, allArgs, 2, args.length);
-      event = type.cast(KNOWN_EVENT_TYPES.get(type).newInstance(allArgs));
+      event = type.cast(
+          KNOWN_EVENT_TYPES.get(type)
+              .bindTo(this.api)
+              .bindTo(type)
+              .invokeWithArguments(args)
+      );
     } catch (final Throwable throwable) {
       throw new Error("Unknown event type " + type, throwable);
     }
