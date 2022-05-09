@@ -39,13 +39,13 @@ public class EventBusTest {
   }
 
   private static void playerImprison(final PlayerImprisonEvent event) {
-    System.out.println("event = " + event);
-    System.out.println("event.prisoner() = " + event.prisoner());
+    plugin.getLogger().info("event = " + event);
+    plugin.getLogger().info("event.prisoner() = " + event.prisoner());
   }
 
   private static void prisonerRelease(final PrisonerReleaseEvent event) {
-    System.out.println("event = " + event);
-    System.out.println("event.prisoner() = " + event.prisoner());
+    plugin.getLogger().info("event = " + event);
+    plugin.getLogger().info("event.prisoner() = " + event.prisoner());
   }
 
   @Test

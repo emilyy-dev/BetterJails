@@ -54,7 +54,6 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -63,9 +62,11 @@ import java.util.function.Consumer;
 import java.util.stream.Collector;
 
 import static com.google.common.collect.Multimaps.synchronizedListMultimap;
+import static java.lang.invoke.MethodType.methodType;
 
 public class ApiEventBus implements EventBus {
 
+  private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
   private static final Map<Class<? extends BetterJailsEvent>, MethodHandle> KNOWN_EVENT_TYPES;
   private static final Collector<Object, ImmutableSet.Builder<Object>, ImmutableSet<Object>> IMMUTABLE_SET_COLLECTOR =
       Collector.of(
@@ -77,18 +78,17 @@ public class ApiEventBus implements EventBus {
 
   static {
     final ImmutableMap.Builder<Class<? extends BetterJailsEvent>, MethodHandle> builder = ImmutableMap.builder();
-    final MethodHandles.Lookup lookup = MethodHandles.lookup();
 
     try {
       builder
-          .put(JailCreateEvent.class, lookup.findConstructor(JailCreateEventImpl.class, constructor(String.class, ImmutableLocation.class)))
-          .put(JailDeleteEvent.class, lookup.findConstructor(JailDeleteEventImpl.class, constructor(Jail.class)))
-          .put(PlayerImprisonEvent.class, lookup.findConstructor(PlayerImprisonEventImpl.class, constructor(Prisoner.class)))
-          .put(PrisonerReleaseEvent.class, lookup.findConstructor(PrisonerReleaseEventImpl.class, constructor(Prisoner.class)))
-          .put(PluginReloadEvent.class, lookup.findConstructor(PluginReloadEventImpl.class, constructor(CommandSender.class)))
-          .put(PluginSaveDataEvent.class, lookup.findConstructor(PluginSaveDataEventImpl.class, constructor()));
+          .put(JailCreateEvent.class, constructor(JailCreateEventImpl.class, String.class, ImmutableLocation.class))
+          .put(JailDeleteEvent.class, constructor(JailDeleteEventImpl.class, Jail.class))
+          .put(PlayerImprisonEvent.class, constructor(PlayerImprisonEventImpl.class, Prisoner.class))
+          .put(PrisonerReleaseEvent.class, constructor(PrisonerReleaseEventImpl.class, Prisoner.class))
+          .put(PluginReloadEvent.class, constructor(PluginReloadEventImpl.class, CommandSender.class))
+          .put(PluginSaveDataEvent.class, constructor(PluginSaveDataEventImpl.class));
     } catch (final ReflectiveOperationException exception) {
-      // ignore, ***shouldn't*** throw
+      throw new Error(exception);
     }
 
     KNOWN_EVENT_TYPES = builder.build();
@@ -99,13 +99,16 @@ public class ApiEventBus implements EventBus {
     return (Collector) IMMUTABLE_SET_COLLECTOR;
   }
 
-  private static MethodType constructor(final Class<?>... args) {
-    return MethodType.methodType(Void.TYPE, args).insertParameterTypes(0, BetterJails.class, Class.class);
+  private static MethodHandle constructor(final Class<?> eventType, final Class<?>... args)
+      throws NoSuchMethodException, IllegalAccessException {
+    return LOOKUP.findConstructor(
+        eventType, methodType(void.class, args).insertParameterTypes(0, BetterJails.class, Class.class)
+    );
   }
 
   private final BetterJails api;
-  private final ListMultimap<Class<? extends BetterJailsEvent>, EventSubscription<? extends BetterJailsEvent>> subscriptions =
-      synchronizedListMultimap(ArrayListMultimap.create());
+  private final ListMultimap<Class<? extends BetterJailsEvent>, EventSubscription<? extends BetterJailsEvent>>
+      subscriptions = synchronizedListMultimap(ArrayListMultimap.create());
 
   public ApiEventBus(final BetterJails api) {
     this.api = api;
@@ -113,8 +116,10 @@ public class ApiEventBus implements EventBus {
 
   @Override
   public <T extends BetterJailsEvent> @NotNull EventSubscription<T> subscribe(
-      final @NotNull Plugin plugin, final @NotNull Class<T> eventType,
-      final @NotNull Consumer<? super T> handler) {
+      final @NotNull Plugin plugin,
+      final @NotNull Class<T> eventType,
+      final @NotNull Consumer<? super T> handler
+  ) {
     final EventSubscription<T> subscription = new ApiEventSubscription<>(plugin, eventType, handler);
     this.subscriptions.get(eventType).add(subscription);
     return subscription;
@@ -139,8 +144,10 @@ public class ApiEventBus implements EventBus {
   }
 
   @Override
-  public <T extends BetterJailsEvent> void unsubscribe(final @NotNull Plugin plugin,
-      final @NotNull Class<T> eventType) {
+  public <T extends BetterJailsEvent> void unsubscribe(
+      final @NotNull Plugin plugin,
+      final @NotNull Class<T> eventType
+  ) {
     this.subscriptions.get(eventType).removeIf(subscription -> {
       if (plugin.equals(subscription.plugin())) {
         subscription.unsubscribe();
@@ -152,13 +159,18 @@ public class ApiEventBus implements EventBus {
   }
 
   public void unsubscribeAll() {
-    this.subscriptions.values().forEach(EventSubscription::unsubscribe);
-    this.subscriptions.clear();
+    final Iterator<Map.Entry<Class<? extends BetterJailsEvent>, EventSubscription<? extends BetterJailsEvent>>> it =
+        this.subscriptions.entries().iterator();
+    while (it.hasNext()) {
+      it.next().getValue().unsubscribe();
+      it.remove();
+    }
   }
 
   @Override
   public @NotNull @Unmodifiable Set<@NotNull EventSubscription<? extends BetterJailsEvent>> getSubscriptions(
-      final @NotNull Plugin plugin) {
+      final @NotNull Plugin plugin
+  ) {
     return this.subscriptions.values().stream()
         .filter(subscription -> plugin.equals(subscription.plugin()))
         .collect(toImmutableSet());
@@ -167,7 +179,9 @@ public class ApiEventBus implements EventBus {
   @Override
   @SuppressWarnings("unchecked")
   public <T extends BetterJailsEvent> @NotNull @Unmodifiable Set<@NotNull EventSubscription<T>> getSubscriptions(
-      final @NotNull Plugin plugin, final @NotNull Class<T> eventType) {
+      final @NotNull Plugin plugin,
+      final @NotNull Class<T> eventType
+  ) {
     return this.subscriptions.get(eventType).stream()
         .filter(subscription -> plugin.equals(subscription.plugin()))
         .map(subscription -> (EventSubscription<T>) subscription)
@@ -176,8 +190,8 @@ public class ApiEventBus implements EventBus {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T extends BetterJailsEvent> @NotNull @Unmodifiable Set<@NotNull EventSubscription<? extends T>> getAllSubscriptions(
-      final @NotNull Plugin plugin, final @NotNull Class<T> eventType) {
+  public <T extends BetterJailsEvent> @NotNull @Unmodifiable Set<@NotNull EventSubscription<? extends T>>
+  getAllSubscriptions(final @NotNull Plugin plugin, final @NotNull Class<T> eventType) {
     return this.subscriptions.values().stream()
         .filter(subscription -> plugin.equals(subscription.plugin()))
         .filter(subscription -> subscription.eventType().isAssignableFrom(eventType))
@@ -201,10 +215,11 @@ public class ApiEventBus implements EventBus {
       throw new Error("Unknown event type " + type, throwable);
     }
 
-    final Iterator<Map.Entry<Class<? extends BetterJailsEvent>, EventSubscription<? extends BetterJailsEvent>>> iterator =
-        this.subscriptions.entries().iterator();
+    final Iterator<Map.Entry<Class<? extends BetterJailsEvent>, EventSubscription<? extends BetterJailsEvent>>>
+        iterator = this.subscriptions.entries().iterator();
     while (iterator.hasNext()) {
-      final Map.Entry<Class<? extends BetterJailsEvent>, EventSubscription<? extends BetterJailsEvent>> entry = iterator.next();
+      final Map.Entry<Class<? extends BetterJailsEvent>, EventSubscription<? extends BetterJailsEvent>> entry =
+          iterator.next();
       final Class<? extends BetterJailsEvent> eventType = entry.getKey();
       final EventSubscription<? extends BetterJailsEvent> subscription = entry.getValue();
 

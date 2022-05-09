@@ -33,6 +33,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Locale;
 
 public class CommandTabCompleter implements TabCompleter {
 
@@ -43,21 +44,23 @@ public class CommandTabCompleter implements TabCompleter {
   }
 
   @Override
-  public List<String> onTabComplete(final @NotNull CommandSender sender,
+  public List<String> onTabComplete(
+      final @NotNull CommandSender sender,
       final @NotNull Command cmd,
       final @NotNull String alias,
-      final @NotNull String @NotNull [] args) {
+      final @NotNull String @NotNull [] args
+  ) {
     final ImmutableList.Builder<String> suggestionsBuilder = ImmutableList.builder();
 
     switch (cmd.getName()) {
       case "jail": {
         switch (args.length) {
           case 1:
-            if ("info".startsWith(args[0].toLowerCase())) {
+            if ("info".startsWith(args[0].toLowerCase(Locale.ROOT))) {
               suggestionsBuilder.add("info");
             }
             for (final Player player : this.plugin.getServer().getOnlinePlayers()) {
-              if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
+              if (player.getName().toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT))) {
                 suggestionsBuilder.add(player.getName());
               }
             }
@@ -66,13 +69,13 @@ public class CommandTabCompleter implements TabCompleter {
           case 2:
             if (!args[0].equalsIgnoreCase("info")) {
               for (final String jailName : this.plugin.dataHandler.getJails().keySet()) {
-                if (jailName.toLowerCase().startsWith(args[1].toLowerCase())) {
+                if (jailName.toLowerCase(Locale.ROOT).startsWith(args[1].toLowerCase(Locale.ROOT))) {
                   suggestionsBuilder.add(jailName);
                 }
               }
             } else {
               for (final Player player : this.plugin.getServer().getOnlinePlayers()) {
-                if (player.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
+                if (player.getName().toLowerCase(Locale.ROOT).startsWith(args[1].toLowerCase(Locale.ROOT))) {
                   suggestionsBuilder.add(player.getName());
                 }
               }
@@ -91,7 +94,7 @@ public class CommandTabCompleter implements TabCompleter {
       case "unjail": {
         if (args.length == 1) {
           for (final Player player : this.plugin.getServer().getOnlinePlayers()) {
-            if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
+            if (player.getName().toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT))) {
               suggestionsBuilder.add(player.getName());
             }
           }
@@ -109,7 +112,7 @@ public class CommandTabCompleter implements TabCompleter {
       case "deljail": {
         if (args.length == 1) {
           for (final String jailName : this.plugin.dataHandler.getJails().keySet()) {
-            if (jailName.toLowerCase().startsWith(args[0].toLowerCase())) {
+            if (jailName.toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT))) {
               suggestionsBuilder.add(jailName);
             }
           }
@@ -126,11 +129,11 @@ public class CommandTabCompleter implements TabCompleter {
             break;
           }
 
-          if (reloadPerms && "reload".startsWith(args[0].toLowerCase())) {
+          if (reloadPerms && "reload".startsWith(args[0].toLowerCase(Locale.ROOT))) {
             suggestionsBuilder.add("reload");
           }
 
-          if (savePerms && "save".startsWith(args[0].toLowerCase())) {
+          if (savePerms && "save".startsWith(args[0].toLowerCase(Locale.ROOT))) {
             suggestionsBuilder.add("save");
           }
 

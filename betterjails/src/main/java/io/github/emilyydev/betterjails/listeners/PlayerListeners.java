@@ -40,6 +40,7 @@ import org.bukkit.plugin.PluginManager;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public class PlayerListeners implements Listener {
 
@@ -55,12 +56,18 @@ public class PlayerListeners implements Listener {
 
   public void register() {
     final PluginManager pluginManager = this.plugin.getServer().getPluginManager();
-    pluginManager.registerEvent(PlayerJoinEvent.class, this, EventPriority.HIGH,
-        (l, e) -> playerJoin((PlayerJoinEvent) e), this.plugin);
-    pluginManager.registerEvent(PlayerQuitEvent.class, this, EventPriority.NORMAL,
-        (l, e) -> playerQuit((PlayerQuitEvent) e), this.plugin);
-    pluginManager.registerEvent(PlayerRespawnEvent.class, this, EventPriority.HIGH,
-        (l, e) -> playerRespawn((PlayerRespawnEvent) e), this.plugin);
+    pluginManager.registerEvent(
+        PlayerJoinEvent.class, this, EventPriority.HIGH,
+        (l, e) -> playerJoin((PlayerJoinEvent) e), this.plugin
+    );
+    pluginManager.registerEvent(
+        PlayerQuitEvent.class, this, EventPriority.NORMAL,
+        (l, e) -> playerQuit((PlayerQuitEvent) e), this.plugin
+    );
+    pluginManager.registerEvent(
+        PlayerRespawnEvent.class, this, EventPriority.HIGH,
+        (l, e) -> playerRespawn((PlayerRespawnEvent) e), this.plugin
+    );
   }
 
   private void playerJoin(final PlayerJoinEvent event) {
@@ -76,8 +83,12 @@ public class PlayerListeners implements Listener {
           if (jailName != null) {
             this.plugin.dataHandler.addJailedPlayer(player, jailName, null, this.plugin.dataHandler.getSecondsLeft(uuid, 0));
           } else {
-            this.plugin.dataHandler.addJailedPlayer(player, this.plugin.dataHandler.getJails().values().iterator().next().name(),
-                null, this.plugin.dataHandler.getSecondsLeft(uuid, 0));
+            this.plugin.dataHandler.addJailedPlayer(
+                player,
+                this.plugin.dataHandler.getJails().values().iterator().next().name(),
+                null,
+                this.plugin.dataHandler.getSecondsLeft(uuid, 0)
+            );
           }
 
         } catch (final IOException exception) {
@@ -88,8 +99,10 @@ public class PlayerListeners implements Listener {
       }
     }
 
-    if (player.hasPermission("betterjails.receivebroadcast")
-        && !this.plugin.getDescription().getVersion().endsWith("-SNAPSHOT")) {
+    if (
+        player.hasPermission("betterjails.receivebroadcast") &&
+        !this.plugin.getDescription().getVersion().endsWith("-SNAPSHOT")
+    ) {
       this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () ->
           Util.checkVersion(this.plugin, 76001, version -> {
             if (!this.plugin.getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {
@@ -133,10 +146,13 @@ public class PlayerListeners implements Listener {
         if (jail != null) {
           player.teleport(jail.location().mutable());
         } else {
-          player.teleport(this.plugin.dataHandler.getJails().values().iterator().next().location().mutable());
-          this.plugin.getLogger().warning("Value " + jailedPlayer.getString("jail") + " for option jail on jailed played " + uuid + " is INCORRECT!");
-          this.plugin.getLogger().warning("That jail does not exist!");
-          this.plugin.getLogger().warning("Teleporting player to jail " + this.plugin.dataHandler.getJails().values().iterator().next().name() + "!");
+          final Jail nextJail = this.plugin.dataHandler.getJails().values().iterator().next();
+          player.teleport(nextJail.location().mutable());
+
+          final Logger logger = this.plugin.getLogger();
+          logger.warning("Value " + jailedPlayer.getString("jail") + " for option jail on jailed played " + uuid + " is INCORRECT!");
+          logger.warning("That jail does not exist!");
+          logger.warning("Teleporting player to jail " + nextJail.name() + "!");
         }
       }
     }, 1L);

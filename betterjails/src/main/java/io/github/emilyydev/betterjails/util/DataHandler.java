@@ -158,7 +158,8 @@ public class DataHandler {
     this.jailsYaml = YamlConfiguration.loadConfiguration(this.jailsFile);
 
     for (final String key : this.jailsYaml.getKeys(false)) {
-      this.jails.put(key.toLowerCase(Locale.ROOT), new ApiJail(key.toLowerCase(Locale.ROOT), (Location) this.jailsYaml.get(key)));
+      final String lowerCaseKey = key.toLowerCase(Locale.ROOT);
+      this.jails.put(lowerCaseKey, new ApiJail(lowerCaseKey, (Location) this.jailsYaml.get(key)));
     }
   }
 
@@ -214,18 +215,20 @@ public class DataHandler {
   }
 
   public void addJail(final String name, final Location location) throws IOException {
-    this.jails.computeIfAbsent(name.toLowerCase(Locale.ROOT), key -> new ApiJail(key, location))
+    final String lowerCaseName = name.toLowerCase(Locale.ROOT);
+    this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, location))
         .location(ImmutableLocation.copyOf(location));
-    this.jailsYaml.set(name.toLowerCase(Locale.ROOT), location);
+    this.jailsYaml.set(lowerCaseName, location);
     this.jailsYaml.save(this.jailsFile);
 
     this.plugin.getEventBus().post(JailCreateEvent.class, name, ImmutableLocation.copyOf(location));
   }
 
   public void removeJail(final String name) throws IOException {
-    final Jail jail = this.jails.remove(name.toLowerCase(Locale.ROOT));
+    final String lowerCaseName = name.toLowerCase(Locale.ROOT);
+    final Jail jail = this.jails.remove(lowerCaseName);
     this.jailsYaml.set(name, null); // jic...
-    this.jailsYaml.set(name.toLowerCase(Locale.ROOT), null);
+    this.jailsYaml.set(lowerCaseName, null);
     this.jailsYaml.save(this.jailsFile);
 
     this.plugin.getEventBus().post(JailDeleteEvent.class, jail);
@@ -302,7 +305,7 @@ public class DataHandler {
           final String group = this.plugin.permsInterface.getPrimaryGroup(null, player);
           yaml.set(FIELD_GROUP, group);
           try {
-            yaml.save(new File(this.playerDataFolder, player.getUniqueId().toString() + ".yml"));
+            yaml.save(new File(this.playerDataFolder, player.getUniqueId() + ".yml"));
           } catch (final IOException exception) {
             exception.printStackTrace();
           }
@@ -311,7 +314,7 @@ public class DataHandler {
         }
       });
     } else {
-      yaml.save(new File(this.playerDataFolder, player.getUniqueId().toString() + ".yml"));
+      yaml.save(new File(this.playerDataFolder, player.getUniqueId() + ".yml"));
     }
 
     if (!isPlayerJailed) {
@@ -501,17 +504,19 @@ public class DataHandler {
       this.plugin.getLogger().warning("Error in config.yml: Couldn't retrieve backupLocation.world");
       this.plugin.getLogger().warning("Choosing world \"" + unjailWorld + "\" by default.");
     }
-    this.backupLocation = new Location(this.server.getWorld(unjailWorld),
+    this.backupLocation = new Location(
+        this.server.getWorld(unjailWorld),
         this.plugin.getConfig().getDouble("backupLocation.x"),
         this.plugin.getConfig().getDouble("backupLocation.y"),
         this.plugin.getConfig().getDouble("backupLocation.z"),
         (float) this.plugin.getConfig().getDouble("backupLocation.yaw"),
-        (float) this.plugin.getConfig().getDouble("backupLocation.pitch"));
+        (float) this.plugin.getConfig().getDouble("backupLocation.pitch")
+    );
 
     this.jailsYaml = YamlConfiguration.loadConfiguration(this.jailsFile);
-
     for (final String key : this.jailsYaml.getKeys(false)) {
-      this.jails.put(key.toLowerCase(Locale.ROOT), new ApiJail(key.toLowerCase(Locale.ROOT), (Location) this.jailsYaml.get(key)));
+      final String lowerCaseKey = key.toLowerCase(Locale.ROOT);
+      this.jails.put(lowerCaseKey, new ApiJail(lowerCaseKey, (Location) this.jailsYaml.get(key)));
     }
 
     this.subcommandsYaml = YamlConfiguration.loadConfiguration(this.subcommandsFile);
