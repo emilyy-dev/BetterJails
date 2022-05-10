@@ -46,13 +46,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.UUID;
 
 import static io.github.emilyydev.betterjails.util.Util.color;
+import static io.github.emilyydev.betterjails.util.Util.uuidOrNil;
 
 public class CommandHandler implements CommandExecutor, Listener {
-
-  private static final UUID FALLBACK_UUID = new UUID(0L, 0L);
 
   private final BetterJailsPlugin plugin;
   private final Server server;
@@ -129,12 +129,19 @@ public class CommandHandler implements CommandExecutor, Listener {
 
   private boolean betterjails(final CommandSender sender, final String argument) {
     if (argument.equalsIgnoreCase("reload") && sender.hasPermission("betterjails.betterjails.reload")) {
-      this.plugin.dataHandler.reload();
-      this.messages = this.plugin.getConfig().getConfigurationSection("messages");
-      sender.sendMessage(color(this.messages.getString("reload").replace("{player}", sender.getName())));
+      try {
+        this.plugin.dataHandler.reload();
+        this.messages = this.plugin.getConfig().getConfigurationSection("messages");
+        sender.sendMessage(color(this.messages.getString("reload").replace("{player}", sender.getName())));
 
-      this.plugin.eventBus().post(PluginReloadEvent.class, sender);
-
+        this.plugin.eventBus().post(PluginReloadEvent.class, sender);
+      } catch (IOException exception) {
+        sender.sendMessage(color(
+            "&cThere was an internal error while trying to reload the data files.\n" +
+            "Please check console for more information."
+        ));
+        exception.printStackTrace();
+      }
     } else if (argument.equalsIgnoreCase("save") && sender.hasPermission("betterjails.betterjails.save")) {
       try {
         this.plugin.dataHandler.save();
@@ -156,8 +163,8 @@ public class CommandHandler implements CommandExecutor, Listener {
 
   private boolean jailPlayer(final CommandSender sender, final String prisoner, final String jail, final String time) {
     final OfflinePlayer player =
-        this.server.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), FALLBACK_UUID));
-    if (!player.getUniqueId().equals(FALLBACK_UUID)) {
+        this.server.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), Util.NIL_UUID));
+    if (!player.getUniqueId().equals(Util.NIL_UUID)) {
       if (player.isOnline() && player.getPlayer().hasPermission("betterjails.jail.exempt")) {
         sender.sendMessage(color(
             this.messages.getString("jailFailedPlayerExempt")
@@ -203,7 +210,7 @@ public class CommandHandler implements CommandExecutor, Listener {
 
         final long seconds = (long) (scale * Double.parseDouble(time.substring(0, time.length() - 1)));
         try {
-          if (!this.plugin.dataHandler.addJailedPlayer(player, jail, sender.getName(), seconds)) {
+          if (!this.plugin.dataHandler.addJailedPlayer(player, jail, uuidOrNil(sender), sender.getName(), seconds)) {
             sender.sendMessage(color(
                 this.messages.getString("jailFailedJailNotFound")
                     .replace("{prisoner}", prisoner)
@@ -259,8 +266,8 @@ public class CommandHandler implements CommandExecutor, Listener {
 
   private boolean jailInfo(final CommandSender sender, final String prisoner) {
     final OfflinePlayer player =
-        this.server.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), FALLBACK_UUID));
-    if (!player.getUniqueId().equals(FALLBACK_UUID)) {
+        this.server.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), Util.NIL_UUID));
+    if (!player.getUniqueId().equals(Util.NIL_UUID)) {
       final UUID uuid = player.getUniqueId();
       if (this.plugin.dataHandler.isPlayerJailed(prisoner)) {
         if (
@@ -322,9 +329,11 @@ public class CommandHandler implements CommandExecutor, Listener {
         infoLines[7] = color("  &7· Primary group: &f%s", this.plugin.dataHandler.getPrimaryGroup(
             uuid, this.plugin.getConfig().getBoolean("changeGroup", false) ? "&oundefined" : "&oFeature not enabled"
         ));
-        infoLines[8] = color(
-            "  &7· All parent group: &f%s", String.join(", ", this.plugin.dataHandler.getAllParentGroups(uuid))
-        );
+
+        final StringJoiner joiner = new StringJoiner(", ");
+        joiner.setEmptyValue(this.plugin.getConfig().getBoolean("changeGroup", false) ? "&oNone" : "&oFeature not enabled");
+        this.plugin.dataHandler.getAllParentGroups(uuid).forEach(joiner::add);
+        infoLines[8] = color("  &7· All parent groups: &f%s", joiner.toString());
 
         sender.sendMessage(infoLines);
       } else {
@@ -370,9 +379,10 @@ public class CommandHandler implements CommandExecutor, Listener {
 
   private boolean releasePlayer(final CommandSender sender, final String prisoner) {
     final OfflinePlayer player =
-        this.server.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), FALLBACK_UUID));
-    if (!player.getUniqueId().equals(FALLBACK_UUID)) {
-      final boolean wasReleased = this.plugin.dataHandler.releaseJailedPlayer(player.getUniqueId());
+        this.server.getOfflinePlayer(this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), Util.NIL_UUID));
+    if (!player.getUniqueId().equals(Util.NIL_UUID)) {
+      final boolean wasReleased =
+          this.plugin.dataHandler.releaseJailedPlayer(player.getUniqueId(), uuidOrNil(sender), sender.getName());
 
       if (wasReleased) {
         for (final Player playerToBroadcast : this.server.getOnlinePlayers()) {

@@ -30,6 +30,7 @@ import be.seeseemelk.mockbukkit.entity.PlayerMock;
 import com.github.fefo.betterjails.api.event.prisoner.PlayerImprisonEvent;
 import com.github.fefo.betterjails.api.event.prisoner.PrisonerReleaseEvent;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.util.Vector;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -77,7 +78,7 @@ public class EventBusTest {
     plugin.dataHandler.addJail("jail0", Vector.getRandom().toLocation(server.addSimpleWorld("world0")));
 
     final PlayerMock player = server.addPlayer();
-    plugin.dataHandler.addJailedPlayer(player, "jail0", null, 3600L);
-    plugin.dataHandler.releaseJailedPlayer(player.getUniqueId());
+    plugin.dataHandler.addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L);
+    plugin.dataHandler.releaseJailedPlayer(player.getUniqueId(), Util.NIL_UUID, "test");
   }
 }

@@ -53,7 +53,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.Executor;
 
 public class BetterJailsPlugin extends JavaPlugin {
 
@@ -66,8 +65,6 @@ public class BetterJailsPlugin extends JavaPlugin {
 
   private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this), new ApiPrisonerManager(this));
   private final ApiEventBus eventBus = this.api.getEventBus();
-  private final Executor syncExecutor = task -> getServer().getScheduler().runTask(this, task);
-  private final Executor asyncExecutor = task -> getServer().getScheduler().runTaskAsynchronously(this, task);
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
 
   public BetterJailsPlugin() {
@@ -88,14 +85,6 @@ public class BetterJailsPlugin extends JavaPlugin {
 
   public ApiEventBus eventBus() {
     return this.eventBus;
-  }
-
-  public Executor syncExecutor() {
-    return this.syncExecutor;
-  }
-
-  public Executor asyncExecutor() {
-    return this.asyncExecutor;
   }
 
   public PermissionInterface permissionInterface() {

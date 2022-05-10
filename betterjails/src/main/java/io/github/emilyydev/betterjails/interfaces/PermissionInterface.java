@@ -30,6 +30,7 @@ import org.bukkit.plugin.PluginManager;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -53,21 +54,23 @@ public interface PermissionInterface {
     }
 
     @Override
-    public CompletionStage<?> setPrisonerGroup(final OfflinePlayer player) {
+    public CompletionStage<?> setPrisonerGroup(final OfflinePlayer player, final UUID source, final String sourceName) {
       return failedStage();
     }
 
     @Override
     public CompletionStage<?> setParentGroups(
         final OfflinePlayer player,
-        final Collection<? extends String> parentGroups
+        final Collection<? extends String> parentGroups,
+        final UUID source,
+        final String sourceName
     ) {
       return failedStage();
     }
 
     private <T> CompletionStage<? extends T> failedStage() {
       final CompletableFuture<T> future = new CompletableFuture<>();
-      future.completeExceptionally(new NotImplementedException());
+      future.completeExceptionally(new UnsupportedOperationException());
       return future;
     }
   };
@@ -89,27 +92,7 @@ public interface PermissionInterface {
 
   CompletionStage<? extends Set<? extends String>> fetchParentGroups(OfflinePlayer player);
 
-  CompletionStage<?> setPrisonerGroup(OfflinePlayer player);
+  CompletionStage<?> setPrisonerGroup(OfflinePlayer player, UUID source, String sourceName);
 
-  CompletionStage<?> setParentGroups(OfflinePlayer player, Collection<? extends String> parentGroups);
-
-  final class NotImplementedException extends RuntimeException {
-
-    private static final long serialVersionUID = -7896776323308507590L;
-
-    public NotImplementedException() {
-    }
-
-    public NotImplementedException(final String message) {
-      super(message);
-    }
-
-    public NotImplementedException(final String message, final Throwable cause) {
-      super(message, cause);
-    }
-
-    public NotImplementedException(final Throwable cause) {
-      super(cause);
-    }
-  }
+  CompletionStage<?> setParentGroups(OfflinePlayer player, Collection<? extends String> parentGroups, UUID source, String sourceName);
 }

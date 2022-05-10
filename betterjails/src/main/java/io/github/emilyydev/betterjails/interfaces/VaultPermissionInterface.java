@@ -31,6 +31,7 @@ import org.bukkit.Server;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -58,7 +59,7 @@ final class VaultPermissionInterface extends AbstractPermissionInterface {
   }
 
   @Override
-  public CompletionStage<?> setPrisonerGroup(final OfflinePlayer player) {
+  public CompletionStage<?> setPrisonerGroup(final OfflinePlayer player, final UUID source, final String sourceName) {
     return fetchParentGroups(player).thenAccept(parentGroups -> {
       this.permission.playerAddGroup(null, player, prisonerGroup());
       parentGroups.forEach(group -> this.permission.playerRemoveGroup(null, player, group));
@@ -68,7 +69,9 @@ final class VaultPermissionInterface extends AbstractPermissionInterface {
   @Override
   public CompletionStage<?> setParentGroups(
       final OfflinePlayer player,
-      final Collection<? extends String> parentGroups
+      final Collection<? extends String> parentGroups,
+      final UUID source,
+      final String sourceName
   ) {
     parentGroups.forEach(group -> this.permission.playerAddGroup(null, player, group));
     this.permission.playerRemoveGroup(null, player, prisonerGroup());

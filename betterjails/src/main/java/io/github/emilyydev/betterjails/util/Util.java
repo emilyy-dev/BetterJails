@@ -26,6 +26,8 @@ package io.github.emilyydev.betterjails.util;
 
 import com.google.common.collect.ImmutableSet;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
 
 import java.io.BufferedReader;
@@ -34,6 +36,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collector;
 
@@ -46,6 +49,12 @@ public interface Util {
           (first, second) -> first.addAll(second.build()),
           ImmutableSet.Builder::build
       );
+
+  UUID NIL_UUID = new UUID(0L, 0L);
+
+  static UUID uuidOrNil(final CommandSender source) {
+    return source instanceof Entity ? ((Entity) source).getUniqueId() : NIL_UUID;
+  }
 
   static String color(final String text, final Object... args) {
     return ChatColor.translateAlternateColorCodes('&', String.format(text, args));

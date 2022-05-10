@@ -43,12 +43,10 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.World;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -147,7 +145,7 @@ public class DataHandler {
     final long now = System.currentTimeMillis();
     for (final File file : this.playerDataFolder.listFiles()) {
       final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-      migratePrisonerData(yaml);
+      migratePrisonerData(yaml, file);
       final UUID uuid = UUID.fromString(file.getName().replace(".yml", ""));
       if (plugin.getConfig().getBoolean("offlineTime")) {
         this.yamlsJailedPlayers.put(uuid, yaml);
@@ -187,7 +185,7 @@ public class DataHandler {
     return this.jailedPlayerNames.contains(playerName.toLowerCase(Locale.ROOT));
   }
 
-  public @NotNull YamlConfiguration retrieveJailedPlayer(final UUID uuid) {
+  public YamlConfiguration retrieveJailedPlayer(final UUID uuid) {
     if (!isPlayerJailed(uuid)) {
       return new YamlConfiguration();
     }
@@ -199,6 +197,7 @@ public class DataHandler {
       final YamlConfiguration config = new YamlConfiguration();
       try {
         config.load(playerFile);
+        migratePrisonerData(config, playerFile);
       } catch (final IOException exception) {
         if (!(exception instanceof FileNotFoundException)) {
           this.plugin.getLogger().severe("Couldn't read file " + playerFile.getAbsolutePath());
@@ -209,7 +208,6 @@ public class DataHandler {
         exception.printStackTrace();
       }
 
-      migratePrisonerData(config);
       return config;
     }
   }
@@ -251,8 +249,13 @@ public class DataHandler {
     this.plugin.eventBus().post(JailDeleteEvent.class, jail);
   }
 
-  public boolean addJailedPlayer(final @NotNull OfflinePlayer player, final @NotNull String jailName,
-      final @Nullable String jailer, final long secondsLeft)
+  public boolean addJailedPlayer(
+      final OfflinePlayer player,
+      final String jailName,
+      final UUID jailer,
+      final @Nullable String jailerName,
+      final long secondsLeft
+  )
       throws IOException {
     final YamlConfiguration yaml = retrieveJailedPlayer(player.getUniqueId());
     final Jail jail = getJail(jailName);
@@ -268,8 +271,8 @@ public class DataHandler {
     yaml.set(UUID_FIELD, player.getUniqueId().toString());
     yaml.set(NAME_FIELD, player.getName());
     yaml.set(JAIL_FIELD, jailName.toLowerCase(Locale.ROOT));
-    if (jailer != null) {
-      yaml.set(JAILED_BY_FIELD, jailer);
+    if (jailerName != null) {
+      yaml.set(JAILED_BY_FIELD, jailerName);
     }
     yaml.set(SECONDS_LEFT_FIELD, secondsLeft);
     yaml.set(IS_RELEASED_FIELD, false);
@@ -285,14 +288,14 @@ public class DataHandler {
       for (final String cmd : asPrisoner) {
         if (!cmd.equals("")) {
           online.performCommand(cmd.replace("{player}", yaml.getString(JAILED_BY_FIELD, ""))
-              .replace("{prisoner}", player.getName()));
+              .replace("{prisoner}", online.getName()));
         }
       }
       for (final String cmd : asConsole) {
         if (!cmd.equals("")) {
           this.server.dispatchCommand(this.server.getConsoleSender(),
               cmd.replace("{player}", yaml.getString(JAILED_BY_FIELD, ""))
-                  .replace("{prisoner}", player.getName()));
+                  .replace("{prisoner}", online.getName()));
         }
       }
     } else if (!isPlayerOnline && !isPlayerJailed) {
@@ -322,7 +325,7 @@ public class DataHandler {
         yaml.set(GROUP_FIELD, primaryGroup);
         yaml.set(EXTRA_GROUPS_FIELD, ImmutableList.copyOf(parentGroups));
 
-        return permissionInterface.setPrisonerGroup(player);
+        return permissionInterface.setPrisonerGroup(player, jailer, jailerName);
       }).thenCompose(stage -> stage).whenComplete(($, exception) -> {
         if (exception != null && permissionInterface != PermissionInterface.NULL) {
           exception.printStackTrace();
@@ -365,18 +368,24 @@ public class DataHandler {
     return true;
   }
 
-  public boolean releaseJailedPlayer(final @NotNull UUID uuid) {
-    if (!isPlayerJailed(uuid)) {
+  public boolean releaseJailedPlayer(final UUID prisonerUuid, final UUID source, final @Nullable String sourceName) {
+    if (!isPlayerJailed(prisonerUuid)) {
       return false;
     }
 
-    final YamlConfiguration yaml = retrieveJailedPlayer(uuid);
-    final File playerFile = new File(this.playerDataFolder, uuid + ".yml");
+    final YamlConfiguration yaml = retrieveJailedPlayer(prisonerUuid);
+    final File playerFile = new File(this.playerDataFolder, prisonerUuid + ".yml");
 
-    final OfflinePlayer player = this.server.getOfflinePlayer(uuid);
+    final OfflinePlayer player = this.server.getOfflinePlayer(prisonerUuid);
     final Prisoner prisoner = this.plugin.api().getPrisonerManager().getPrisoner(player.getUniqueId());
 
-    this.plugin.permissionInterface().setParentGroups(player, yaml.getStringList(EXTRA_GROUPS_FIELD));
+    final PermissionInterface permissionInterface = this.plugin.permissionInterface();
+    permissionInterface.setParentGroups(player, yaml.getStringList(EXTRA_GROUPS_FIELD), source, sourceName)
+        .whenComplete(($, exception) -> {
+          if (exception != null && permissionInterface != PermissionInterface.NULL) {
+            exception.printStackTrace();
+          }
+        });
 
     if (player.isOnline()) {
       final Player online = player.getPlayer();
@@ -387,25 +396,25 @@ public class DataHandler {
       }
 
       online.teleport(lastLocation);
-      this.yamlsJailedPlayers.remove(uuid);
+      this.yamlsJailedPlayers.remove(prisonerUuid);
       playerFile.delete();
-      this.jailedPlayerNames.remove(player.getName().toLowerCase(Locale.ROOT));
-      this.jailedPlayerUuids.remove(uuid);
-      this.playersJailedUntil.remove(uuid);
+      this.jailedPlayerNames.remove(online.getName().toLowerCase(Locale.ROOT));
+      this.jailedPlayerUuids.remove(prisonerUuid);
+      this.playersJailedUntil.remove(prisonerUuid);
 
       final List<String> commandsAsPrisoner = this.subcommandsYaml.getStringList("on-release.as-prisoner");
       final List<String> commandsAsConsole = this.subcommandsYaml.getStringList("on-release.as-console");
       for (final String command : commandsAsPrisoner) {
         if (!Strings.isNullOrEmpty(command)) {
-          ((Player) player).performCommand(command.replace("{player}", yaml.getString(JAILED_BY_FIELD, ""))
-              .replace("{prisoner}", player.getName()));
+          online.performCommand(command.replace("{player}", yaml.getString(JAILED_BY_FIELD, ""))
+              .replace("{prisoner}", online.getName()));
         }
       }
       for (final String command : commandsAsConsole) {
         if (!Strings.isNullOrEmpty(command)) {
           this.server.dispatchCommand(this.server.getConsoleSender(),
               command.replace("{player}", yaml.getString(JAILED_BY_FIELD, ""))
-                  .replace("{prisoner}", player.getName()));
+                  .replace("{prisoner}", online.getName()));
         }
       }
     } else {
@@ -414,15 +423,15 @@ public class DataHandler {
       }
 
       if (yaml.get(LAST_LOCATION_FIELD, this.backupLocation).equals(this.backupLocation)) {
-        this.yamlsJailedPlayers.remove(uuid);
+        this.yamlsJailedPlayers.remove(prisonerUuid);
         playerFile.delete();
         final String name = player.getName();
         if (name != null) {
           this.jailedPlayerNames.remove(name.toLowerCase(Locale.ROOT));
         }
 
-        this.jailedPlayerUuids.remove(uuid);
-        this.playersJailedUntil.remove(uuid);
+        this.jailedPlayerUuids.remove(prisonerUuid);
+        this.playersJailedUntil.remove(prisonerUuid);
       } else {
         yaml.set(IS_RELEASED_FIELD, true);
         try {
@@ -445,7 +454,7 @@ public class DataHandler {
     return true;
   }
 
-  public long getSecondsLeft(final @NotNull UUID uuid, final int fallback) {
+  public long getSecondsLeft(final UUID uuid, final int fallback) {
     if (this.playersJailedUntil.containsKey(uuid)) {
       return (this.playersJailedUntil.get(uuid) - System.currentTimeMillis()) / 1000L;
     } else {
@@ -453,35 +462,35 @@ public class DataHandler {
     }
   }
 
-  public boolean isReleased(final @NotNull UUID uuid, final boolean def) {
+  public boolean isReleased(final UUID uuid, final boolean def) {
     return retrieveJailedPlayer(uuid).getBoolean(IS_RELEASED_FIELD, def);
   }
 
-  public String getName(final @NotNull UUID uuid, final @Nullable String def) {
+  public String getName(final UUID uuid, final @Nullable String def) {
     return retrieveJailedPlayer(uuid).getString(NAME_FIELD, def);
   }
 
-  public String getJail(final @NotNull UUID uuid, final @Nullable String def) {
+  public String getJail(final UUID uuid, final @Nullable String def) {
     return retrieveJailedPlayer(uuid).getString(JAIL_FIELD, def);
   }
 
-  public String getJailer(final @NotNull UUID uuid, final @Nullable String def) {
+  public String getJailer(final UUID uuid, final @Nullable String def) {
     return retrieveJailedPlayer(uuid).getString(JAILED_BY_FIELD, def);
   }
 
-  public Location getLastLocation(final @NotNull UUID uuid) {
+  public Location getLastLocation(final UUID uuid) {
     return (Location) retrieveJailedPlayer(uuid).get(LAST_LOCATION_FIELD, this.backupLocation);
   }
 
-  public String getPrimaryGroup(final @NotNull UUID uuid, final @Nullable String def) {
+  public String getPrimaryGroup(final UUID uuid, final @Nullable String def) {
     return retrieveJailedPlayer(uuid).getString(GROUP_FIELD, def);
   }
 
-  public List<String> getAllParentGroups(final @NotNull UUID uuid) {
+  public List<String> getAllParentGroups(final UUID uuid) {
     return retrieveJailedPlayer(uuid).getStringList(EXTRA_GROUPS_FIELD);
   }
 
-  public void updateSecondsLeft(final @NotNull UUID uuid) {
+  public void updateSecondsLeft(final UUID uuid) {
     final OfflinePlayer player = this.server.getOfflinePlayer(uuid);
     if (this.plugin.getConfig().getBoolean("offlineTime")
         && !getLastLocation(uuid).equals(this.backupLocation)
@@ -509,7 +518,7 @@ public class DataHandler {
     this.plugin.eventBus().post(PluginSaveDataEvent.class);
   }
 
-  public void reload() {
+  public void reload() throws IOException {
     this.plugin.reloadConfig();
 
     String unjailWorld = this.plugin.getConfig().getString("backupLocation.world");
@@ -542,7 +551,7 @@ public class DataHandler {
       for (final File file : this.playerDataFolder.listFiles()) {
         final UUID uuid = UUID.fromString(file.getName().replace(".yml", ""));
         final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-        migratePrisonerData(yaml);
+        migratePrisonerData(yaml, file);
         this.yamlsJailedPlayers.put(uuid, yaml);
         this.playersJailedUntil.put(uuid, now + yaml.getLong(SECONDS_LEFT_FIELD) * 1000L);
       }
@@ -590,30 +599,29 @@ public class DataHandler {
       }
 
       if (released || getSecondsLeft(key, 0) <= 0) {
-        releaseJailedPlayer(key);
+        releaseJailedPlayer(key, Util.NIL_UUID, "timer");
       }
     }
   }
 
+  // TODO keep this or perform some kind of automatic migration?
   private void alertNewConfigAvailable() throws IOException, InvalidConfigurationException {
+    final YamlConfiguration bundledConfig = new YamlConfiguration();
     try (
         final InputStream in = this.plugin.getResource("config.yml");
-        final Reader reader = new InputStreamReader(
-            Objects.requireNonNull(in, "bundled config not present"), StandardCharsets.UTF_8
-        )
+        final Reader reader = new InputStreamReader(Objects.requireNonNull(in, "bundled config not present"), StandardCharsets.UTF_8)
     ) {
-      final YamlConfiguration bundledConfig = new YamlConfiguration();
       bundledConfig.load(reader);
-      final FileConfiguration existingConfig = this.plugin.getConfig();
+    }
 
-      if (bundledConfig.getKeys(true).hashCode() != existingConfig.getKeys(true).hashCode()) {
-        this.plugin.getLogger().warning("New config.yml found!");
-        this.plugin.getLogger().warning("Make sure to make a backup of your settings before deleting your current config.yml!");
-      }
+    final FileConfiguration existingConfig = this.plugin.getConfig();
+    if (!bundledConfig.getKeys(true).equals(existingConfig.getKeys(true))) {
+      this.plugin.getLogger().warning("New config.yml found!");
+      this.plugin.getLogger().warning("Make sure to make a backup of your settings before deleting your current config.yml!");
     }
   }
 
-  private void migratePrisonerData(final ConfigurationSection config) {
+  private void migratePrisonerData(final YamlConfiguration config, final File file) throws IOException {
     DATA_FIELD_MIGRATION_MAP.forEach((oldField, newField) -> {
       if (config.contains(oldField)) {
         if (!config.contains(newField)) {
@@ -623,5 +631,7 @@ public class DataHandler {
         config.set(oldField, null);
       }
     });
+
+    config.save(file);
   }
 }

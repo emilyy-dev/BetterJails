@@ -39,6 +39,7 @@ import org.bukkit.Server;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 
 final class LuckPermsPermissionInterface extends AbstractPermissionInterface {
@@ -68,7 +69,7 @@ final class LuckPermsPermissionInterface extends AbstractPermissionInterface {
   }
 
   @Override
-  public CompletionStage<?> setPrisonerGroup(final OfflinePlayer player) {
+  public CompletionStage<?> setPrisonerGroup(final OfflinePlayer player, final UUID source, final String sourceName) {
     return this.luckPerms.getUserManager().modifyUser(player.getUniqueId(), user -> {
           final NodeMap nodeMap = user.data();
           // TODO consider non-contextual node removal? That renders a problem for later, as currently parent groups
@@ -80,7 +81,8 @@ final class LuckPermsPermissionInterface extends AbstractPermissionInterface {
         .thenCompose($ -> {
           final ActionLogger actionLogger = this.luckPerms.getActionLogger();
           final Action.Builder builder = actionLogger.actionBuilder();
-          builder.sourceName("BetterJails")
+          builder.source(source)
+              .sourceName(sourceName + " (BetterJails)")
               .target(player.getUniqueId())
               .targetType(Action.Target.Type.USER)
               .timestamp(Instant.now())
@@ -97,7 +99,9 @@ final class LuckPermsPermissionInterface extends AbstractPermissionInterface {
   @Override
   public CompletionStage<?> setParentGroups(
       final OfflinePlayer player,
-      final Collection<? extends String> parentGroups
+      final Collection<? extends String> parentGroups,
+      final UUID source,
+      final String sourceName
   ) {
     return this.luckPerms.getUserManager().modifyUser(player.getUniqueId(), user -> {
           final NodeMap nodeMap = user.data();
@@ -110,7 +114,8 @@ final class LuckPermsPermissionInterface extends AbstractPermissionInterface {
         .thenCompose($ -> {
           final ActionLogger actionLogger = this.luckPerms.getActionLogger();
           final Action.Builder builder = actionLogger.actionBuilder();
-          builder.sourceName("BetterJails")
+          builder.source(source)
+              .sourceName(sourceName + " (BetterJails)")
               .target(player.getUniqueId())
               .targetType(Action.Target.Type.USER)
               .timestamp(Instant.now())

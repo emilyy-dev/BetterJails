@@ -27,10 +27,14 @@ package io.github.emilyydev.betterjails.api.impl.model.prisoner;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
+import com.google.common.collect.ImmutableSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 
 public class ApiPrisoner implements Prisoner {
@@ -38,16 +42,26 @@ public class ApiPrisoner implements Prisoner {
   private final UUID uuid;
   private final String name;
   private final String primaryGroup;
+  private final Set<String> parentGroups;
   private final Jail jail;
   private final String jailedBy;
   private final Instant jailedUntil;
   private final ImmutableLocation lastLocation;
 
-  public ApiPrisoner(final UUID uuid, final String name, final String primaryGroup, final Jail jail,
-      final String jailedBy, final Instant jailedUntil, final ImmutableLocation lastLocation) {
+  public ApiPrisoner(
+      final UUID uuid,
+      final String name,
+      final String primaryGroup,
+      final Collection<? extends String> parentGroups,
+      final Jail jail,
+      final String jailedBy,
+      final Instant jailedUntil,
+      final ImmutableLocation lastLocation
+  ) {
     this.uuid = uuid;
     this.name = name;
     this.primaryGroup = primaryGroup;
+    this.parentGroups = ImmutableSet.copyOf(parentGroups);
     this.jail = jail;
     this.jailedBy = jailedBy;
     this.jailedUntil = jailedUntil;
@@ -67,6 +81,11 @@ public class ApiPrisoner implements Prisoner {
   @Override
   public @Nullable String primaryGroup() {
     return this.primaryGroup;
+  }
+
+  @Override
+  public @Unmodifiable @NotNull Set<@NotNull String> parentGroups() {
+    return this.parentGroups;
   }
 
   @Override
@@ -91,15 +110,9 @@ public class ApiPrisoner implements Prisoner {
 
   @Override
   public boolean equals(final Object other) {
-    if (this == other) {
-      return true;
-    }
-    if (!(other instanceof Prisoner)) {
-      return false;
-    }
-
-    final Prisoner that = (Prisoner) other;
-    return this.uuid.equals(that.uuid());
+    if (this == other) { return true; }
+    if (!(other instanceof Prisoner)) { return false; }
+    return this.uuid.equals(((Prisoner) other).uuid());
   }
 
   @Override
@@ -113,6 +126,7 @@ public class ApiPrisoner implements Prisoner {
            this.uuid +
            ',' + '"' + this.name + '"' +
            ',' + '"' + this.primaryGroup + '"' +
+           ',' + this.parentGroups +
            ',' + this.jail +
            ',' + '"' + this.jailedBy + '"' +
            ',' + this.jailedUntil +

@@ -82,12 +82,12 @@ public class PlayerListeners implements Listener {
         try {
           final String jailName = jailedPlayer.getString(DataHandler.JAIL_FIELD);
           if (jailName != null) {
-            this.plugin.dataHandler.addJailedPlayer(player, jailName, null, this.plugin.dataHandler.getSecondsLeft(uuid, 0));
+            this.plugin.dataHandler.addJailedPlayer(
+                player, jailName, Util.NIL_UUID, null, this.plugin.dataHandler.getSecondsLeft(uuid, 0)
+            );
           } else {
             this.plugin.dataHandler.addJailedPlayer(
-                player,
-                this.plugin.dataHandler.getJails().values().iterator().next().name(),
-                null,
+                player, this.plugin.dataHandler.getJails().values().iterator().next().name(), Util.NIL_UUID, null,
                 this.plugin.dataHandler.getSecondsLeft(uuid, 0)
             );
           }
@@ -96,7 +96,7 @@ public class PlayerListeners implements Listener {
           exception.printStackTrace();
         }
       } else {
-        this.plugin.dataHandler.releaseJailedPlayer(uuid);
+        this.plugin.dataHandler.releaseJailedPlayer(uuid, Util.NIL_UUID, null);
       }
     }
 

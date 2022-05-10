@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -63,8 +64,9 @@ public class ApiPrisonerManager implements PrisonerManager {
     }
 
     final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) config.get(DataHandler.LAST_LOCATION_FIELD));
-    final String group = config.getString(DataHandler.GROUP_FIELD);
     final String name = config.getString(DataHandler.NAME_FIELD);
+    final String group = config.getString(DataHandler.GROUP_FIELD);
+    final List<String> parentGroups = config.getStringList(DataHandler.EXTRA_GROUPS_FIELD);
     final Jail jail = this.plugin.dataHandler.getJail(config.getString(DataHandler.JAIL_FIELD));
     final String jailedBy = config.getString(DataHandler.JAILED_BY_FIELD);
     final Instant jailedUntil =
@@ -72,7 +74,7 @@ public class ApiPrisonerManager implements PrisonerManager {
             ? Instant.MIN
             : Instant.now().plusSeconds(this.plugin.dataHandler.getSecondsLeft(uuid, 0));
 
-    return new ApiPrisoner(uuid, name, group, jail, jailedBy, jailedUntil, lastLocation);
+    return new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, lastLocation);
   }
 
   @Override
@@ -89,7 +91,7 @@ public class ApiPrisonerManager implements PrisonerManager {
 
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
     try {
-      this.plugin.dataHandler.addJailedPlayer(player, jail.name(), "api", duration.getSeconds());
+      this.plugin.dataHandler.addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds());
     } catch (final IOException exception) {
       throw new RuntimeException(exception);
     }
@@ -100,7 +102,7 @@ public class ApiPrisonerManager implements PrisonerManager {
   @Override
   public boolean releasePrisoner(final @NotNull Prisoner prisoner) {
     Objects.requireNonNull(prisoner, "prisoner");
-    return this.plugin.dataHandler.releaseJailedPlayer(prisoner.uuid());
+    return this.plugin.dataHandler.releaseJailedPlayer(prisoner.uuid(), Util.NIL_UUID, "api");
   }
 
   @Override
