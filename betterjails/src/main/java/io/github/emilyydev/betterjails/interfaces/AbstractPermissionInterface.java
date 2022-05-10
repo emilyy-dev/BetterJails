@@ -32,7 +32,7 @@ abstract class AbstractPermissionInterface implements PermissionInterface {
     this.prisonerGroup = prisonerGroup;
   }
 
-  protected String prisonerGroup() {
+  protected final String prisonerGroup() {
     return this.prisonerGroup;
   }
 }
