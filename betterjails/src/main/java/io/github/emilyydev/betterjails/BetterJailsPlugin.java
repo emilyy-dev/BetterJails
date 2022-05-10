@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2021 emilyy-dev
+// Copyright (c) 2022 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,13 +32,16 @@ import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJailManager;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisonerManager;
 import io.github.emilyydev.betterjails.commands.CommandHandler;
 import io.github.emilyydev.betterjails.commands.CommandTabCompleter;
+import io.github.emilyydev.betterjails.interfaces.PermissionInterface;
 import io.github.emilyydev.betterjails.listeners.PlayerListeners;
 import io.github.emilyydev.betterjails.listeners.PluginDisableListener;
 import io.github.emilyydev.betterjails.util.DataHandler;
 import io.github.emilyydev.betterjails.util.Util;
 import net.ess3.api.IEssentials;
-import net.milkbowl.vault.permission.Permission;
+import org.bukkit.Server;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
@@ -50,6 +53,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.Executor;
 
 public class BetterJailsPlugin extends JavaPlugin {
 
@@ -59,11 +63,12 @@ public class BetterJailsPlugin extends JavaPlugin {
 
   public final DataHandler dataHandler = new DataHandler(this);
   public IEssentials essentials = null;
-  public Permission permsInterface = null;
-  public String prisonerGroup = null;
 
   private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this), new ApiPrisonerManager(this));
   private final ApiEventBus eventBus = this.api.getEventBus();
+  private final Executor syncExecutor = task -> getServer().getScheduler().runTask(this, task);
+  private final Executor asyncExecutor = task -> getServer().getScheduler().runTaskAsynchronously(this, task);
+  private PermissionInterface permissionInterface = PermissionInterface.NULL;
 
   public BetterJailsPlugin() {
   }
@@ -77,12 +82,28 @@ public class BetterJailsPlugin extends JavaPlugin {
     super(loader, description, dataFolder, file);
   }
 
-  public BetterJailsApi getApi() {
+  public BetterJailsApi api() {
     return this.api;
   }
 
-  public ApiEventBus getEventBus() {
+  public ApiEventBus eventBus() {
     return this.eventBus;
+  }
+
+  public Executor syncExecutor() {
+    return this.syncExecutor;
+  }
+
+  public Executor asyncExecutor() {
+    return this.asyncExecutor;
+  }
+
+  public PermissionInterface permissionInterface() {
+    return this.permissionInterface;
+  }
+
+  public void resetPermissionInterface(final PermissionInterface permissionInterface) {
+    this.permissionInterface = permissionInterface;
   }
 
   @Override
@@ -96,27 +117,28 @@ public class BetterJailsPlugin extends JavaPlugin {
 
     saveDefaultConfig();
 
-    final PluginManager pluginManager = getServer().getPluginManager();
+    final Server server = getServer();
+    final PluginManager pluginManager = server.getPluginManager();
     if (pluginManager.isPluginEnabled("Essentials")) {
       this.essentials = (IEssentials) pluginManager.getPlugin("Essentials");
       getLogger().info("Hooked with Essentials successfully!");
     }
 
-    if (getConfig().getBoolean("changeGroup")) {
-      if (pluginManager.isPluginEnabled("Vault")) {
-        this.permsInterface = getServer().getServicesManager().load(Permission.class);
-        this.prisonerGroup = getConfig().getString("prisonerGroup");
-        getLogger().info("Hooked with Vault successfully!");
+    final FileConfiguration config = getConfig();
+    if (config.getBoolean("changeGroup")) {
+      this.permissionInterface = PermissionInterface.determinePermissionInterface(server, config.getString("prisonerGroup"));
+      if (this.permissionInterface != PermissionInterface.NULL) {
+        getLogger().info("Hooked with \"" + this.permissionInterface.name() + "\" successfully!");
       } else {
-        getLogger().warning("Hook with Vault failed!");
-        getLogger().warning("Option \"changeGroup\" in config.yml is set to true but Vault isn't installed");
+        getLogger().warning("Hook with a permission interface failed!");
+        getLogger().warning("Option \"changeGroup\" in config.yml is set to true but no supported permission plugin (or Vault) is installed");
         getLogger().warning("Group changing feature will not be used!");
       }
     }
 
     try {
       this.dataHandler.init();
-    } catch (final IOException exception) {
+    } catch (final IOException | InvalidConfigurationException exception) {
       throw new RuntimeException(exception);
     }
 
@@ -133,23 +155,23 @@ public class BetterJailsPlugin extends JavaPlugin {
       }
     }
 
-    final BukkitScheduler scheduler = getServer().getScheduler();
+    final BukkitScheduler scheduler = server.getScheduler();
     scheduler.runTaskTimer(this, this.dataHandler::timer, 0L, 20L);
-    if (getConfig().getLong("autoSaveTimeInMinutes") > 0L) {
+    if (config.getLong("autoSaveTimeInMinutes") > 0L) {
       scheduler.runTaskTimerAsynchronously(this, () -> {
         try {
           this.dataHandler.save();
         } catch (final IOException exception) {
           exception.printStackTrace();
         }
-      }, 0L, 20L * 60L * getConfig().getLong("autoSaveTimeInMinutes"));
+      }, 0L, 20L * 60L * config.getLong("autoSaveTimeInMinutes"));
     }
 
     if (!getDescription().getVersion().endsWith("-SNAPSHOT")) {
       scheduler.runTaskLater(this, () ->
           Util.checkVersion(this, 76001, version -> {
             if (!getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {
-              getServer().getConsoleSender().sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
+              server.getConsoleSender().sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
             }
           }), 100L);
     }

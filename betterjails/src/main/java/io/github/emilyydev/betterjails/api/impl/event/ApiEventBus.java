@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2021 emilyy-dev
+// Copyright (c) 2022 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,6 @@ import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import io.github.emilyydev.betterjails.api.impl.event.jail.JailCreateEventImpl;
 import io.github.emilyydev.betterjails.api.impl.event.jail.JailDeleteEventImpl;
@@ -47,6 +46,7 @@ import io.github.emilyydev.betterjails.api.impl.event.plugin.PluginReloadEventIm
 import io.github.emilyydev.betterjails.api.impl.event.plugin.PluginSaveDataEventImpl;
 import io.github.emilyydev.betterjails.api.impl.event.prisoner.PlayerImprisonEventImpl;
 import io.github.emilyydev.betterjails.api.impl.event.prisoner.PrisonerReleaseEventImpl;
+import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -59,7 +59,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collector;
 
 import static com.google.common.collect.Multimaps.synchronizedListMultimap;
 import static java.lang.invoke.MethodType.methodType;
@@ -68,13 +67,6 @@ public class ApiEventBus implements EventBus {
 
   private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
   private static final Map<Class<? extends BetterJailsEvent>, MethodHandle> KNOWN_EVENT_TYPES;
-  private static final Collector<Object, ImmutableSet.Builder<Object>, ImmutableSet<Object>> IMMUTABLE_SET_COLLECTOR =
-      Collector.of(
-          ImmutableSet::builder,
-          ImmutableSet.Builder::add,
-          (first, second) -> first.addAll(second.build()),
-          ImmutableSet.Builder::build
-      );
 
   static {
     final ImmutableMap.Builder<Class<? extends BetterJailsEvent>, MethodHandle> builder = ImmutableMap.builder();
@@ -92,11 +84,6 @@ public class ApiEventBus implements EventBus {
     }
 
     KNOWN_EVENT_TYPES = builder.build();
-  }
-
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static <T> Collector<T, ImmutableSet.Builder<T>, ImmutableSet<T>> toImmutableSet() {
-    return (Collector) IMMUTABLE_SET_COLLECTOR;
   }
 
   private static MethodHandle constructor(final Class<?> eventType, final Class<?>... args)
@@ -173,7 +160,7 @@ public class ApiEventBus implements EventBus {
   ) {
     return this.subscriptions.values().stream()
         .filter(subscription -> plugin.equals(subscription.plugin()))
-        .collect(toImmutableSet());
+        .collect(Util.toImmutableSet());
   }
 
   @Override
@@ -185,7 +172,7 @@ public class ApiEventBus implements EventBus {
     return this.subscriptions.get(eventType).stream()
         .filter(subscription -> plugin.equals(subscription.plugin()))
         .map(subscription -> (EventSubscription<T>) subscription)
-        .collect(toImmutableSet());
+        .collect(Util.toImmutableSet());
   }
 
   @Override
@@ -196,7 +183,7 @@ public class ApiEventBus implements EventBus {
         .filter(subscription -> plugin.equals(subscription.plugin()))
         .filter(subscription -> subscription.eventType().isAssignableFrom(eventType))
         .map(subscription -> (EventSubscription<? extends T>) subscription)
-        .collect(toImmutableSet());
+        .collect(Util.toImmutableSet());
   }
 
   @SuppressWarnings("unchecked")

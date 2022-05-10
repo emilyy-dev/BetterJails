@@ -22,27 +22,17 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.api.impl.event.prisoner;
+package io.github.emilyydev.betterjails.interfaces;
 
-import com.github.fefo.betterjails.api.BetterJails;
-import com.github.fefo.betterjails.api.event.BetterJailsEvent;
-import com.github.fefo.betterjails.api.event.prisoner.PlayerImprisonEvent;
-import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
-import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
-import org.jetbrains.annotations.NotNull;
+abstract class AbstractPermissionInterface implements PermissionInterface {
 
-public class PlayerImprisonEventImpl extends SimpleBetterJailsEvent implements PlayerImprisonEvent {
+  private final String prisonerGroup;
 
-  private final Prisoner prisoner;
-
-  public PlayerImprisonEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
-      final Prisoner prisoner) {
-    super(api, eventType);
-    this.prisoner = prisoner;
+  AbstractPermissionInterface(final String prisonerGroup) {
+    this.prisonerGroup = prisonerGroup;
   }
 
-  @Override
-  public @NotNull Prisoner prisoner() {
-    return this.prisoner;
+  protected String prisonerGroup() {
+    return this.prisonerGroup;
   }
 }

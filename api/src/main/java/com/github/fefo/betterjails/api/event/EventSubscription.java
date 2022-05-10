@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2021 emilyy-dev
+// Copyright (c) 2022 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal

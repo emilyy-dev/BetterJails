@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2021 emilyy-dev
+// Copyright (c) 2022 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@ package io.github.emilyydev.betterjails.listeners;
 import com.earth2me.essentials.User;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.util.DataHandler;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -76,10 +77,10 @@ public class PlayerListeners implements Listener {
 
     if (this.plugin.dataHandler.isPlayerJailed(uuid)) {
       final YamlConfiguration jailedPlayer = this.plugin.dataHandler.retrieveJailedPlayer(uuid);
-      if (!jailedPlayer.getBoolean("unjailed") && !player.hasPermission("betterjails.jail.exempt")) {
+      if (!jailedPlayer.getBoolean(DataHandler.IS_RELEASED_FIELD) && !player.hasPermission("betterjails.jail.exempt")) {
         this.plugin.dataHandler.loadJailedPlayer(uuid, jailedPlayer);
         try {
-          final String jailName = jailedPlayer.getString("jail");
+          final String jailName = jailedPlayer.getString(DataHandler.JAIL_FIELD);
           if (jailName != null) {
             this.plugin.dataHandler.addJailedPlayer(player, jailName, null, this.plugin.dataHandler.getSecondsLeft(uuid, 0));
           } else {
@@ -95,7 +96,7 @@ public class PlayerListeners implements Listener {
           exception.printStackTrace();
         }
       } else {
-        this.plugin.dataHandler.removeJailedPlayer(uuid);
+        this.plugin.dataHandler.releaseJailedPlayer(uuid);
       }
     }
 
@@ -142,7 +143,7 @@ public class PlayerListeners implements Listener {
     this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
       if (this.plugin.dataHandler.isPlayerJailed(uuid)) {
         final YamlConfiguration jailedPlayer = this.plugin.dataHandler.retrieveJailedPlayer(uuid);
-        final Jail jail = this.plugin.dataHandler.getJail(jailedPlayer.getString("jail"));
+        final Jail jail = this.plugin.dataHandler.getJail(jailedPlayer.getString(DataHandler.JAIL_FIELD));
         if (jail != null) {
           player.teleport(jail.location().mutable());
         } else {
@@ -150,7 +151,7 @@ public class PlayerListeners implements Listener {
           player.teleport(nextJail.location().mutable());
 
           final Logger logger = this.plugin.getLogger();
-          logger.warning("Value " + jailedPlayer.getString("jail") + " for option jail on jailed played " + uuid + " is INCORRECT!");
+          logger.warning("Value " + jailedPlayer.getString(DataHandler.JAIL_FIELD) + " for option jail on jailed played " + uuid + " is INCORRECT!");
           logger.warning("That jail does not exist!");
           logger.warning("Teleporting player to jail " + nextJail.name() + "!");
         }
