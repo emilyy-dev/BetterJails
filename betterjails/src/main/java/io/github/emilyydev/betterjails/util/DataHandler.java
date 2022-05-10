@@ -622,16 +622,22 @@ public class DataHandler {
   }
 
   private void migratePrisonerData(final YamlConfiguration config, final File file) throws IOException {
-    DATA_FIELD_MIGRATION_MAP.forEach((oldField, newField) -> {
+    boolean wasChanged = false;
+    for (final Map.Entry<String, String> entry : DATA_FIELD_MIGRATION_MAP.entrySet()) {
+      final String oldField = entry.getKey();
+      final String newField = entry.getValue();
       if (config.contains(oldField)) {
         if (!config.contains(newField)) {
           config.set(newField, config.get(oldField));
         }
 
         config.set(oldField, null);
+        wasChanged = true;
       }
-    });
+    }
 
-    config.save(file);
+    if (wasChanged) {
+      config.save(file);
+    }
   }
 }
