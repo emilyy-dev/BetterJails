@@ -116,23 +116,22 @@ public class PlayerListeners implements Listener {
   private void playerQuit(final PlayerQuitEvent event) {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
+    if (!this.plugin.dataHandler.isPlayerJailed(uuid)) { return; }
 
-    if (this.plugin.dataHandler.isPlayerJailed(uuid)) {
-      this.plugin.dataHandler.updateSecondsLeft(uuid);
-      final YamlConfiguration jailedPlayer = this.plugin.dataHandler.retrieveJailedPlayer(uuid);
-      try {
-        jailedPlayer.save(new File(this.plugin.dataHandler.playerDataFolder, uuid + ".yml"));
-        if (!this.plugin.getConfig().getBoolean("offlineTime")) {
-          this.plugin.dataHandler.unloadJailedPlayer(uuid);
-          if (this.plugin.essentials != null) {
-            final User user = this.plugin.essentials.getUser(uuid);
-            user.setJailTimeout(0L);
-            user.setJailed(true);
-          }
+    this.plugin.dataHandler.updateSecondsLeft(uuid);
+    final YamlConfiguration jailedPlayer = this.plugin.dataHandler.retrieveJailedPlayer(uuid);
+    try {
+      jailedPlayer.save(new File(this.plugin.dataHandler.playerDataFolder, uuid + ".yml"));
+      if (!this.plugin.configuration().considerOfflineTime()) {
+        this.plugin.dataHandler.unloadJailedPlayer(uuid);
+        if (this.plugin.essentials != null) {
+          final User user = this.plugin.essentials.getUser(uuid);
+          user.setJailTimeout(0L);
+          user.setJailed(true);
         }
-      } catch (final IOException exception) {
-        exception.printStackTrace();
       }
+    } catch (final IOException exception) {
+      exception.printStackTrace();
     }
   }
 

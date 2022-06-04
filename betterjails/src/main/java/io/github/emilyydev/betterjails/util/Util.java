@@ -24,6 +24,7 @@
 
 package io.github.emilyydev.betterjails.util;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -50,10 +51,22 @@ public interface Util {
           ImmutableSet.Builder::build
       );
 
+  Collector<Object, ImmutableList.Builder<Object>, ImmutableList<Object>> IMMUTABLE_LIST_COLLECTOR =
+      Collector.of(
+          ImmutableList::builder,
+          ImmutableList.Builder::add,
+          (first, second) -> first.addAll(second.build()),
+          ImmutableList.Builder::build
+      );
+
   UUID NIL_UUID = new UUID(0L, 0L);
 
   static UUID uuidOrNil(final CommandSender source) {
     return source instanceof Entity ? ((Entity) source).getUniqueId() : NIL_UUID;
+  }
+
+  static String color(final String text) {
+    return ChatColor.translateAlternateColorCodes('&', text);
   }
 
   static String color(final String text, final Object... args) {
@@ -76,5 +89,10 @@ public interface Util {
   @SuppressWarnings({ "unchecked", "rawtypes" })
   static <T> Collector<T, ImmutableSet.Builder<T>, ImmutableSet<T>> toImmutableSet() {
     return (Collector) IMMUTABLE_SET_COLLECTOR;
+  }
+
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  static <T> Collector<T, ImmutableList.Builder<T>, ImmutableList<T>> toImmutableList() {
+    return (Collector) IMMUTABLE_LIST_COLLECTOR;
   }
 }

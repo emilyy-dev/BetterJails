@@ -32,7 +32,8 @@ import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJailManager;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisonerManager;
 import io.github.emilyydev.betterjails.commands.CommandHandler;
 import io.github.emilyydev.betterjails.commands.CommandTabCompleter;
-import io.github.emilyydev.betterjails.interfaces.PermissionInterface;
+import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
+import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
 import io.github.emilyydev.betterjails.listeners.PlayerListeners;
 import io.github.emilyydev.betterjails.listeners.PluginDisableListener;
 import io.github.emilyydev.betterjails.util.DataHandler;
@@ -41,7 +42,6 @@ import net.ess3.api.IEssentials;
 import org.bukkit.Server;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
@@ -53,6 +53,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Optional;
 
 public class BetterJailsPlugin extends JavaPlugin {
 
@@ -60,11 +62,12 @@ public class BetterJailsPlugin extends JavaPlugin {
     ConfigurationSerialization.registerClass(ImmutableLocation.class);
   }
 
-  public final DataHandler dataHandler = new DataHandler(this);
   public IEssentials essentials = null;
+  public final DataHandler dataHandler = new DataHandler(this);
 
   private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this), new ApiPrisonerManager(this));
   private final ApiEventBus eventBus = this.api.getEventBus();
+  private final BetterJailsConfiguration configuration = new BetterJailsConfiguration(this::getConfig);
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
 
   public BetterJailsPlugin() {
@@ -95,6 +98,10 @@ public class BetterJailsPlugin extends JavaPlugin {
     this.permissionInterface = permissionInterface;
   }
 
+  public BetterJailsConfiguration configuration() {
+    return this.configuration;
+  }
+
   @Override
   public void onLoad() {
     getServer().getServicesManager().register(BetterJails.class, this.api, this, ServicePriority.Normal);
@@ -113,14 +120,19 @@ public class BetterJailsPlugin extends JavaPlugin {
       getLogger().info("Hooked with Essentials successfully!");
     }
 
-    final FileConfiguration config = getConfig();
-    if (config.getBoolean("changeGroup")) {
-      this.permissionInterface = PermissionInterface.determinePermissionInterface(server, config.getString("prisonerGroup"));
-      if (this.permissionInterface != PermissionInterface.NULL) {
-        getLogger().info("Hooked with \"" + this.permissionInterface.name() + "\" successfully!");
+    if (this.configuration.permissionHookEnabled()) {
+      final Optional<String> maybePrisonerGroup = this.configuration.prisonerPermissionGroup();
+      if (maybePrisonerGroup.isPresent()) {
+        this.permissionInterface = PermissionInterface.determinePermissionInterface(server, maybePrisonerGroup.get());
+        if (this.permissionInterface != PermissionInterface.NULL) {
+          getLogger().info("Hooked with \"" + this.permissionInterface.name() + "\" successfully!");
+        } else {
+          getLogger().warning("Hook with a permission interface failed!");
+          getLogger().warning("Option \"changeGroup\" in config.yml is set to true but no supported permission plugin (or Vault) is installed");
+          getLogger().warning("Group changing feature will not be used!");
+        }
       } else {
-        getLogger().warning("Hook with a permission interface failed!");
-        getLogger().warning("Option \"changeGroup\" in config.yml is set to true but no supported permission plugin (or Vault) is installed");
+        getLogger().warning("Option \"changeGroup\" in config.yml is set to true but no prisoner permission group was configured");
         getLogger().warning("Group changing feature will not be used!");
       }
     }
@@ -128,14 +140,13 @@ public class BetterJailsPlugin extends JavaPlugin {
     try {
       this.dataHandler.init();
     } catch (final IOException | InvalidConfigurationException exception) {
-      throw new RuntimeException(exception);
+      throw new RuntimeException(exception.getMessage(), exception);
     }
 
     PlayerListeners.create(this).register();
 
     final CommandHandler commandHandler = new CommandHandler(this);
     final CommandTabCompleter tabCompleter = new CommandTabCompleter(this);
-
     for (final String commandName : getDescription().getCommands().keySet()) {
       final PluginCommand command = getCommand(commandName);
       if (command != null) {
@@ -146,23 +157,24 @@ public class BetterJailsPlugin extends JavaPlugin {
 
     final BukkitScheduler scheduler = server.getScheduler();
     scheduler.runTaskTimer(this, this.dataHandler::timer, 0L, 20L);
-    if (config.getLong("autoSaveTimeInMinutes") > 0L) {
+
+    final Duration autoSavePeriod = this.configuration.autoSavePeriod();
+    if (!autoSavePeriod.isZero()) {
       scheduler.runTaskTimerAsynchronously(this, () -> {
         try {
           this.dataHandler.save();
         } catch (final IOException exception) {
           exception.printStackTrace();
         }
-      }, 0L, 20L * 60L * config.getLong("autoSaveTimeInMinutes"));
+      }, 0L, autoSavePeriod.getSeconds() * 20L);
     }
 
     if (!getDescription().getVersion().endsWith("-SNAPSHOT")) {
-      scheduler.runTaskLater(this, () ->
-          Util.checkVersion(this, 76001, version -> {
-            if (!getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {
-              server.getConsoleSender().sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
-            }
-          }), 100L);
+      scheduler.runTaskLater(this, () -> Util.checkVersion(this, 76001, version -> {
+        if (!getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {
+          server.getConsoleSender().sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
+        }
+      }), 100L);
     }
   }
 
@@ -176,5 +188,11 @@ public class BetterJailsPlugin extends JavaPlugin {
     }
 
     this.eventBus.unsubscribeAll();
+  }
+
+  public void reload() throws IOException {
+    reloadConfig();
+    this.configuration.invalidate();
+    this.dataHandler.reload();
   }
 }
