@@ -510,8 +510,6 @@ public class DataHandler {
   }
 
   public void reload() throws IOException {
-    this.plugin.reloadConfig();
-
     this.backupLocation = this.config.backupLocation().mutable();
     this.jailsYaml = YamlConfiguration.loadConfiguration(this.jailsFile);
     for (final String key : this.jailsYaml.getKeys(false)) {
