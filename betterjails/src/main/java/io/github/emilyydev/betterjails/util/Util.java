@@ -95,4 +95,8 @@ public interface Util {
   static <T> Collector<T, ImmutableList.Builder<T>, ImmutableList<T>> toImmutableList() {
     return (Collector) IMMUTABLE_LIST_COLLECTOR;
   }
+
+  static String bracesRemoved(final String in) {
+    return in.substring(1, in.length() - 1);
+  }
 }

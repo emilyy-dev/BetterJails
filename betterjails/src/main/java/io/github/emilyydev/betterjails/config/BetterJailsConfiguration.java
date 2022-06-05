@@ -34,9 +34,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.MatchResult;
@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.joining;
 
-public final class BetterJailsConfiguration {
+public final class BetterJailsConfiguration extends AbstractConfiguration {
 
   private static final String BACKUP_LOCATION = "backupLocation";
   private static final String OFFLINE_TIME = "offlineTime";
@@ -55,11 +55,8 @@ public final class BetterJailsConfiguration {
   private static final String AUTO_SAVE_TIME_IN_MINUTES = "autoSaveTimeInMinutes";
   private static final String MESSAGES = "messages";
 
-  private final Supplier<? extends Configuration> configSupplier;
-  private final Map<String, Object> configurationMap = new ConcurrentHashMap<>(6);
-
   public BetterJailsConfiguration(final Supplier<? extends Configuration> configSupplier) {
-    this.configSupplier = configSupplier;
+    super(configSupplier, HashMap::new);
   }
 
   public ImmutableLocation backupLocation() {
@@ -92,19 +89,6 @@ public final class BetterJailsConfiguration {
 
   public MessageHolder messages() {
     return setting(MESSAGES, key -> new MessageHolder(config().getConfigurationSection(key).getValues(false)));
-  }
-
-  public void invalidate() {
-    this.configurationMap.clear();
-  }
-
-  @SuppressWarnings("unchecked")
-  private <T> T setting(final String key, final Function<? super String, ? extends T> loader) {
-    return (T) this.configurationMap.computeIfAbsent(key, loader);
-  }
-
-  private Configuration config() {
-    return this.configSupplier.get();
   }
 
   public interface JailListFormatter {
@@ -159,7 +143,7 @@ public final class BetterJailsConfiguration {
     ) {
       return matchResult -> {
         final String matchedGroup = matchResult.group();
-        switch (bracesRemoved(matchedGroup)) {
+        switch (Util.bracesRemoved(matchedGroup)) {
           case "prisoner": return prisoner.orElse(matchedGroup);
           case "player": return executioner.orElse(matchedGroup);
           case "jail": return jail.orElse(matchedGroup);
@@ -167,10 +151,6 @@ public final class BetterJailsConfiguration {
           default: return matchedGroup;
         }
       };
-    }
-
-    private static String bracesRemoved(final String in) {
-      return in.substring(1, in.length() - 1);
     }
 
     private final Map<String, String> messageMap;
@@ -306,7 +286,7 @@ public final class BetterJailsConfiguration {
 
       final StringBuffer buffer = new StringBuffer();
       while (matcher.find()) {
-        matcher.appendReplacement(buffer, replacer.apply(matcher));
+        matcher.appendReplacement(buffer, replacer.apply(matcher.toMatchResult()));
       }
 
       return Util.color(matcher.appendTail(buffer).toString());

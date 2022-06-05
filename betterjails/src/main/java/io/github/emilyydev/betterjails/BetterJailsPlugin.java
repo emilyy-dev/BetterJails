@@ -33,6 +33,7 @@ import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisonerManage
 import io.github.emilyydev.betterjails.commands.CommandHandler;
 import io.github.emilyydev.betterjails.commands.CommandTabCompleter;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
+import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
 import io.github.emilyydev.betterjails.listeners.PlayerListeners;
 import io.github.emilyydev.betterjails.listeners.PluginDisableListener;
@@ -41,7 +42,10 @@ import io.github.emilyydev.betterjails.util.Util;
 import net.ess3.api.IEssentials;
 import org.bukkit.Server;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
@@ -53,6 +57,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -62,12 +70,17 @@ public class BetterJailsPlugin extends JavaPlugin {
     ConfigurationSerialization.registerClass(ImmutableLocation.class);
   }
 
-  public IEssentials essentials = null;
   public final DataHandler dataHandler = new DataHandler(this);
+  public IEssentials essentials = null;
 
   private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this), new ApiPrisonerManager(this));
   private final ApiEventBus eventBus = this.api.getEventBus();
+
   private final BetterJailsConfiguration configuration = new BetterJailsConfiguration(this::getConfig);
+  private final File subCommandsFile = new File(getDataFolder(), "subcommands.yml");
+  private Configuration subCommandsConfig = new MemoryConfiguration();
+  private final SubCommandsConfiguration subCommands = new SubCommandsConfiguration(() -> this.subCommandsConfig);
+
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
 
   public BetterJailsPlugin() {
@@ -102,6 +115,10 @@ public class BetterJailsPlugin extends JavaPlugin {
     return this.configuration;
   }
 
+  public SubCommandsConfiguration subCommands() {
+    return this.subCommands;
+  }
+
   @Override
   public void onLoad() {
     getServer().getServicesManager().register(BetterJails.class, this.api, this, ServicePriority.Normal);
@@ -111,7 +128,8 @@ public class BetterJailsPlugin extends JavaPlugin {
   public void onEnable() {
     PluginDisableListener.create(this.eventBus).register(this);
 
-    saveDefaultConfig();
+    saveResource("config.yml");
+    loadSubCommandsConfig();
 
     final Server server = getServer();
     final PluginManager pluginManager = server.getPluginManager();
@@ -139,8 +157,11 @@ public class BetterJailsPlugin extends JavaPlugin {
 
     try {
       this.dataHandler.init();
-    } catch (final IOException | InvalidConfigurationException exception) {
-      throw new RuntimeException(exception.getMessage(), exception);
+    } catch (final IOException exception) {
+      throw new UncheckedIOException(exception.getMessage(), exception);
+    } catch (final InvalidConfigurationException exception) {
+      final IOException ioEx = new IOException(exception.getMessage(), exception);
+      throw new UncheckedIOException(ioEx.getMessage(), ioEx);
     }
 
     PlayerListeners.create(this).register();
@@ -190,9 +211,38 @@ public class BetterJailsPlugin extends JavaPlugin {
     this.eventBus.unsubscribeAll();
   }
 
+  public void saveResource(final String resourcePath) {
+    final Path dest = getDataFolder().toPath().resolve(resourcePath);
+    if (Files.notExists(dest)) {
+      try (final InputStream in = getClassLoader().getResourceAsStream(resourcePath)) {
+        Files.copy(in, dest);
+      } catch (final IOException exception) {
+        throw new UncheckedIOException(exception.getMessage(), exception);
+      }
+    }
+  }
+
   public void reload() throws IOException {
     reloadConfig();
+    loadSubCommandsConfig();
+
     this.configuration.invalidate();
+    this.subCommands.invalidate();
     this.dataHandler.reload();
+  }
+
+  private void loadSubCommandsConfig() {
+    saveResource("subcommands.yml");
+
+    final YamlConfiguration config = new YamlConfiguration();
+    try {
+      config.load(this.subCommandsFile);
+      this.subCommandsConfig = config;
+    } catch (final IOException exception) {
+      throw new UncheckedIOException(exception.getMessage(), exception);
+    } catch (final InvalidConfigurationException exception) {
+      final IOException ioEx = new IOException(exception.getMessage(), exception);
+      throw new UncheckedIOException(ioEx.getMessage(), ioEx);
+    }
   }
 }

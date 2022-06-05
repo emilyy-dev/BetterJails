@@ -33,12 +33,12 @@ import com.github.fefo.betterjails.api.event.prisoner.PrisonerReleaseEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
+import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -96,6 +96,7 @@ public class DataHandler {
   public final File playerDataFolder;
   private final BetterJailsPlugin plugin;
   private final BetterJailsConfiguration config;
+  private final SubCommandsConfiguration subCommands;
   private final Server server;
   private final Set<String> jailedPlayerNames = new HashSet<>();
   private final Set<UUID> jailedPlayerUuids = new HashSet<>();
@@ -103,20 +104,18 @@ public class DataHandler {
   private final Map<UUID, YamlConfiguration> yamlsJailedPlayers = new HashMap<>();
   private final Map<UUID, Long> playersJailedUntil = new HashMap<>();
   private final File jailsFile;
-  private final File subcommandsFile;
   private Location backupLocation;
   private YamlConfiguration jailsYaml;
-  private YamlConfiguration subcommandsYaml;
 
   public DataHandler(final BetterJailsPlugin plugin) {
     this.plugin = plugin;
     this.config = plugin.configuration();
+    this.subCommands = plugin.subCommands();
     this.server = plugin.getServer();
 
     final File dataFolder = plugin.getDataFolder();
     this.jailsFile = new File(dataFolder, "jails.yml");
     this.playerDataFolder = new File(dataFolder, "playerdata");
-    this.subcommandsFile = new File(dataFolder, "subcommands.yml");
   }
 
   public void init() throws IOException, InvalidConfigurationException {
@@ -124,12 +123,6 @@ public class DataHandler {
 
     this.playerDataFolder.mkdirs();
     loadJails();
-
-    if (!this.subcommandsFile.exists()) {
-      plugin.saveResource("subcommands.yml", false);
-    }
-
-    this.subcommandsYaml = YamlConfiguration.loadConfiguration(this.subcommandsFile);
 
     alertNewConfigAvailable();
 
@@ -273,21 +266,9 @@ public class DataHandler {
       online.teleport(jail.location().mutable());
       this.yamlsJailedPlayers.put(player.getUniqueId(), yaml);
 
-      final List<String> asPrisoner = this.subcommandsYaml.getStringList("on-jail.as-prisoner");
-      final List<String> asConsole = this.subcommandsYaml.getStringList("on-jail.as-console");
-      for (final String cmd : asPrisoner) {
-        if (!cmd.equals("")) {
-          online.performCommand(cmd.replace("{player}", yaml.getString(JAILED_BY_FIELD, ""))
-              .replace("{prisoner}", online.getName()));
-        }
-      }
-      for (final String cmd : asConsole) {
-        if (!cmd.equals("")) {
-          this.server.dispatchCommand(this.server.getConsoleSender(),
-              cmd.replace("{player}", yaml.getString(JAILED_BY_FIELD, ""))
-                  .replace("{prisoner}", online.getName()));
-        }
-      }
+      final SubCommandsConfiguration.SubCommands subCommands = this.subCommands.onJail();
+      subCommands.executeAsPrisoner(this.server, online, yaml.getString(JAILED_BY_FIELD, ""));
+      subCommands.executeAsConsole(this.server, online, yaml.getString(JAILED_BY_FIELD, ""));
     } else if (!isPlayerOnline && !isPlayerJailed) {
       yaml.set(LAST_LOCATION_FIELD, this.backupLocation);
 
@@ -392,21 +373,9 @@ public class DataHandler {
       this.jailedPlayerUuids.remove(prisonerUuid);
       this.playersJailedUntil.remove(prisonerUuid);
 
-      final List<String> commandsAsPrisoner = this.subcommandsYaml.getStringList("on-release.as-prisoner");
-      final List<String> commandsAsConsole = this.subcommandsYaml.getStringList("on-release.as-console");
-      for (final String command : commandsAsPrisoner) {
-        if (!Strings.isNullOrEmpty(command)) {
-          online.performCommand(command.replace("{player}", yaml.getString(JAILED_BY_FIELD, ""))
-              .replace("{prisoner}", online.getName()));
-        }
-      }
-      for (final String command : commandsAsConsole) {
-        if (!Strings.isNullOrEmpty(command)) {
-          this.server.dispatchCommand(this.server.getConsoleSender(),
-              command.replace("{player}", yaml.getString(JAILED_BY_FIELD, ""))
-                  .replace("{prisoner}", online.getName()));
-        }
-      }
+      final SubCommandsConfiguration.SubCommands subCommands = this.subCommands.onRelease();
+      subCommands.executeAsPrisoner(this.server, online, yaml.getString(JAILED_BY_FIELD, ""));
+      subCommands.executeAsConsole(this.server, online, yaml.getString(JAILED_BY_FIELD, ""));
     } else {
       if (yaml.getBoolean(IS_RELEASED_FIELD, false)) {
         return true;
@@ -516,8 +485,6 @@ public class DataHandler {
       final String lowerCaseKey = key.toLowerCase(Locale.ROOT);
       this.jails.put(lowerCaseKey, new ApiJail(lowerCaseKey, (Location) this.jailsYaml.get(key)));
     }
-
-    this.subcommandsYaml = YamlConfiguration.loadConfiguration(this.subcommandsFile);
 
     this.yamlsJailedPlayers.clear();
     this.playersJailedUntil.clear();
