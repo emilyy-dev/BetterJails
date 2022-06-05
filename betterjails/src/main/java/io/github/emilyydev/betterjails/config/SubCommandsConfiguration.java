@@ -70,7 +70,7 @@ public final class SubCommandsConfiguration extends AbstractConfiguration {
     ) {
       return matchResult -> {
         final String matchedGroup = matchResult.group();
-        switch (Util.bracesRemoved(matchedGroup)) {
+        switch (Util.removeBracesFromMatchedPlaceholderPleaseAndThankYou(matchedGroup)) {
           case "prisoner": return prisoner;
           case "player": return executioner;
           default: return matchedGroup;

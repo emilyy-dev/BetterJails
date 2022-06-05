@@ -143,7 +143,7 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
     ) {
       return matchResult -> {
         final String matchedGroup = matchResult.group();
-        switch (Util.bracesRemoved(matchedGroup)) {
+        switch (Util.removeBracesFromMatchedPlaceholderPleaseAndThankYou(matchedGroup)) {
           case "prisoner": return prisoner.orElse(matchedGroup);
           case "player": return executioner.orElse(matchedGroup);
           case "jail": return jail.orElse(matchedGroup);
