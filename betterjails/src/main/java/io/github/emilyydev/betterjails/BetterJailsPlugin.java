@@ -70,7 +70,6 @@ public class BetterJailsPlugin extends JavaPlugin {
     ConfigurationSerialization.registerClass(ImmutableLocation.class);
   }
 
-  public final DataHandler dataHandler = new DataHandler(this);
   public IEssentials essentials = null;
 
   private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this), new ApiPrisonerManager(this));
@@ -82,6 +81,8 @@ public class BetterJailsPlugin extends JavaPlugin {
   private final SubCommandsConfiguration subCommands = new SubCommandsConfiguration(() -> this.subCommandsConfig);
 
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
+
+  public final DataHandler dataHandler = new DataHandler(this);
 
   public BetterJailsPlugin() {
   }

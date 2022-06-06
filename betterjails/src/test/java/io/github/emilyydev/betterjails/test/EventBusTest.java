@@ -48,6 +48,7 @@ public class EventBusTest {
   @BeforeAll
   public static void prepare() throws IOException {
     server = MockBukkit.mock();
+    server.addSimpleWorld("world");
     try (final InputStream pluginDescriptorStream = BetterJailsPlugin.class.getResourceAsStream("/plugin.yml")) {
       plugin = MockBukkit.loadWith(BetterJailsPlugin.class, Objects.requireNonNull(pluginDescriptorStream, "descriptor stream"));
     }
