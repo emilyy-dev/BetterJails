@@ -31,6 +31,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -45,8 +46,8 @@ public final class SubCommandsConfiguration extends AbstractConfiguration {
   private static final String ON_JAIL = "on-jail";
   private static final String ON_RELEASE = "on-release";
 
-  public SubCommandsConfiguration(final Supplier<? extends Configuration> configSupplier) {
-    super(configSupplier, HashMap::new);
+  public SubCommandsConfiguration(final Path dir) {
+    super(dir, "subcommands.yml", HashMap::new);
   }
 
   public SubCommands onJail() {

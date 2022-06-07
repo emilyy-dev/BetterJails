@@ -25,26 +25,61 @@
 package io.github.emilyydev.betterjails.config;
 
 import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class AbstractConfiguration {
 
-  private final Supplier<? extends Configuration> configSupplier;
+  private final Path configFile;
+  private final String fileName;
   private final Map<String, Object> configurationMap;
+  private volatile Configuration configuration = new MemoryConfiguration();
 
   public AbstractConfiguration(
-      final Supplier<? extends Configuration> configSupplier,
+      final Path dir,
+      final String fileName,
       final Supplier<? extends Map<String, Object>> mapCreator
   ) {
-    this.configSupplier = configSupplier;
+    this.configFile = dir.resolve(fileName);
+    this.fileName = fileName;
     this.configurationMap = mapCreator.get();
   }
 
-  public final void invalidate() {
-    this.configurationMap.clear();
+  public final void load() {
+    try {
+      if (Files.notExists(this.configFile)) {
+        Files.createDirectories(this.configFile.getParent());
+        try (final InputStream in = AbstractConfiguration.class.getResourceAsStream('/' + this.fileName)) {
+          Objects.requireNonNull(in, "Bundled " + this.fileName);
+          Files.copy(in, this.configFile);
+        }
+      }
+
+      final YamlConfiguration configuration = new YamlConfiguration();
+      try (final BufferedReader reader = Files.newBufferedReader(this.configFile)) {
+        configuration.load(reader);
+      }
+
+      this.configuration = configuration;
+      this.configurationMap.clear();
+    } catch (final IOException exception) {
+      throw new UncheckedIOException(exception.getMessage(), exception);
+    } catch (final InvalidConfigurationException exception) {
+      final IOException ioEx = new IOException(exception.getMessage(), exception);
+      throw new UncheckedIOException(ioEx.getMessage(), ioEx);
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -53,6 +88,6 @@ public class AbstractConfiguration {
   }
 
   protected final Configuration config() {
-    return this.configSupplier.get();
+    return this.configuration;
   }
 }

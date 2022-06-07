@@ -29,16 +29,15 @@ import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.github.emilyydev.betterjails.util.Util;
-import org.bukkit.configuration.Configuration;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,8 +54,8 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
   private static final String AUTO_SAVE_TIME_IN_MINUTES = "autoSaveTimeInMinutes";
   private static final String MESSAGES = "messages";
 
-  public BetterJailsConfiguration(final Supplier<? extends Configuration> configSupplier) {
-    super(configSupplier, HashMap::new);
+  public BetterJailsConfiguration(final Path dir) {
+    super(dir, "config.yml", HashMap::new);
   }
 
   public ImmutableLocation backupLocation() {
