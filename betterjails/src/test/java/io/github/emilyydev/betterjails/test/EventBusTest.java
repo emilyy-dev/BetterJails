@@ -1,3 +1,27 @@
+//
+// This file is part of BetterJails, licensed under the MIT License.
+//
+// Copyright (c) 2022 emilyy-dev
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+//
+
 package io.github.emilyydev.betterjails.test;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
@@ -6,6 +30,7 @@ import be.seeseemelk.mockbukkit.entity.PlayerMock;
 import com.github.fefo.betterjails.api.event.prisoner.PlayerImprisonEvent;
 import com.github.fefo.betterjails.api.event.prisoner.PrisonerReleaseEvent;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.util.Vector;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -27,8 +52,8 @@ public class EventBusTest {
       plugin = MockBukkit.loadWith(BetterJailsPlugin.class, Objects.requireNonNull(pluginDescriptorStream, "descriptor stream"));
     }
 
-    plugin.getEventBus().subscribe(plugin, PlayerImprisonEvent.class, EventBusTest::playerImprison);
-    plugin.getEventBus().subscribe(plugin, PrisonerReleaseEvent.class, EventBusTest::prisonerRelease);
+    plugin.eventBus().subscribe(plugin, PlayerImprisonEvent.class, EventBusTest::playerImprison);
+    plugin.eventBus().subscribe(plugin, PrisonerReleaseEvent.class, EventBusTest::prisonerRelease);
   }
 
   @AfterAll
@@ -39,13 +64,13 @@ public class EventBusTest {
   }
 
   private static void playerImprison(final PlayerImprisonEvent event) {
-    System.out.println("event = " + event);
-    System.out.println("event.prisoner() = " + event.prisoner());
+    plugin.getLogger().info("event = " + event);
+    plugin.getLogger().info("event.prisoner() = " + event.prisoner());
   }
 
   private static void prisonerRelease(final PrisonerReleaseEvent event) {
-    System.out.println("event = " + event);
-    System.out.println("event.prisoner() = " + event.prisoner());
+    plugin.getLogger().info("event = " + event);
+    plugin.getLogger().info("event.prisoner() = " + event.prisoner());
   }
 
   @Test
@@ -53,7 +78,7 @@ public class EventBusTest {
     plugin.dataHandler.addJail("jail0", Vector.getRandom().toLocation(server.addSimpleWorld("world0")));
 
     final PlayerMock player = server.addPlayer();
-    plugin.dataHandler.addJailedPlayer(player, "jail0", null, 3600L);
-    plugin.dataHandler.removeJailedPlayer(player.getUniqueId());
+    plugin.dataHandler.addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L);
+    plugin.dataHandler.releaseJailedPlayer(player.getUniqueId(), Util.NIL_UUID, "test");
   }
 }

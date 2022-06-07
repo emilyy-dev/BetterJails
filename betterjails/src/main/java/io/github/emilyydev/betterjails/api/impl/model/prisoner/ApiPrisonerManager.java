@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2021 emilyy-dev
+// Copyright (c) 2022 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,8 +30,8 @@ import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.base.Preconditions;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
-import io.github.emilyydev.betterjails.api.impl.event.ApiEventBus;
 import io.github.emilyydev.betterjails.util.DataHandler;
+import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.Configuration;
@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -58,20 +59,22 @@ public class ApiPrisonerManager implements PrisonerManager {
   public @Nullable Prisoner getPrisoner(final @NotNull UUID uuid) {
     Objects.requireNonNull(uuid, "uuid");
     final Configuration config = this.plugin.dataHandler.retrieveJailedPlayer(uuid);
-    if (!config.contains(DataHandler.FIELD_UUID)) {
+    if (!config.contains(DataHandler.UUID_FIELD)) {
       return null;
     }
 
-    final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) config.get(DataHandler.FIELD_LASTLOCATION));
-    final String group = config.getString(DataHandler.FIELD_GROUP);
-    final String name = config.getString(DataHandler.FIELD_NAME);
-    final Jail jail = this.plugin.dataHandler.getJail(config.getString(DataHandler.FIELD_JAIL));
-    final String jailedBy = config.getString(DataHandler.FIELD_JAILEDBY);
-    final Instant jailedUntil = config.getBoolean(DataHandler.FIELD_UNJAILED)
-        ? Instant.MIN
-        : Instant.now().plusSeconds(this.plugin.dataHandler.getSecondsLeft(uuid, 0));
+    final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) config.get(DataHandler.LAST_LOCATION_FIELD));
+    final String name = config.getString(DataHandler.NAME_FIELD);
+    final String group = config.getString(DataHandler.GROUP_FIELD);
+    final List<String> parentGroups = config.getStringList(DataHandler.EXTRA_GROUPS_FIELD);
+    final Jail jail = this.plugin.dataHandler.getJail(config.getString(DataHandler.JAIL_FIELD));
+    final String jailedBy = config.getString(DataHandler.JAILED_BY_FIELD);
+    final Instant jailedUntil =
+        config.getBoolean(DataHandler.IS_RELEASED_FIELD)
+            ? Instant.MIN
+            : Instant.now().plusSeconds(this.plugin.dataHandler.getSecondsLeft(uuid, 0));
 
-    return new ApiPrisoner(uuid, name, group, jail, jailedBy, jailedUntil, lastLocation);
+    return new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, lastLocation);
   }
 
   @Override
@@ -88,7 +91,7 @@ public class ApiPrisonerManager implements PrisonerManager {
 
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
     try {
-      this.plugin.dataHandler.addJailedPlayer(player, jail.name(), "api", duration.getSeconds());
+      this.plugin.dataHandler.addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds());
     } catch (final IOException exception) {
       throw new RuntimeException(exception);
     }
@@ -99,7 +102,7 @@ public class ApiPrisonerManager implements PrisonerManager {
   @Override
   public boolean releasePrisoner(final @NotNull Prisoner prisoner) {
     Objects.requireNonNull(prisoner, "prisoner");
-    return this.plugin.dataHandler.removeJailedPlayer(prisoner.uuid());
+    return this.plugin.dataHandler.releaseJailedPlayer(prisoner.uuid(), Util.NIL_UUID, "api");
   }
 
   @Override
@@ -113,6 +116,6 @@ public class ApiPrisonerManager implements PrisonerManager {
     return this.plugin.dataHandler.getAllJailedPlayers().keySet().stream()
         .map(this::getPrisoner)
         .filter(Objects::nonNull)
-        .collect(ApiEventBus.toImmutableSet());
+        .collect(Util.toImmutableSet());
   }
 }

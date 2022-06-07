@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2021 emilyy-dev
+// Copyright (c) 2022 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,8 +29,10 @@ import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -66,6 +68,17 @@ public interface Prisoner {
    * @return the primary group
    */
   @Nullable String primaryGroup();
+
+  /**
+   * Returns the player's parent groups according to the permission implementation.
+   * <p>
+   * Unlike the {@link #primaryGroup() primary group}, this method will always return a valid set,
+   * though it may be empty.
+   * </p>
+   *
+   * @return all of the parent groups
+   */
+  @Unmodifiable @NotNull Set<@NotNull String> parentGroups();
 
   /**
    * The {@link Jail} this prisoner is currently in, whether the player is online or not.
