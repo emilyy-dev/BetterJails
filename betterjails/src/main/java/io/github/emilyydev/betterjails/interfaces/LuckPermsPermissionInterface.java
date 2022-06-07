@@ -63,6 +63,8 @@ final class LuckPermsPermissionInterface extends AbstractPermissionInterface {
     return this.luckPerms.getUserManager().loadUser(player.getUniqueId()).thenApply(user ->
         user.getNodes(NodeType.INHERITANCE)
             .stream()
+            // see below TODO
+            .filter(node -> node.getContexts().isEmpty())
             .map(InheritanceNode::getGroupName)
             .collect(Util.toImmutableSet())
     );
