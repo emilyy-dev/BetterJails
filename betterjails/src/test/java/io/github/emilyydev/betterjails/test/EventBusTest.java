@@ -76,10 +76,10 @@ public class EventBusTest {
 
   @Test
   public void test() throws IOException {
-    plugin.dataHandler.addJail("jail0", Vector.getRandom().toLocation(server.addSimpleWorld("world0")));
+    plugin.dataHandler().addJail("jail0", Vector.getRandom().toLocation(server.addSimpleWorld("world0")));
 
     final PlayerMock player = server.addPlayer();
-    plugin.dataHandler.addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L);
-    plugin.dataHandler.releaseJailedPlayer(player.getUniqueId(), Util.NIL_UUID, "test");
+    plugin.dataHandler().addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L);
+    plugin.dataHandler().releaseJailedPlayer(player.getUniqueId(), Util.NIL_UUID, "test");
   }
 }

@@ -69,14 +69,11 @@ public class BetterJailsPlugin extends JavaPlugin {
 
   private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this), new ApiPrisonerManager(this));
   private final ApiEventBus eventBus = this.api.getEventBus();
-
   private final Path pluginDir = getDataFolder().toPath();
   private final BetterJailsConfiguration configuration = new BetterJailsConfiguration(this.pluginDir);
   private final SubCommandsConfiguration subCommands = new SubCommandsConfiguration(this.pluginDir);
-
+  private final DataHandler dataHandler = new DataHandler(this);
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
-
-  public final DataHandler dataHandler = new DataHandler(this);
 
   public BetterJailsPlugin() {
   }
@@ -88,6 +85,10 @@ public class BetterJailsPlugin extends JavaPlugin {
       final @NotNull File file
   ) {
     super(loader, description, dataFolder, file);
+  }
+
+  public DataHandler dataHandler() {
+    return this.dataHandler;
   }
 
   public BetterJailsApi api() {

@@ -149,7 +149,7 @@ public class CommandHandler implements CommandExecutor, Listener {
       }
     } else if (argument.equalsIgnoreCase("save") && sender.hasPermission("betterjails.betterjails.save")) {
       try {
-        this.plugin.dataHandler.save();
+        this.plugin.dataHandler().save();
         sender.sendMessage(this.configuration.messages().saveData(sender.getName()));
       } catch (final IOException exception) {
         exception.printStackTrace();
@@ -226,7 +226,7 @@ public class CommandHandler implements CommandExecutor, Listener {
 
     final long seconds = (long) (scale * Double.parseDouble(time.substring(0, time.length() - 1)));
     try {
-      if (!this.plugin.dataHandler.addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds)) {
+      if (!this.plugin.dataHandler().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds)) {
         sender.sendMessage(this.configuration.messages().jailPlayerFailedJailNotFound(
             prisoner, executioner, jail, time
         ));
@@ -257,20 +257,20 @@ public class CommandHandler implements CommandExecutor, Listener {
     }
 
     final UUID uuid = player.getUniqueId();
-    if (!this.plugin.dataHandler.isPlayerJailed(prisoner)) {
+    if (!this.plugin.dataHandler().isPlayerJailed(prisoner)) {
       sender.sendMessage(this.configuration.messages().prisonerInfoFailedNotJailed(prisoner, executioner));
       return true;
     }
 
     if (
-        this.plugin.dataHandler.isReleased(uuid, false) ||
-        this.plugin.dataHandler.getSecondsLeft(uuid, 0) <= 0
+        this.plugin.dataHandler().isReleased(uuid, false) ||
+        this.plugin.dataHandler().getSecondsLeft(uuid, 0) <= 0
     ) {
       sender.sendMessage(this.configuration.messages().prisonerInfoFailedNotJailed(prisoner, executioner));
       return true;
     }
 
-    double secondsLeft = this.plugin.dataHandler.getSecondsLeft(uuid, 0);
+    double secondsLeft = this.plugin.dataHandler().getSecondsLeft(uuid, 0);
     char timeUnit = 's';
     if (secondsLeft >= 3600 * 24 * 365.25) {
       secondsLeft /= 3600 * 24 * 365.25;
@@ -297,7 +297,7 @@ public class CommandHandler implements CommandExecutor, Listener {
       timeUnit = 'm';
     }
 
-    final Location lastLocation = this.plugin.dataHandler.getLastLocation(uuid);
+    final Location lastLocation = this.plugin.dataHandler().getLastLocation(uuid);
     final String lastLocationString = color(
         "x:%,d y:%,d z%,d &7in &f%s",
         lastLocation.getBlockX(),
@@ -308,19 +308,19 @@ public class CommandHandler implements CommandExecutor, Listener {
 
     final List<String> infoLines = new ArrayList<>(9);
     infoLines.add(color("&7Info for jailed player:"));
-    infoLines.add(color("  &7· Name: &f%s", this.plugin.dataHandler.getName(uuid, "&oundefined")));
+    infoLines.add(color("  &7· Name: &f%s", this.plugin.dataHandler().getName(uuid, "&oundefined")));
     infoLines.add(color("  &7· UUID: &f%s", uuid));
     infoLines.add(color("  &7· Time left: &f%,.2f%s", secondsLeft, timeUnit));
-    infoLines.add(color("  &7· Jailed in jail: &f%s", this.plugin.dataHandler.getJail(uuid, "&oundefined")));
-    infoLines.add(color("  &7· Jailed by: &f%s", this.plugin.dataHandler.getJailer(uuid, "&oundefined")));
+    infoLines.add(color("  &7· Jailed in jail: &f%s", this.plugin.dataHandler().getJail(uuid, "&oundefined")));
+    infoLines.add(color("  &7· Jailed by: &f%s", this.plugin.dataHandler().getJailer(uuid, "&oundefined")));
     infoLines.add(color("  &7· Location before jailed: &f%s", lastLocationString));
-    infoLines.add(color("  &7· Primary group: &f%s", this.plugin.dataHandler.getPrimaryGroup(
+    infoLines.add(color("  &7· Primary group: &f%s", this.plugin.dataHandler().getPrimaryGroup(
         uuid, this.configuration.permissionHookEnabled() ? "&oundefined" : "&oFeature not enabled"
     )));
 
     final StringJoiner joiner = new StringJoiner(", ");
     joiner.setEmptyValue(this.configuration.permissionHookEnabled() ? "&oNone" : "&oFeature not enabled");
-    this.plugin.dataHandler.getAllParentGroups(uuid).forEach(joiner::add);
+    this.plugin.dataHandler().getAllParentGroups(uuid).forEach(joiner::add);
     infoLines.add(color("  &7· All parent groups: &f%s", joiner.toString()));
 
     sender.sendMessage(infoLines.toArray(DUMMY_STRING_ARRAY));
@@ -329,7 +329,7 @@ public class CommandHandler implements CommandExecutor, Listener {
 
   private boolean listJails(final CommandSender sender) {
     final BetterJailsConfiguration.MessageHolder messages = this.configuration.messages();
-    final Map<String, Jail> jails = this.plugin.dataHandler.getJails();
+    final Map<String, Jail> jails = this.plugin.dataHandler().getJails();
     final List<String> jailListMessageThingu = new ArrayList<>();
 
     if (jails.isEmpty()) {
@@ -354,7 +354,7 @@ public class CommandHandler implements CommandExecutor, Listener {
       return true;
     }
 
-    final boolean wasReleased = this.plugin.dataHandler.releaseJailedPlayer(
+    final boolean wasReleased = this.plugin.dataHandler().releaseJailedPlayer(
         player.getUniqueId(),
         uuidOrNil(sender),
         executioner
@@ -381,7 +381,7 @@ public class CommandHandler implements CommandExecutor, Listener {
 
     final Player player = (Player) sender;
     try {
-      this.plugin.dataHandler.addJail(jail, player.getLocation());
+      this.plugin.dataHandler().addJail(jail, player.getLocation());
       sender.sendMessage(this.configuration.messages().createJailSuccess(sender.getName(), jail));
 
     } catch (final IOException exception) {
@@ -393,13 +393,13 @@ public class CommandHandler implements CommandExecutor, Listener {
   }
 
   private boolean deleteJail(final CommandSender sender, final String jail) {
-    if (this.plugin.dataHandler.getJail(jail) == null) {
+    if (this.plugin.dataHandler().getJail(jail) == null) {
       sender.sendMessage(this.configuration.messages().deleteJailFailed(sender.getName(), jail));
       return true;
     }
 
     try {
-      this.plugin.dataHandler.removeJail(jail);
+      this.plugin.dataHandler().removeJail(jail);
       sender.sendMessage(this.configuration.messages().deleteJailSuccess(sender.getName(), jail));
     } catch (final IOException exception) {
       sender.sendMessage(color("&cThere was an error while trying to remove the jail."));

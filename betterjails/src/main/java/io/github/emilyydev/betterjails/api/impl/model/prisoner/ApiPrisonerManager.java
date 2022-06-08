@@ -58,7 +58,7 @@ public class ApiPrisonerManager implements PrisonerManager {
   @Override
   public @Nullable Prisoner getPrisoner(final @NotNull UUID uuid) {
     Objects.requireNonNull(uuid, "uuid");
-    final Configuration config = this.plugin.dataHandler.retrieveJailedPlayer(uuid);
+    final Configuration config = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
     if (!config.contains(DataHandler.UUID_FIELD)) {
       return null;
     }
@@ -67,12 +67,12 @@ public class ApiPrisonerManager implements PrisonerManager {
     final String name = config.getString(DataHandler.NAME_FIELD);
     final String group = config.getString(DataHandler.GROUP_FIELD);
     final List<String> parentGroups = config.getStringList(DataHandler.EXTRA_GROUPS_FIELD);
-    final Jail jail = this.plugin.dataHandler.getJail(config.getString(DataHandler.JAIL_FIELD));
+    final Jail jail = this.plugin.dataHandler().getJail(config.getString(DataHandler.JAIL_FIELD));
     final String jailedBy = config.getString(DataHandler.JAILED_BY_FIELD);
     final Instant jailedUntil =
         config.getBoolean(DataHandler.IS_RELEASED_FIELD)
             ? Instant.MIN
-            : Instant.now().plusSeconds(this.plugin.dataHandler.getSecondsLeft(uuid, 0));
+            : Instant.now().plusSeconds(this.plugin.dataHandler().getSecondsLeft(uuid, 0));
 
     return new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, lastLocation);
   }
@@ -91,7 +91,7 @@ public class ApiPrisonerManager implements PrisonerManager {
 
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
     try {
-      this.plugin.dataHandler.addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds());
+      this.plugin.dataHandler().addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds());
     } catch (final IOException exception) {
       throw new RuntimeException(exception);
     }
@@ -102,18 +102,18 @@ public class ApiPrisonerManager implements PrisonerManager {
   @Override
   public boolean releasePrisoner(final @NotNull Prisoner prisoner) {
     Objects.requireNonNull(prisoner, "prisoner");
-    return this.plugin.dataHandler.releaseJailedPlayer(prisoner.uuid(), Util.NIL_UUID, "api");
+    return this.plugin.dataHandler().releaseJailedPlayer(prisoner.uuid(), Util.NIL_UUID, "api");
   }
 
   @Override
   public boolean isPlayerJailed(final @NotNull UUID uuid) {
     Objects.requireNonNull(uuid, "uuid");
-    return this.plugin.dataHandler.isPlayerJailed(uuid);
+    return this.plugin.dataHandler().isPlayerJailed(uuid);
   }
 
   @Override
   public @NotNull @Unmodifiable Collection<@NotNull Prisoner> getAllPrisoners() {
-    return this.plugin.dataHandler.getAllJailedPlayers().keySet().stream()
+    return this.plugin.dataHandler().getAllJailedPlayers().keySet().stream()
         .map(this::getPrisoner)
         .filter(Objects::nonNull)
         .collect(Util.toImmutableSet());

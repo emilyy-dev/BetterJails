@@ -68,7 +68,7 @@ public class CommandTabCompleter implements TabCompleter {
 
           case 2:
             if (!args[0].equalsIgnoreCase("info")) {
-              for (final String jailName : this.plugin.dataHandler.getJails().keySet()) {
+              for (final String jailName : this.plugin.dataHandler().getJails().keySet()) {
                 if (jailName.toLowerCase(Locale.ROOT).startsWith(args[1].toLowerCase(Locale.ROOT))) {
                   suggestionsBuilder.add(jailName);
                 }
@@ -111,7 +111,7 @@ public class CommandTabCompleter implements TabCompleter {
 
       case "deljail": {
         if (args.length == 1) {
-          for (final String jailName : this.plugin.dataHandler.getJails().keySet()) {
+          for (final String jailName : this.plugin.dataHandler().getJails().keySet()) {
             if (jailName.toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT))) {
               suggestionsBuilder.add(jailName);
             }

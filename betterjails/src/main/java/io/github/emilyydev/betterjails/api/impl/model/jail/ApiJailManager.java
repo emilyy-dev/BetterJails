@@ -53,7 +53,7 @@ public class ApiJailManager implements JailManager {
     Objects.requireNonNull(name, "name");
     Objects.requireNonNull(location, "location");
 
-    final DataHandler dataHandler = this.plugin.dataHandler;
+    final DataHandler dataHandler = this.plugin.dataHandler();
     if (dataHandler.getJail(name) != null) {
       throw new IllegalArgumentException("name");
     }
@@ -70,7 +70,7 @@ public class ApiJailManager implements JailManager {
   @Override
   public @Nullable Jail getJail(final @NotNull String name) {
     Objects.requireNonNull(name, "name");
-    return this.plugin.dataHandler.getJail(name);
+    return this.plugin.dataHandler().getJail(name);
   }
 
   @Override
@@ -78,7 +78,7 @@ public class ApiJailManager implements JailManager {
     Objects.requireNonNull(jail, "jail");
 
     try {
-      this.plugin.dataHandler.removeJail(jail.name());
+      this.plugin.dataHandler().removeJail(jail.name());
     } catch (final IOException exception) {
       throw new RuntimeException(exception);
     }
@@ -86,6 +86,6 @@ public class ApiJailManager implements JailManager {
 
   @Override
   public @NotNull @UnmodifiableView Collection<@NotNull Jail> getAllJails() {
-    return Collections.unmodifiableCollection(this.plugin.dataHandler.getJails().values());
+    return Collections.unmodifiableCollection(this.plugin.dataHandler().getJails().values());
   }
 }
