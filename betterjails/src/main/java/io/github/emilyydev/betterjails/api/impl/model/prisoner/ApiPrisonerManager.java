@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
@@ -90,19 +89,14 @@ public class ApiPrisonerManager implements PrisonerManager {
     Preconditions.checkState(jailedUntil.isAfter(now), "duration must be positive");
 
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
-    try {
-      this.plugin.dataHandler().addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds());
-    } catch (final IOException exception) {
-      throw new RuntimeException(exception);
-    }
-
+    this.plugin.dataHandler().addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds(), true, player.getLocation());
     return getPrisoner(uuid);
   }
 
   @Override
   public boolean releasePrisoner(final @NotNull Prisoner prisoner) {
     Objects.requireNonNull(prisoner, "prisoner");
-    return this.plugin.dataHandler().releaseJailedPlayer(prisoner.uuid(), Util.NIL_UUID, "api");
+    return this.plugin.dataHandler().releaseJailedPlayer(prisoner.uuid(), Util.NIL_UUID, "api", true);
   }
 
   @Override

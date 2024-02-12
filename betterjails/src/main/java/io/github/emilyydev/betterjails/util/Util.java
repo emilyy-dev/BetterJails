@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -43,6 +43,8 @@ import java.util.stream.Collector;
 
 public interface Util {
 
+  int SPIGOTMC_RESOURCE_ID = 76001;
+
   Collector<Object, ImmutableSet.Builder<Object>, ImmutableSet<Object>> IMMUTABLE_SET_COLLECTOR =
       Collector.of(
           ImmutableSet::builder,
@@ -73,10 +75,10 @@ public interface Util {
     return ChatColor.translateAlternateColorCodes('&', String.format(text, args));
   }
 
-  static void checkVersion(final Plugin plugin, final int id, final Consumer<? super String> consumer) {
+  static void checkVersion(final Plugin plugin, final Consumer<? super String> consumer) {
     plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
       try (
-          final InputStream stream = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + id).openStream();
+          final InputStream stream = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + SPIGOTMC_RESOURCE_ID).openStream();
           final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))
       ) {
         consumer.accept(reader.readLine());

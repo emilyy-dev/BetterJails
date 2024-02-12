@@ -4,7 +4,7 @@ version: "${project.version}"
 main: "io.github.emilyydev.betterjails.BetterJailsPlugin"
 api-version: "1.13"
 load: "POSTWORLD"
-softdepend: [ "Essentials", "Vault", "LuckPerms", "Multiverse-Core", "Hyperverse", "My_Worlds", "SlimeWorldManager" ]
+softdepend: [ "Essentials", "Vault", "LuckPerms" ]
 
 commands:
   jail:

@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,27 +25,48 @@
 package io.github.emilyydev.betterjails.interfaces.permission;
 
 import com.google.common.collect.ImmutableSet;
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.Server;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.ServiceRegisterEvent;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.Collection;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-final class VaultPermissionInterface extends AbstractPermissionInterface {
+final class VaultPermissionInterface extends AbstractPermissionInterface implements Listener {
 
   private static <T> CompletionStage<? extends T> completed(final T value) {
     return CompletableFuture.completedFuture(value);
   }
 
-  private final Permission permission;
+  private Permission permission;
 
-  VaultPermissionInterface(final Server server, final String prisonerGroup) {
-    super(prisonerGroup);
-    this.permission = server.getServicesManager().load(Permission.class);
+  VaultPermissionInterface(final BetterJailsPlugin plugin) {
+    super(plugin.configuration().prisonerPermissionGroup().orElseThrow(NoSuchElementException::new));
+    this.permission = plugin.getServer().getServicesManager().load(Permission.class);
+    plugin.getServer().getPluginManager().registerEvent(
+        ServiceRegisterEvent.class, this, EventPriority.MONITOR,
+        (l, e) -> onPermissionServiceRegistered((ServiceRegisterEvent) e), plugin
+    );
+  }
+
+  private void onPermissionServiceRegistered(final ServiceRegisterEvent event) {
+    final RegisteredServiceProvider<?> provider = event.getProvider();
+    if (provider.getService() == Permission.class) {
+      this.permission = (Permission) provider.getProvider();
+    }
+  }
+
+  @Override
+  public void close() {
+    ServiceRegisterEvent.getHandlerList().unregister(this);
   }
 
   @Override

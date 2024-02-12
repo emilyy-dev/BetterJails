@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@
 
 package io.github.emilyydev.betterjails.interfaces.permission;
 
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.plugin.PluginManager;
@@ -34,9 +35,13 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-public interface PermissionInterface {
+public interface PermissionInterface extends AutoCloseable {
 
   PermissionInterface NULL = new PermissionInterface() {
+
+    @Override
+    public void close() {
+    }
 
     @Override
     public String name() {
@@ -75,18 +80,20 @@ public interface PermissionInterface {
     }
   };
 
-  static PermissionInterface determinePermissionInterface(final Server server, final String prisonerGroup) {
-    final PluginManager pluginManager = server.getPluginManager();
+  static PermissionInterface determinePermissionInterface(final BetterJailsPlugin plugin, final String prisonerGroup) {
+    final PluginManager pluginManager = plugin.getServer().getPluginManager();
     if (pluginManager.isPluginEnabled("LuckPerms")) {
-      return new LuckPermsPermissionInterface(server, prisonerGroup);
+      return new LuckPermsPermissionInterface(plugin.getServer(), prisonerGroup);
     } else if (pluginManager.isPluginEnabled("Vault")) {
-      return new VaultPermissionInterface(server, prisonerGroup);
+      return new VaultPermissionInterface(plugin);
     } else {
       return NULL;
     }
   }
 
   String name();
+
+  void close();
 
   CompletionStage<? extends String> fetchPrimaryGroup(OfflinePlayer player);
 

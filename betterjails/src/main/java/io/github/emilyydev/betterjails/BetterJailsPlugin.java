@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -44,21 +44,19 @@ import org.bukkit.Server;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.java.JavaPluginLoader;
 import org.bukkit.scheduler.BukkitScheduler;
-import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+@SuppressWarnings("DesignForExtension")
 public class BetterJailsPlugin extends JavaPlugin {
 
   static {
@@ -74,18 +72,6 @@ public class BetterJailsPlugin extends JavaPlugin {
   private final SubCommandsConfiguration subCommands = new SubCommandsConfiguration(this.pluginDir);
   private final DataHandler dataHandler = new DataHandler(this);
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
-
-  public BetterJailsPlugin() {
-  }
-
-  public BetterJailsPlugin(
-      final @NotNull JavaPluginLoader loader,
-      final @NotNull PluginDescriptionFile description,
-      final @NotNull File dataFolder,
-      final @NotNull File file
-  ) {
-    super(loader, description, dataFolder, file);
-  }
 
   public DataHandler dataHandler() {
     return this.dataHandler;
@@ -104,6 +90,7 @@ public class BetterJailsPlugin extends JavaPlugin {
   }
 
   public void resetPermissionInterface(final PermissionInterface permissionInterface) {
+    this.permissionInterface.close();
     this.permissionInterface = permissionInterface;
   }
 
@@ -113,6 +100,10 @@ public class BetterJailsPlugin extends JavaPlugin {
 
   public SubCommandsConfiguration subCommands() {
     return this.subCommands;
+  }
+
+  public Path getPluginDir() {
+    return this.pluginDir;
   }
 
   @Override
@@ -136,29 +127,33 @@ public class BetterJailsPlugin extends JavaPlugin {
 
     if (this.configuration.permissionHookEnabled()) {
       final Optional<String> maybePrisonerGroup = this.configuration.prisonerPermissionGroup();
+      final Logger logger = getLogger();
       if (maybePrisonerGroup.isPresent()) {
-        this.permissionInterface = PermissionInterface.determinePermissionInterface(server, maybePrisonerGroup.get());
+        this.permissionInterface = PermissionInterface.determinePermissionInterface(this, maybePrisonerGroup.get());
         if (this.permissionInterface != PermissionInterface.NULL) {
-          getLogger().info("Hooked with \"" + this.permissionInterface.name() + "\" successfully!");
+          logger.info("Hooked with \"" + this.permissionInterface.name() + "\" successfully!");
         } else {
-          getLogger().warning("Hook with a permission interface failed!");
-          getLogger().warning("Option \"changeGroup\" in config.yml is set to true but no supported permission plugin (or Vault) is installed");
-          getLogger().warning("Group changing feature will not be used!");
+          logger.warning("Hook with a permission interface failed!");
+          logger.warning("Option \"changeGroup\" in config.yml is set to true but no supported permission plugin (or Vault) is installed");
+          logger.warning("Group changing feature will not be used!");
         }
       } else {
-        getLogger().warning("Option \"changeGroup\" in config.yml is set to true but no prisoner permission group was configured");
-        getLogger().warning("Group changing feature will not be used!");
+        logger.warning("Option \"changeGroup\" in config.yml is set to true but no prisoner permission group was configured");
+        logger.warning("Group changing feature will not be used!");
       }
     }
 
-    try {
-      this.dataHandler.init();
-    } catch (final IOException exception) {
-      throw new UncheckedIOException(exception.getMessage(), exception);
-    } catch (final InvalidConfigurationException exception) {
-      final IOException ioEx = new IOException(exception.getMessage(), exception);
-      throw new UncheckedIOException(ioEx.getMessage(), ioEx);
-    }
+    final BukkitScheduler scheduler = server.getScheduler();
+
+    // delay data loading to allow plugins to load additional worlds that might have jails in them
+    scheduler.runTask(this, () -> {
+      try {
+        this.dataHandler.init();
+      } catch (final IOException | InvalidConfigurationException exception) {
+        getLogger().log(Level.SEVERE, "Error loading plugin data", exception);
+        pluginManager.disablePlugin(this);
+      }
+    });
 
     PlayerListeners.create(this).register();
 
@@ -172,7 +167,6 @@ public class BetterJailsPlugin extends JavaPlugin {
       }
     }
 
-    final BukkitScheduler scheduler = server.getScheduler();
     scheduler.runTaskTimer(this, this.dataHandler::timer, 0L, 20L);
 
     final Duration autoSavePeriod = this.configuration.autoSavePeriod();
@@ -181,13 +175,13 @@ public class BetterJailsPlugin extends JavaPlugin {
         try {
           this.dataHandler.save();
         } catch (final IOException exception) {
-          exception.printStackTrace();
+          getLogger().log(Level.SEVERE, null, exception);
         }
-      }, 0L, autoSavePeriod.getSeconds() * 20L);
+      }, autoSavePeriod.getSeconds() * 20L, autoSavePeriod.getSeconds() * 20L);
     }
 
     if (!getDescription().getVersion().endsWith("-SNAPSHOT")) {
-      scheduler.runTaskLater(this, () -> Util.checkVersion(this, 76001, version -> {
+      scheduler.runTaskLater(this, () -> Util.checkVersion(this, version -> {
         if (!getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {
           server.getConsoleSender().sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
         }
@@ -200,8 +194,7 @@ public class BetterJailsPlugin extends JavaPlugin {
     try {
       this.dataHandler.save();
     } catch (final IOException exception) {
-      getLogger().severe("Could not save data files!");
-      exception.printStackTrace();
+      getLogger().log(Level.SEVERE, "Could not save data files", exception);
     }
 
     this.eventBus.unsubscribeAll();

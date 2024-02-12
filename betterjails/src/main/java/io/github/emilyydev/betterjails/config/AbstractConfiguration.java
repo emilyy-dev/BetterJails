@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -75,10 +75,9 @@ public class AbstractConfiguration {
       this.configuration = configuration;
       this.configurationMap.clear();
     } catch (final IOException exception) {
-      throw new UncheckedIOException(exception.getMessage(), exception);
+      throw new UncheckedIOException(exception);
     } catch (final InvalidConfigurationException exception) {
-      final IOException ioEx = new IOException(exception.getMessage(), exception);
-      throw new UncheckedIOException(ioEx.getMessage(), ioEx);
+      throw new UncheckedIOException(new IOException(exception));
     }
   }
 

@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -55,6 +55,7 @@ public class EventBusTest {
 
     plugin.eventBus().subscribe(plugin, PlayerImprisonEvent.class, EventBusTest::playerImprison);
     plugin.eventBus().subscribe(plugin, PrisonerReleaseEvent.class, EventBusTest::prisonerRelease);
+    server.getScheduler().performOneTick();
   }
 
   @AfterAll
@@ -79,7 +80,7 @@ public class EventBusTest {
     plugin.dataHandler().addJail("jail0", Vector.getRandom().toLocation(server.addSimpleWorld("world0")));
 
     final PlayerMock player = server.addPlayer();
-    plugin.dataHandler().addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L);
-    plugin.dataHandler().releaseJailedPlayer(player.getUniqueId(), Util.NIL_UUID, "test");
+    plugin.dataHandler().addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L, false, player.getLocation());
+    plugin.dataHandler().releaseJailedPlayer(player.getUniqueId(), Util.NIL_UUID, "test", true);
   }
 }
