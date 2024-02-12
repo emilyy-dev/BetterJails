@@ -22,7 +22,7 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.interfaces;
+package io.github.emilyydev.betterjails.interfaces.permission;
 
 import com.google.common.collect.ImmutableSet;
 import net.milkbowl.vault.permission.Permission;

@@ -22,7 +22,7 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.interfaces;
+package io.github.emilyydev.betterjails.interfaces.permission;
 
 import io.github.emilyydev.betterjails.util.Util;
 import net.luckperms.api.LuckPerms;
