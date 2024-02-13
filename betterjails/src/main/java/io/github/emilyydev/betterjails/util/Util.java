@@ -47,6 +47,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.logging.Level;
 import java.util.stream.Collector;
 
 public interface Util {
@@ -90,9 +91,10 @@ public interface Util {
           final InputStream stream = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + SPIGOTMC_RESOURCE_ID).openStream();
           final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))
       ) {
-        consumer.accept(reader.readLine());
+        final String version = reader.readLine();
+        plugin.getServer().getScheduler().runTask(plugin, () -> consumer.accept(version));
       } catch (final IOException exception) {
-        plugin.getLogger().warning("Cannot look for updates: " + exception.getMessage());
+        plugin.getLogger().log(Level.WARNING, "Cannot look for updates", exception);
       }
     });
   }
