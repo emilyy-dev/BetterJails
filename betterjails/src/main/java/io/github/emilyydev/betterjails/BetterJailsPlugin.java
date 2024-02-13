@@ -41,6 +41,7 @@ import io.github.emilyydev.betterjails.util.DataHandler;
 import io.github.emilyydev.betterjails.util.FileIO;
 import io.github.emilyydev.betterjails.util.Util;
 import net.ess3.api.IEssentials;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Server;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -76,6 +77,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   private final SubCommandsConfiguration subCommands = new SubCommandsConfiguration(this.pluginDir);
   private final DataHandler dataHandler = new DataHandler(this);
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
+  private Metrics metrics = null;
 
   public DataHandler dataHandler() {
     return this.dataHandler;
@@ -193,18 +195,27 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
         }
       }), 100L);
     }
+
+    this.metrics = Util.prepareMetrics(this);
   }
 
   @Override
   public void onDisable() {
     try {
       this.dataHandler.save().get();
-      FileIO.shutdown();
     } catch (final InterruptedException | ExecutionException exception) {
       getLogger().log(Level.SEVERE, "Could not save data files", exception);
     }
 
+    try {
+      FileIO.shutdown();
+    } catch (final InterruptedException ignored) {
+    }
+
     this.eventBus.unsubscribeAll();
+    if (this.metrics != null) {
+      this.metrics.shutdown();
+    }
   }
 
   public void reload() throws IOException {

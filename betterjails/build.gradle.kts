@@ -22,6 +22,7 @@ dependencies {
   compileOnly(libs.vault) { isTransitive = false }
   compileOnly(libs.essentialsx) { isTransitive = false }
   compileOnly(libs.annotations)
+  implementation(libs.bstats)
 
   testImplementation(libs.junit)
   testImplementation(libs.mockbukkit)
@@ -32,8 +33,11 @@ tasks {
     dependsOn(shadowJar)
   }
 
-  shadowJar { archiveClassifier = null }
   jar { archiveClassifier = "noshadow" }
+  shadowJar {
+    archiveClassifier = null
+    relocate("org.bstats", "io.github.emilyydev.betterjails.bstats")
+  }
 
   processResources {
     inputs.property("version", version)

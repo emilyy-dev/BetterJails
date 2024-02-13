@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Set;
@@ -46,6 +47,7 @@ public class ApiPrisoner implements Prisoner {
   private final Jail jail;
   private final String jailedBy;
   private final Instant jailedUntil;
+  private final Duration totalSentenceTime;
   private final ImmutableLocation lastLocation;
 
   public ApiPrisoner(
@@ -56,6 +58,7 @@ public class ApiPrisoner implements Prisoner {
       final Jail jail,
       final String jailedBy,
       final Instant jailedUntil,
+      final Duration totalSentenceTime,
       final ImmutableLocation lastLocation
   ) {
     this.uuid = uuid;
@@ -65,6 +68,7 @@ public class ApiPrisoner implements Prisoner {
     this.jail = jail;
     this.jailedBy = jailedBy;
     this.jailedUntil = jailedUntil;
+    this.totalSentenceTime = totalSentenceTime;
     this.lastLocation = lastLocation;
   }
 
@@ -101,6 +105,11 @@ public class ApiPrisoner implements Prisoner {
   @Override
   public @NotNull Instant jailedUntil() {
     return this.jailedUntil;
+  }
+
+  @Override
+  public @NotNull Duration totalSentenceTime() {
+    return this.totalSentenceTime;
   }
 
   @Override

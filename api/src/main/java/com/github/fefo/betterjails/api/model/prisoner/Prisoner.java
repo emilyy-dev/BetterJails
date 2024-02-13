@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
@@ -101,7 +102,7 @@ public interface Prisoner {
 
   /**
    * Gets the future {@link Instant} in time in which this prisoner will be released or
-   * {@link Instant#MIN} if the prisoner was unjailed while offline.
+   * {@link Instant#MIN} if the prisoner was released while offline.
    *
    * @return the instant of release date
    */
@@ -111,7 +112,15 @@ public interface Prisoner {
    * Gets the location this player was at when jailed.
    *
    * @return the recorded location when this player was jailed or the "backup location" defined in
-   * configuration if unknown (jailed while offline).
+   * configuration if unknown (jailed while offline)
    */
   @NotNull ImmutableLocation lastLocation();
+
+  /**
+   * Gets the complete sentence time as a {@link Duration} for when the player was jailed.
+   *
+   * @return the total sentence time, or {@link Duration#ZERO} if unknown (only happens when
+   * existing prisoner data was upgraded from an older version where this data did not exist)
+   */
+  @NotNull Duration totalSentenceTime();
 }

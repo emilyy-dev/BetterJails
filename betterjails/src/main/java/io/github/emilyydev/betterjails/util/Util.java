@@ -24,9 +24,14 @@
 
 package io.github.emilyydev.betterjails.util;
 
+import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import net.md_5.bungee.api.ChatColor;
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.AdvancedPie;
+import org.bstats.charts.SingleLineChart;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
@@ -37,6 +42,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collector;
@@ -44,6 +52,7 @@ import java.util.stream.Collector;
 public interface Util {
 
   int SPIGOTMC_RESOURCE_ID = 76001;
+  int BSTATS_ID = 9015;
 
   Collector<Object, ImmutableSet.Builder<Object>, ImmutableSet<Object>> IMMUTABLE_SET_COLLECTOR =
       Collector.of(
@@ -86,6 +95,42 @@ public interface Util {
         plugin.getLogger().warning("Cannot look for updates: " + exception.getMessage());
       }
     });
+  }
+
+  static Metrics prepareMetrics(final BetterJailsPlugin plugin) {
+    final Metrics metrics = new Metrics(plugin, BSTATS_ID);
+    metrics.addCustomChart(new SingleLineChart("jail_count", () -> plugin.dataHandler().getJails().size()));
+    metrics.addCustomChart(new SingleLineChart("prisoner_count", () -> plugin.dataHandler().getPrisonerIds().size()));
+    metrics.addCustomChart(new AdvancedPie("sentence_time", () -> {
+      final Map<String, Integer> map = new LinkedHashMap<>();
+      for (final Prisoner prisoner : plugin.api().getPrisonerManager().getAllPrisoners()) {
+        final Duration remainingTime = prisoner.totalSentenceTime();
+        if (remainingTime.isZero()) {
+          continue;
+        }
+
+        final String key;
+        if (remainingTime.compareTo(Duration.ofMinutes(1L)) <= 0) {
+          key = "<= 1m";
+        } else if (remainingTime.compareTo(Duration.ofMinutes(10L)) <= 0) {
+          key = "<= 10m";
+        } else if (remainingTime.compareTo(Duration.ofHours(1L)) <= 0) {
+          key = "<= 1h";
+        } else if (remainingTime.compareTo(Duration.ofHours(10L)) <= 0) {
+          key = "<= 10h";
+        } else if (remainingTime.compareTo(Duration.ofDays(1L)) <= 0) {
+          key = "<= 1d";
+        } else {
+          key = "> 1d";
+        }
+
+        map.merge(key, 1, Integer::sum);
+      }
+
+      return map;
+    }));
+
+    return metrics;
   }
 
   @SuppressWarnings({ "unchecked", "rawtypes" })

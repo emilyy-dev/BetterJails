@@ -46,7 +46,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class ApiPrisonerManager implements PrisonerManager {
+public final class ApiPrisonerManager implements PrisonerManager {
 
   private final BetterJailsPlugin plugin;
 
@@ -72,8 +72,12 @@ public class ApiPrisonerManager implements PrisonerManager {
         config.getBoolean(DataHandler.IS_RELEASED_FIELD)
             ? Instant.MIN
             : Instant.now().plusSeconds(this.plugin.dataHandler().getSecondsLeft(uuid, 0));
+    final Duration totalSentenceTime =
+        config.contains(DataHandler.TOTAL_SENTENCE_TIME)
+            ? Duration.ofSeconds(config.getInt(DataHandler.TOTAL_SENTENCE_TIME))
+            : Duration.ZERO;
 
-    return new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, lastLocation);
+    return new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, totalSentenceTime, lastLocation);
   }
 
   @Override
@@ -107,7 +111,7 @@ public class ApiPrisonerManager implements PrisonerManager {
 
   @Override
   public @NotNull @Unmodifiable Collection<@NotNull Prisoner> getAllPrisoners() {
-    return this.plugin.dataHandler().getAllJailedPlayers().keySet().stream()
+    return this.plugin.dataHandler().getPrisonerIds().stream()
         .map(this::getPrisoner)
         .filter(Objects::nonNull)
         .collect(Util.toImmutableSet());

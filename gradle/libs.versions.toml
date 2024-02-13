@@ -6,6 +6,7 @@ essentialsx = "2.18.2"
 annotations = "20.1.0"
 junit = "5.8.2"
 mockbukkit = "3.71.0"
+bstats = "3.0.2"
 
 [libraries]
 spigot = { module = "org.spigotmc:spigot-api", version.ref = "spigot" }
@@ -15,3 +16,4 @@ essentialsx = { module = "net.ess3:EssentialsX", version.ref = "essentialsx" }
 annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 mockbukkit = { module = "com.github.seeseemelk:MockBukkit-v1.20", version.ref = "mockbukkit" }
+bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
