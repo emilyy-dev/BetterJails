@@ -153,20 +153,22 @@ public final class CommandHandler implements CommandExecutor, Listener {
         this.plugin.getLogger().log(Level.SEVERE, null, exception);
         sender.sendMessage(color(
             "&cThere was an internal error while trying to reload the data files.\n" +
-            "Please check console for more information."
+                "Please check console for more information."
         ));
       }
     } else if (argument.equalsIgnoreCase("save") && sender.hasPermission("betterjails.betterjails.save")) {
-      try {
-        this.plugin.dataHandler().save();
+      this.plugin.dataHandler().save().whenCompleteAsync((v, ex) -> {
+        if (ex != null) {
+          this.plugin.getLogger().log(Level.SEVERE, null, ex);
+          sender.sendMessage(color(
+              "&cThere was an internal error while trying to save the data files.\n" +
+                  "Please check console for more information."
+          ));
+          return;
+        }
+
         sender.sendMessage(this.configuration.messages().saveData(sender.getName()));
-      } catch (final IOException exception) {
-        this.plugin.getLogger().log(Level.SEVERE, null, exception);
-        sender.sendMessage(color(
-            "&cThere was an internal error while trying to save the data files.\n" +
-            "Please check console for more information."
-        ));
-      }
+      }, this.plugin);
     } else {
       sender.sendMessage(color("&bBetterJails &3by &bemilyy-dev &3- v%s", this.plugin.getDescription().getVersion()));
     }
@@ -232,7 +234,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
     }
 
     final long seconds = (long) (scale * Double.parseDouble(time.substring(0, time.length() - 1)));
-    if (!this.plugin.dataHandler().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds, true, player.getLocation())) {
+    if (!this.plugin.dataHandler().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds)) {
       sender.sendMessage(this.configuration.messages().jailPlayerFailedJailNotFound(
           prisoner, executioner, jail, time
       ));
@@ -356,7 +358,8 @@ public final class CommandHandler implements CommandExecutor, Listener {
         player.getUniqueId(),
         uuidOrNil(sender),
         executioner,
-        true);
+        true
+    );
 
     if (wasReleased) {
       this.server.broadcast(
@@ -366,7 +369,6 @@ public final class CommandHandler implements CommandExecutor, Listener {
     } else {
       sender.sendMessage(this.configuration.messages().releasePrisonerFailedNotJailed(prisoner, executioner));
     }
-
   }
 
   private void createOrRenameJail(final CommandSender sender, final String jail) {
@@ -376,14 +378,15 @@ public final class CommandHandler implements CommandExecutor, Listener {
     }
 
     final Player player = (Player) sender;
-    try {
-      this.plugin.dataHandler().addJail(jail, player.getLocation());
-      sender.sendMessage(this.configuration.messages().createJailSuccess(sender.getName(), jail));
+    this.plugin.dataHandler().addJail(jail, player.getLocation()).whenCompleteAsync((v, ex) -> {
+      if (ex != null) {
+        this.plugin.getLogger().log(Level.SEVERE, null, ex);
+        sender.sendMessage(color("&cThere was an error while trying to add the jail."));
+        return;
+      }
 
-    } catch (final IOException exception) {
-      this.plugin.getLogger().log(Level.SEVERE, null, exception);
-      sender.sendMessage(color("&cThere was an error while trying to add the jail."));
-    }
+      sender.sendMessage(this.configuration.messages().createJailSuccess(sender.getName(), jail));
+    }, this.plugin);
   }
 
   private void deleteJail(final CommandSender sender, final String jail) {
@@ -392,13 +395,15 @@ public final class CommandHandler implements CommandExecutor, Listener {
       return;
     }
 
-    try {
-      this.plugin.dataHandler().removeJail(jail);
+    this.plugin.dataHandler().removeJail(jail).whenCompleteAsync((v, ex) -> {
+      if (ex != null) {
+        this.plugin.getLogger().log(Level.SEVERE, null, ex);
+        sender.sendMessage(color("&cThere was an error while trying to remove the jail."));
+        return;
+      }
+
       sender.sendMessage(this.configuration.messages().deleteJailSuccess(sender.getName(), jail));
-    } catch (final IOException exception) {
-      this.plugin.getLogger().log(Level.SEVERE, null, exception);
-      sender.sendMessage(color("&cThere was an error while trying to remove the jail."));
-    }
+    }, this.plugin);
   }
 
   private void playerLogin(final PlayerLoginEvent event) {

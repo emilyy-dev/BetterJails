@@ -38,6 +38,7 @@ import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface
 import io.github.emilyydev.betterjails.listeners.PlayerListeners;
 import io.github.emilyydev.betterjails.listeners.PluginDisableListener;
 import io.github.emilyydev.betterjails.util.DataHandler;
+import io.github.emilyydev.betterjails.util.FileIO;
 import io.github.emilyydev.betterjails.util.Util;
 import net.ess3.api.IEssentials;
 import org.bukkit.Server;
@@ -48,16 +49,19 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @SuppressWarnings("DesignForExtension")
-public class BetterJailsPlugin extends JavaPlugin {
+public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
   static {
     ConfigurationSerialization.registerClass(ImmutableLocation.class);
@@ -104,6 +108,11 @@ public class BetterJailsPlugin extends JavaPlugin {
 
   public Path getPluginDir() {
     return this.pluginDir;
+  }
+
+  @Override
+  public void execute(final @NotNull Runnable command) {
+    getServer().getScheduler().runTask(this, command);
   }
 
   @Override
@@ -171,13 +180,10 @@ public class BetterJailsPlugin extends JavaPlugin {
 
     final Duration autoSavePeriod = this.configuration.autoSavePeriod();
     if (!autoSavePeriod.isZero()) {
-      scheduler.runTaskTimerAsynchronously(this, () -> {
-        try {
-          this.dataHandler.save();
-        } catch (final IOException exception) {
-          getLogger().log(Level.SEVERE, null, exception);
-        }
-      }, autoSavePeriod.getSeconds() * 20L, autoSavePeriod.getSeconds() * 20L);
+      scheduler.runTaskTimer(this, () -> this.dataHandler.save().exceptionally(ex -> {
+        getLogger().log(Level.SEVERE, "Could not save data files", ex);
+        return null;
+      }), autoSavePeriod.getSeconds() * 20L, autoSavePeriod.getSeconds() * 20L);
     }
 
     if (!getDescription().getVersion().endsWith("-SNAPSHOT")) {
@@ -192,8 +198,9 @@ public class BetterJailsPlugin extends JavaPlugin {
   @Override
   public void onDisable() {
     try {
-      this.dataHandler.save();
-    } catch (final IOException exception) {
+      this.dataHandler.save().get();
+      FileIO.shutdown();
+    } catch (final InterruptedException | ExecutionException exception) {
       getLogger().log(Level.SEVERE, "Could not save data files", exception);
     }
 

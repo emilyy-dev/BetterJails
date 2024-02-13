@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,10 +33,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 public class ApiJailManager implements JailManager {
 
@@ -59,9 +59,11 @@ public class ApiJailManager implements JailManager {
     }
 
     try {
-      dataHandler.addJail(name, location);
-    } catch (final IOException exception) {
-      throw new RuntimeException(exception);
+      dataHandler.addJail(name, location).get();
+    } catch (final InterruptedException exception) {
+      // bleh
+    } catch (final ExecutionException exception) {
+      throw new RuntimeException(exception.getCause());
     }
 
     return dataHandler.getJail(name);
@@ -78,9 +80,11 @@ public class ApiJailManager implements JailManager {
     Objects.requireNonNull(jail, "jail");
 
     try {
-      this.plugin.dataHandler().removeJail(jail.name());
-    } catch (final IOException exception) {
-      throw new RuntimeException(exception);
+      this.plugin.dataHandler().removeJail(jail.name()).get();
+    } catch (final InterruptedException exception) {
+      // bleh
+    } catch (final ExecutionException exception) {
+      throw new RuntimeException(exception.getCause());
     }
   }
 

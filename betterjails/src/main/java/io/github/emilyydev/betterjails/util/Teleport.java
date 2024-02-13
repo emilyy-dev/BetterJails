@@ -24,6 +24,7 @@
 
 package io.github.emilyydev.betterjails.util;
 
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -36,23 +37,26 @@ import java.util.concurrent.CompletableFuture;
 public final class Teleport {
 
   private static final MethodHandle TELEPORT_ASYNC_MH;
+  private static final MethodHandle GET_CHUNK_AT_ASYNC_MH;
 
   static {
     final MethodHandles.Lookup lookup = MethodHandles.lookup();
     MethodHandle teleportAsyncMh;
+    MethodHandle getChunkAtAsyncMh = null;
     try {
       try {
         teleportAsyncMh = lookup.findVirtual(Entity.class, "teleportAsync", MethodType.methodType(CompletableFuture.class, Location.class));
       } catch (final NoSuchMethodException ignored) {
         try {
-          lookup.findVirtual(World.class, "getChunkAtAsync", MethodType.methodType(CompletableFuture.class, Location.class));
+          getChunkAtAsyncMh = lookup.findVirtual(World.class, "getChunkAtAsync", MethodType.methodType(CompletableFuture.class, Location.class));
           teleportAsyncMh = lookup.findStatic(Teleport.class, "teleportAsyncOld", MethodType.methodType(CompletableFuture.class, Entity.class, Location.class));
         } catch (final NoSuchMethodException ignored2) {
-          teleportAsyncMh = lookup.findStatic(Teleport.class, "teleportAsyncOldest", MethodType.methodType(CompletableFuture.class, Entity.class, Location.class));
+          teleportAsyncMh = lookup.findStatic(Teleport.class, "teleportSync", MethodType.methodType(CompletableFuture.class, Entity.class, Location.class));
         }
       }
 
       TELEPORT_ASYNC_MH = teleportAsyncMh;
+      GET_CHUNK_AT_ASYNC_MH = getChunkAtAsyncMh;
     } catch (final NoSuchMethodException | IllegalAccessException ex) {
       throw new ExceptionInInitializerError(ex);
     }
@@ -69,11 +73,13 @@ public final class Teleport {
     }
   }
 
-  private static CompletableFuture<Boolean> teleportAsyncOld(final Entity entity, final Location location) {
-    return location.getWorld().getChunkAtAsync(location).thenApply(chunk -> entity.teleport(location));
+  @SuppressWarnings("unchecked")
+  private static CompletableFuture<Boolean> teleportAsyncOld(final Entity entity, final Location location) throws Throwable {
+    final CompletableFuture<Chunk> cf = (CompletableFuture<Chunk>) GET_CHUNK_AT_ASYNC_MH.invokeExact(location.getWorld(), location);
+    return cf.thenApply(chunk -> entity.teleport(location));
   }
 
-  private static CompletableFuture<Boolean> teleportAsyncOldest(final Entity entity, final Location location) {
+  private static CompletableFuture<Boolean> teleportSync(final Entity entity, final Location location) {
     return CompletableFuture.completedFuture(entity.teleport(location));
   }
 

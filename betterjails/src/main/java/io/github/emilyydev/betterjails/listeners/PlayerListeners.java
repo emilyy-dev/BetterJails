@@ -28,19 +28,20 @@ import com.earth2me.essentials.User;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.util.DataHandler;
+import io.github.emilyydev.betterjails.util.FileIO;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.PluginManager;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
-import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,6 +71,10 @@ public final class PlayerListeners implements Listener {
         (l, e) -> playerSpawnPost((PlayerSpawnLocationEvent) e), this.plugin
     );
     pluginManager.registerEvent(
+        PlayerJoinEvent.class, this, EventPriority.MONITOR,
+        (l, e) -> properlyReleaseReleasedPrisoners((PlayerJoinEvent) e), this.plugin
+    );
+    pluginManager.registerEvent(
         PlayerQuitEvent.class, this, EventPriority.NORMAL,
         (l, e) -> playerQuit((PlayerQuitEvent) e), this.plugin
     );
@@ -80,6 +85,14 @@ public final class PlayerListeners implements Listener {
   }
 
   private Runnable thisIsAwful = null;
+  private boolean properlyReleaseReleasedPrisoner = false;
+
+  private void properlyReleaseReleasedPrisoners(final PlayerJoinEvent event) {
+    if (this.properlyReleaseReleasedPrisoner) {
+      this.properlyReleaseReleasedPrisoner = false;
+      this.plugin.dataHandler().releaseJailedPlayer(event.getPlayer().getUniqueId(), Util.NIL_UUID, null, false);
+    }
+  }
 
   private void playerSpawnPost(final PlayerSpawnLocationEvent event) {
     if (this.thisIsAwful != null) {
@@ -109,10 +122,15 @@ public final class PlayerListeners implements Listener {
         event.setSpawnLocation(jail.location().mutable());
       } else {
         final Location lastLocation = this.plugin.dataHandler().getLastLocation(uuid);
-        this.plugin.dataHandler().releaseJailedPlayer(uuid, Util.NIL_UUID, null, false);
         if (!lastLocation.equals(this.plugin.configuration().backupLocation().mutable())) {
           event.setSpawnLocation(lastLocation);
         }
+
+        // delay prisoner releasing until PlayerJoinEvent,
+        //  DataHandler#releaseJailedPlayer performs actual housekeeping when the Player is "online" (as in, Server#getPlayer will not return null)
+        //  that is available as early as the join event, initial spawn event happens right before that, but we also need to determine the spawn location
+        // this.plugin.dataHandler().releaseJailedPlayer(uuid, Util.NIL_UUID, null, false);
+        this.properlyReleaseReleasedPrisoner = true;
       }
     }
 
@@ -137,19 +155,19 @@ public final class PlayerListeners implements Listener {
     }
 
     this.plugin.dataHandler().updateSecondsLeft(uuid);
+    final Path playerFile = this.plugin.dataHandler().playerDataFolder.resolve(uuid + ".yml");
     final YamlConfiguration jailedPlayer = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
-    try {
-      jailedPlayer.save(new File(this.plugin.dataHandler().playerDataFolder.toFile(), uuid + ".yml"));
-      if (!this.plugin.configuration().considerOfflineTime()) {
-        this.plugin.dataHandler().unloadJailedPlayer(uuid);
-        if (this.plugin.essentials != null) {
-          final User user = this.plugin.essentials.getUser(uuid);
-          user.setJailTimeout(0L);
-          user.setJailed(true);
-        }
+    FileIO.writeString(playerFile, jailedPlayer.saveToString()).exceptionally(ex -> {
+      this.logger.log(Level.SEVERE, null, ex);
+      return null;
+    });
+    if (!this.plugin.configuration().considerOfflineTime()) {
+      this.plugin.dataHandler().unloadJailedPlayer(uuid);
+      if (this.plugin.essentials != null) {
+        final User user = this.plugin.essentials.getUser(uuid);
+        user.setJailTimeout(0L);
+        user.setJailed(true);
       }
-    } catch (final IOException exception) {
-      this.logger.log(Level.SEVERE, null, exception);
     }
   }
 
