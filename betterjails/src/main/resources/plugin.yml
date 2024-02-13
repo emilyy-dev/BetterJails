@@ -1,6 +1,6 @@
 name: "BetterJails"
 author: "emilyy-dev"
-version: "${project.version}"
+version: "${version}"
 main: "io.github.emilyydev.betterjails.BetterJailsPlugin"
 api-version: "1.13"
 load: "POSTWORLD"

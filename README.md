@@ -209,5 +209,5 @@ If you want to manually add the API dependency to your classpath, you can obtain
 
 ## Compiling
 
-You can compile this plugin by cloning the repository and running `mvn package` in the root
-directory of the project, you can find the final jar in `/betterjails/target/betterjails-1.5-SNAPSHOT.jar`.
+You can compile this plugin by cloning the repository and running `./gradlew build` in the root
+directory of the project, you can find the final jar in `./betterjails/build/libs/betterjails-1.5-SNAPSHOT.jar`.
