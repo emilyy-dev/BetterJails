@@ -1,6 +1,7 @@
 plugins {
   id("buildlogic.java-conventions")
   id("com.github.johnrengelman.shadow") version "8.1.1"
+  id("xyz.jpenilla.run-paper") version "2.2.3"
 }
 
 repositories {
@@ -43,6 +44,10 @@ tasks {
 
   compileTestJava {
     options.release = 17
+  }
+
+  runServer {
+    minecraftVersion("1.20.4")
   }
 }
 

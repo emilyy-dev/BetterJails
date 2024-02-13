@@ -34,11 +34,12 @@ import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
+import io.github.emilyydev.betterjails.dataupgrade.DataUpgrader;
+import io.github.emilyydev.betterjails.dataupgrade.V1ToV2;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -82,19 +83,10 @@ public final class DataHandler {
   public static final String JAILED_BY_FIELD = "jailed-by";
   public static final String SECONDS_LEFT_FIELD = "seconds-left";
 
-  @Deprecated private static final String LEGACY_UNJAILED_FIELD = "unjailed";
-  @Deprecated private static final String LEGACY_LASTLOCATION_FIELD = "lastlocation";
-  @Deprecated private static final String LEGACY_JAILEDBY_FIELD = "jailedby";
-  @Deprecated private static final String LEGACY_SECONDSLEFT_FIELD = "secondsleft";
-
-  @Deprecated private static final List<Map<String, String>> DATA_FIELD_MIGRATION_MAPS =
+  private static final List<DataUpgrader> DATA_UPGRADERS =
       ImmutableList.of(
-          ImmutableMap.<String, String>builder()
-              .put(LEGACY_UNJAILED_FIELD, IS_RELEASED_FIELD)
-              .put(LEGACY_LASTLOCATION_FIELD, LAST_LOCATION_FIELD)
-              .put(LEGACY_JAILEDBY_FIELD, JAILED_BY_FIELD)
-              .put(LEGACY_SECONDSLEFT_FIELD, SECONDS_LEFT_FIELD)
-              .build()
+          new V1ToV2(),
+          DataUpgrader.TAIL
       );
 
   public final Path playerDataFolder;
@@ -178,7 +170,10 @@ public final class DataHandler {
 
   public YamlConfiguration retrieveJailedPlayer(final UUID uuid) {
     if (!isPlayerJailed(uuid)) {
-      return new YamlConfiguration();
+      final YamlConfiguration config = new YamlConfiguration();
+      config.set("version", 2);
+      V1ToV2.setVersionWarning(config);
+      return config;
     }
 
     if (this.yamlsJailedPlayers.containsKey(uuid)) {
@@ -369,7 +364,7 @@ public final class DataHandler {
     final Path playerFile = this.playerDataFolder.resolve(prisonerUuid + ".yml");
 
     final OfflinePlayer player = this.server.getOfflinePlayer(prisonerUuid);
-    final Prisoner prisoner = this.plugin.api().getPrisonerManager().getPrisoner(player.getUniqueId());
+    final Prisoner prisoner = this.plugin.api().getPrisonerManager().getPrisoner(prisonerUuid);
 
     final PermissionInterface permissionInterface = this.plugin.permissionInterface();
     permissionInterface.setParentGroups(player, yaml.getStringList(EXTRA_GROUPS_FIELD), source, sourceName)
@@ -609,23 +604,12 @@ public final class DataHandler {
   }
 
   private void migratePrisonerData(final YamlConfiguration config, final Path file) {
-    boolean wasChanged = false;
-    for (final Map<String, String> dataFieldMigrationMap : DATA_FIELD_MIGRATION_MAPS) {
-      for (final Map.Entry<String, String> dataFieldMigrationEntry : dataFieldMigrationMap.entrySet()) {
-        final String oldField = dataFieldMigrationEntry.getKey();
-        final String newField = dataFieldMigrationEntry.getValue();
-        if (config.contains(oldField)) {
-          if (!config.contains(newField)) {
-            config.set(newField, config.get(oldField));
-          }
-
-          config.set(oldField, null);
-          wasChanged = true;
-        }
-      }
+    boolean changed = false;
+    for (final DataUpgrader upgrader : DATA_UPGRADERS.subList(config.getInt("version", 1) - 1, DATA_UPGRADERS.size())) {
+      changed |= upgrader.upgrade(config, this.plugin);
     }
 
-    if (wasChanged) {
+    if (changed) {
       FileIO.writeString(file, config.saveToString()).exceptionally(ex -> {
         this.plugin.getLogger().log(Level.WARNING, "Could not save player data file " + file, ex);
         return null;
