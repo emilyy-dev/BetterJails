@@ -101,6 +101,6 @@ final class VaultPermissionInterface extends AbstractPermissionInterface impleme
 
   @Override
   public String name() {
-    return "Vault";
+    return "Vault (" + this.permission.getName() + ')';
   }
 }

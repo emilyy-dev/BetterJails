@@ -35,7 +35,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.PluginManager;
@@ -67,14 +66,6 @@ public final class PlayerListeners implements Listener {
         (l, e) -> playerSpawn((PlayerSpawnLocationEvent) e), this.plugin
     );
     pluginManager.registerEvent(
-        PlayerSpawnLocationEvent.class, this, EventPriority.MONITOR,
-        (l, e) -> playerSpawnPost((PlayerSpawnLocationEvent) e), this.plugin
-    );
-    pluginManager.registerEvent(
-        PlayerJoinEvent.class, this, EventPriority.MONITOR,
-        (l, e) -> properlyReleaseReleasedPrisoners((PlayerJoinEvent) e), this.plugin
-    );
-    pluginManager.registerEvent(
         PlayerQuitEvent.class, this, EventPriority.NORMAL,
         (l, e) -> playerQuit((PlayerQuitEvent) e), this.plugin
     );
@@ -84,30 +75,20 @@ public final class PlayerListeners implements Listener {
     );
   }
 
-  private Runnable thisIsAwful = null;
-  private boolean properlyReleaseReleasedPrisoner = false;
-
-  private void properlyReleaseReleasedPrisoners(final PlayerJoinEvent event) {
-    if (this.properlyReleaseReleasedPrisoner) {
-      this.properlyReleaseReleasedPrisoner = false;
-      this.plugin.dataHandler().releaseJailedPlayer(event.getPlayer().getUniqueId(), Util.NIL_UUID, null, false);
-    }
-  }
-
-  private void playerSpawnPost(final PlayerSpawnLocationEvent event) {
-    if (this.thisIsAwful != null) {
-      this.thisIsAwful.run();
-      this.thisIsAwful = null;
-    }
-  }
-
   private void playerSpawn(final PlayerSpawnLocationEvent event) {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
 
     if (this.plugin.dataHandler().isPlayerJailed(uuid)) {
       final YamlConfiguration jailedPlayer = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
+      final Location backupLocation = this.plugin.configuration().backupLocation().mutable();
+      final Location lastLocation =
+          (Location) jailedPlayer.get(DataHandler.LAST_LOCATION_FIELD, backupLocation);
       if (!jailedPlayer.getBoolean(DataHandler.IS_RELEASED_FIELD) && !player.hasPermission("betterjails.jail.exempt")) {
+        if (lastLocation.equals(backupLocation)) {
+          jailedPlayer.set(DataHandler.LAST_LOCATION_FIELD, player.getLocation());
+        }
+
         this.plugin.dataHandler().loadJailedPlayer(uuid, jailedPlayer);
         final Jail jail;
         final String jailName = jailedPlayer.getString(DataHandler.JAIL_FIELD);
@@ -117,27 +98,17 @@ public final class PlayerListeners implements Listener {
           jail = this.plugin.dataHandler().getJails().values().iterator().next();
         }
 
-        this.thisIsAwful = () ->
-            this.plugin.dataHandler().addJailedPlayer(player, jail.name(), Util.NIL_UUID, null, this.plugin.dataHandler().getSecondsLeft(uuid, 0), false, event.getSpawnLocation());
         event.setSpawnLocation(jail.location().mutable());
       } else {
-        final Location lastLocation = this.plugin.dataHandler().getLastLocation(uuid);
-        if (!lastLocation.equals(this.plugin.configuration().backupLocation().mutable())) {
+        if (!lastLocation.equals(backupLocation)) {
           event.setSpawnLocation(lastLocation);
         }
 
-        // delay prisoner releasing until PlayerJoinEvent,
-        //  DataHandler#releaseJailedPlayer performs actual housekeeping when the Player is "online" (as in, Server#getPlayer will not return null)
-        //  that is available as early as the join event, initial spawn event happens right before that, but we also need to determine the spawn location
-        // this.plugin.dataHandler().releaseJailedPlayer(uuid, Util.NIL_UUID, null, false);
-        this.properlyReleaseReleasedPrisoner = true;
+        this.plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, null, false);
       }
     }
 
-    if (
-        player.hasPermission("betterjails.receivebroadcast") &&
-            !this.plugin.getDescription().getVersion().endsWith("-SNAPSHOT")
-    ) {
+    if (player.hasPermission("betterjails.receivebroadcast") && !this.plugin.getDescription().getVersion().endsWith("-SNAPSHOT")) {
       this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () ->
           Util.checkVersion(this.plugin, version -> {
             if (!this.plugin.getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {

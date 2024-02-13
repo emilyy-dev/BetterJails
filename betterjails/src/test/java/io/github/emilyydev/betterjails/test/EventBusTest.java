@@ -81,6 +81,6 @@ public class EventBusTest {
 
     final PlayerMock player = server.addPlayer();
     plugin.dataHandler().addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L);
-    plugin.dataHandler().releaseJailedPlayer(player.getUniqueId(), Util.NIL_UUID, "test", true);
+    plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, "test", true);
   }
 }

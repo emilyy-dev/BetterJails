@@ -31,6 +31,7 @@ import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import net.md_5.bungee.api.ChatColor;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.AdvancedPie;
+import org.bstats.charts.SimplePie;
 import org.bstats.charts.SingleLineChart;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -103,6 +104,7 @@ public interface Util {
     final Metrics metrics = new Metrics(plugin, BSTATS_ID);
     metrics.addCustomChart(new SingleLineChart("jail_count", () -> plugin.dataHandler().getJails().size()));
     metrics.addCustomChart(new SingleLineChart("prisoner_count", () -> plugin.dataHandler().getPrisonerIds().size()));
+    metrics.addCustomChart(new SimplePie("permission_plugin_hook", () -> plugin.permissionInterface().name()));
     metrics.addCustomChart(new AdvancedPie("sentence_time", () -> {
       final Map<String, Integer> map = new LinkedHashMap<>();
       for (final Prisoner prisoner : plugin.api().getPrisonerManager().getAllPrisoners()) {

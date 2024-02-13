@@ -100,7 +100,8 @@ public final class ApiPrisonerManager implements PrisonerManager {
   @Override
   public boolean releasePrisoner(final @NotNull Prisoner prisoner) {
     Objects.requireNonNull(prisoner, "prisoner");
-    return this.plugin.dataHandler().releaseJailedPlayer(prisoner.uuid(), Util.NIL_UUID, "api", true);
+    final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(prisoner.uuid());
+    return this.plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, "api", true);
   }
 
   @Override
