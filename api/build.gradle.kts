@@ -22,6 +22,14 @@ java {
   withSourcesJar()
 }
 
+tasks {
+  processResources {
+    val licenseFile = rootProject.layout.projectDirectory.file("LICENSE.txt")
+    inputs.file(licenseFile)
+    from(licenseFile)
+  }
+}
+
 publishing {
   publications {
     create<MavenPublication>("maven") {
