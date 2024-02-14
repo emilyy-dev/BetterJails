@@ -190,7 +190,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
     if (!getDescription().getVersion().endsWith("-SNAPSHOT")) {
       scheduler.runTaskLater(this, () -> Util.checkVersion(this, version -> {
-        if (!getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {
+        if (!getDescription().getVersion().equals(version)) {
           server.getConsoleSender().sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
         }
       }), 100L);

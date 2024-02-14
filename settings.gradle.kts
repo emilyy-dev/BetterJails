@@ -4,6 +4,8 @@ plugins {
 
 rootProject.name = "betterjails-parent"
 
+includeBuild("build-logic")
+
 include(":betterjails-api")
 project(":betterjails-api").projectDir = file("api")
 include(":betterjails")

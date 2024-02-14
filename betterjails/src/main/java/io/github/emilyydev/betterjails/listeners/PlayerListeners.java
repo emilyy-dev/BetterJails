@@ -90,14 +90,7 @@ public final class PlayerListeners implements Listener {
         }
 
         this.plugin.dataHandler().loadJailedPlayer(uuid, jailedPlayer);
-        final Jail jail;
-        final String jailName = jailedPlayer.getString(DataHandler.JAIL_FIELD);
-        if (jailName != null) {
-          jail = this.plugin.dataHandler().getJail(jailName);
-        } else {
-          jail = this.plugin.dataHandler().getJails().values().iterator().next();
-        }
-
+        final Jail jail = getValidJail(jailedPlayer, player.getName(), uuid);
         event.setSpawnLocation(jail.location().mutable());
       } else {
         if (!lastLocation.equals(backupLocation)) {
@@ -111,7 +104,7 @@ public final class PlayerListeners implements Listener {
     if (player.hasPermission("betterjails.receivebroadcast") && !this.plugin.getDescription().getVersion().endsWith("-SNAPSHOT")) {
       this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () ->
           Util.checkVersion(this.plugin, version -> {
-            if (!this.plugin.getDescription().getVersion().equalsIgnoreCase(version.substring(1))) {
+            if (!this.plugin.getDescription().getVersion().equals(version)) {
               player.sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
             }
           }), 100L);
@@ -148,17 +141,22 @@ public final class PlayerListeners implements Listener {
 
     if (this.plugin.dataHandler().isPlayerJailed(uuid)) {
       final YamlConfiguration jailedPlayer = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
-      final Jail jail = this.plugin.dataHandler().getJail(jailedPlayer.getString(DataHandler.JAIL_FIELD));
-      if (jail != null) {
-        event.setRespawnLocation(jail.location().mutable());
-      } else {
-        final Jail nextJail = this.plugin.dataHandler().getJails().values().iterator().next();
-        event.setRespawnLocation(nextJail.location().mutable());
-
-        this.logger.warning("Value " + jailedPlayer.getString(DataHandler.JAIL_FIELD) + " for option jail on jailed played " + uuid + " is INCORRECT!");
-        this.logger.warning("That jail does not exist!");
-        this.logger.warning("Teleporting player to jail " + nextJail.name() + "!");
-      }
+      final Jail jail = getValidJail(jailedPlayer, player.getName(), uuid);
+      event.setRespawnLocation(jail.location().mutable());
     }
+  }
+
+  private Jail getValidJail(final YamlConfiguration prisonerData, final String playerName, final UUID uuid) {
+    final String jailName = prisonerData.getString(DataHandler.JAIL_FIELD);
+    Jail jail = this.plugin.dataHandler().getJail(jailName);
+    if (jail == null) {
+      jail = this.plugin.dataHandler().getJails().values().iterator().next();
+      prisonerData.set(DataHandler.JAIL_FIELD, jail.name());
+      this.logger.log(Level.WARNING, "Jail {0} does not exist", jailName);
+      this.logger.log(Level.WARNING, "Player {0}/{1} was attempted to relocate to {2}", new Object[]{playerName, uuid, jailName});
+      this.logger.log(Level.WARNING, "Teleporting player to jail {0} instead", jail.name());
+    }
+
+    return jail;
   }
 }
