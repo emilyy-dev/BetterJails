@@ -28,6 +28,12 @@ tasks {
     inputs.file(licenseFile)
     from(licenseFile)
   }
+
+  javadoc {
+    val opts = options as? StandardJavadocDocletOptions ?: return@javadoc
+    opts.use()
+    opts.source("8")
+  }
 }
 
 publishing {

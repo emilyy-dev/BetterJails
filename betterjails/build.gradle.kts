@@ -6,9 +6,9 @@ plugins {
 
 repositories {
   maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+  maven("https://oss.sonatype.org/content/repositories/snapshots/")
   maven("https://repo.essentialsx.net/releases")
   maven("https://jitpack.io")
-  maven("https://oss.sonatype.org/content/repositories/snapshots/")
 
   // mockbukkit implements paper-api
   maven("https://repo.papermc.io/repository/maven-public/")
