@@ -44,13 +44,16 @@ public final class FileIO {
   });
 
   public static CompletableFuture<Void> writeString(final Path file, final String string) {
-    return CompletableFuture.runAsync(() -> {
+    final CompletableFuture<Void> future = new CompletableFuture<>();
+    IO_EXECUTOR.execute(() -> {
       try {
         Files.write(file, string.getBytes(StandardCharsets.UTF_8));
+        future.complete(null);
       } catch (final IOException ex) {
-        throw new CompletionException(ex);
+        future.completeExceptionally(ex);
       }
-    }, IO_EXECUTOR);
+    });
+    return future;
   }
 
   public static void shutdown() throws InterruptedException {

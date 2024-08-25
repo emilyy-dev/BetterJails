@@ -79,6 +79,13 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
   private Metrics metrics = null;
 
+  public BetterJailsPlugin() {
+    this.metrics = Util.prepareMetrics(this);
+  }
+
+  public BetterJailsPlugin(final String str) { // for mockbukkit, just a dummy ctor to not enable bstats
+  }
+
   public DataHandler dataHandler() {
     return this.dataHandler;
   }
@@ -195,8 +202,6 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
         }
       }), 100L);
     }
-
-    this.metrics = Util.prepareMetrics(this);
   }
 
   @Override

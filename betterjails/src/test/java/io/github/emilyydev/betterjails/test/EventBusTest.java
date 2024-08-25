@@ -27,6 +27,7 @@ package io.github.emilyydev.betterjails.test;
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
+import com.github.fefo.betterjails.api.event.jail.JailCreateEvent;
 import com.github.fefo.betterjails.api.event.prisoner.PlayerImprisonEvent;
 import com.github.fefo.betterjails.api.event.prisoner.PrisonerReleaseEvent;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
@@ -40,6 +41,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 public class EventBusTest {
 
   private static ServerMock server = null;
@@ -50,9 +53,10 @@ public class EventBusTest {
     server = MockBukkit.mock();
     server.addSimpleWorld("world");
     try (final InputStream pluginDescriptorStream = BetterJailsPlugin.class.getResourceAsStream("/plugin.yml")) {
-      plugin = MockBukkit.loadWith(BetterJailsPlugin.class, Objects.requireNonNull(pluginDescriptorStream, "descriptor stream"));
+      plugin = MockBukkit.loadWith(BetterJailsPlugin.class, Objects.requireNonNull(pluginDescriptorStream, "descriptor stream"), "do not enable bstats");
     }
 
+    plugin.eventBus().subscribe(plugin, JailCreateEvent.class, EventBusTest::jailCreate);
     plugin.eventBus().subscribe(plugin, PlayerImprisonEvent.class, EventBusTest::playerImprison);
     plugin.eventBus().subscribe(plugin, PrisonerReleaseEvent.class, EventBusTest::prisonerRelease);
     server.getScheduler().performOneTick();
@@ -65,22 +69,28 @@ public class EventBusTest {
     MockBukkit.unmock();
   }
 
+  private static void jailCreate(final JailCreateEvent event) {
+    plugin.getLogger().info("event = " + event);
+    plugin.getLogger().info("event.jailName() = " + assertDoesNotThrow(event::jailName));
+    plugin.getLogger().info("event.jailLocation() = " + assertDoesNotThrow(event::jailLocation));
+  }
+
   private static void playerImprison(final PlayerImprisonEvent event) {
     plugin.getLogger().info("event = " + event);
-    plugin.getLogger().info("event.prisoner() = " + event.prisoner());
+    plugin.getLogger().info("event.prisoner() = " + assertDoesNotThrow(event::prisoner));
   }
 
   private static void prisonerRelease(final PrisonerReleaseEvent event) {
     plugin.getLogger().info("event = " + event);
-    plugin.getLogger().info("event.prisoner() = " + event.prisoner());
+    plugin.getLogger().info("event.prisoner() = " + assertDoesNotThrow(event::prisoner));
   }
 
   @Test
-  public void test() throws IOException {
-    plugin.dataHandler().addJail("jail0", Vector.getRandom().toLocation(server.addSimpleWorld("world0")));
+  public void test() {
+    assertDoesNotThrow(() -> plugin.dataHandler().addJail("jail0", new Vector().toLocation(server.addSimpleWorld("world0"))));
 
     final PlayerMock player = server.addPlayer();
-    plugin.dataHandler().addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L);
-    plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, "test", true);
+    assertDoesNotThrow(() -> plugin.dataHandler().addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L, false, player.getLocation()));
+    assertDoesNotThrow(() -> plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, "test", false));
   }
 }

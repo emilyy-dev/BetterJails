@@ -1,19 +1,19 @@
 [versions]
 spigot = "1.8.8-R0.1-SNAPSHOT"
+bstats = "3.0.2"
 luckperms = "5.4"
 vault = "1.7"
 essentialsx = "2.18.2"
 annotations = "20.1.0"
-junit = "5.8.2"
+junit = "5.10.2"
 mockbukkit = "3.71.0"
-bstats = "3.0.2"
 
 [libraries]
 spigot = { module = "org.spigotmc:spigot-api", version.ref = "spigot" }
+bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
 luckperms = { module = "net.luckperms:api", version.ref = "luckperms" }
 vault = { module = "com.github.MilkBowl:VaultAPI", version.ref = "vault" }
 essentialsx = { module = "net.ess3:EssentialsX", version.ref = "essentialsx" }
 annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 mockbukkit = { module = "com.github.seeseemelk:MockBukkit-v1.20", version.ref = "mockbukkit" }
-bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }

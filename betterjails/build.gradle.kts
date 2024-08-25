@@ -18,11 +18,11 @@ dependencies {
   implementation(project(":betterjails-api"))
 
   compileOnly(libs.spigot)
+  implementation(libs.bstats)
   compileOnly(libs.luckperms)
   compileOnly(libs.vault) { isTransitive = false }
   compileOnly(libs.essentialsx) { isTransitive = false }
   compileOnly(libs.annotations)
-  implementation(libs.bstats)
 
   testImplementation(libs.junit)
   testImplementation(libs.mockbukkit)
@@ -48,6 +48,10 @@ tasks {
 
   compileTestJava {
     options.release = 17
+  }
+
+  test {
+    useJUnitPlatform()
   }
 
   runServer {
