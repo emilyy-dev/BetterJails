@@ -234,7 +234,8 @@ public final class CommandHandler implements CommandExecutor, Listener {
     }
 
     final long seconds = (long) (scale * Double.parseDouble(time.substring(0, time.length() - 1)));
-    if (!this.plugin.dataHandler().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds)) {
+//    if (!this.plugin.dataHandler().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds)) {
+    if (!this.plugin.dataHandler().addJailedPlayerNew(player, jail, uuidOrNil(sender), executioner, seconds, true)) {
       sender.sendMessage(this.configuration.messages().jailPlayerFailedJailNotFound(
           prisoner, executioner, jail, time
       ));
