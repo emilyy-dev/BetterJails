@@ -34,6 +34,7 @@ import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
@@ -72,6 +73,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
@@ -203,15 +207,19 @@ public final class DataHandler {
     return Collections.unmodifiableSet(this.prisonerIds);
   }
 
-  public boolean isPlayerJailed(final UUID uuid) {
+  public @Deprecated boolean isPlayerJailed(final UUID uuid) {
     return this.prisonerIds.contains(uuid);
+  }
+
+  public boolean isPlayerJailedNew(final UUID uuid) {
+    return this.prisoners.containsKey(uuid);
   }
 
   public boolean isPlayerJailed(final String playerName) {
     return this.prisonerNames.contains(playerName.toLowerCase(Locale.ROOT));
   }
 
-  public YamlConfiguration retrieveJailedPlayer(final UUID uuid) {
+  public @Deprecated YamlConfiguration retrieveJailedPlayer(final UUID uuid) {
     if (!isPlayerJailed(uuid)) {
       final YamlConfiguration config = new YamlConfiguration();
       config.set("version", DataUpgrader.VERSION);
@@ -274,12 +282,144 @@ public final class DataHandler {
     return FileIO.writeString(this.jailsFile, this.jailsYaml.saveToString());
   }
 
-  public boolean addJailedPlayer(final OfflinePlayer player, final String jailName, final UUID jailer, final @Nullable String jailerName, final long secondsLeft) {
+  public @Deprecated boolean addJailedPlayer(final OfflinePlayer player, final String jailName, final UUID jailer, final @Nullable String jailerName, final long secondsLeft) {
     final Location alternativeLastLocation = player.isOnline() ? player.getPlayer().getLocation() : this.backupLocation;
     return addJailedPlayer(player, jailName, jailer, jailerName, secondsLeft, true, alternativeLastLocation);
   }
 
-  public boolean addJailedPlayer(
+  public boolean addJailedPlayerNew(
+      final OfflinePlayer player,
+      final String jailName,
+      final UUID jailer,
+      final @Nullable String jailerName,
+      final long secondsLeft,
+      final boolean teleport
+  ) {
+    final UUID prisonerUuid = player.getUniqueId();
+    final ApiPrisoner existingPrisoner = prisoners.get(prisonerUuid);
+    final Jail jail = getJail(jailName);
+
+    if (jail == null) {
+      return false;
+    }
+
+    final boolean isPlayerOnline = player.isOnline();
+    final boolean isPlayerJailed = existingPrisoner != null;
+    final Duration sentence = Duration.ofSeconds(secondsLeft);
+    final Duration timeLeft;
+    final Instant jailedUntil;
+    Location knownLastLocation = null;
+
+    if (isPlayerJailed) {
+      // The player is already jailed, and being put in a new jail. Since we don't want to put their last location
+      // inside the previous jail, we use their existing last location.
+      knownLastLocation = existingPrisoner.lastLocation().mutable();
+    }
+
+    if (isPlayerOnline) {
+      // The player is online! We can get their last location, if needed, and put them in jail immediately.
+      final Player onlinePlayer = player.getPlayer();
+
+      if (knownLastLocation == null) {
+        knownLastLocation = onlinePlayer.getLocation();
+      } else if (knownLastLocation.equals(this.backupLocation)) {
+        // TODO(rymiel): This is fragile, if backupLocation changes. Maybe we need another field in ApiPrisoner,
+        //  which is like, "locationIsCorrupt", so we know to fetch it again here. See also issue #11
+        knownLastLocation = onlinePlayer.getLocation();
+      }
+
+      if (teleport) {
+        Teleport.teleportAsync(onlinePlayer, jail.location().mutable());
+      }
+
+      if (!isPlayerJailed) {
+        // If the player is going to jail (not just moving between jails), run the onJail commands.
+        final SubCommandsConfiguration.SubCommands subCommands = this.subCommands.onJail();
+        subCommands.executeAsPrisoner(this.server, onlinePlayer, jailerName == null ? "" : jailerName);
+        subCommands.executeAsConsole(this.server, onlinePlayer, jailerName == null ? "" : jailerName);
+      }
+    }
+
+    if (isPlayerOnline || this.config.considerOfflineTime()) {
+      // If the player is online or offline time is enabled, their remaining time will stack ticking down immediately,
+      // so we store the deadline of their release, and don't store timeLeft.
+      jailedUntil = Instant.now().plus(sentence);
+      timeLeft = null;
+    } else {
+      // Otherwise, the time doesn't start ticking until the player joins.
+      jailedUntil = null;
+      timeLeft = sentence;
+    }
+
+    if (this.plugin.essentials != null) {
+      final User user = this.plugin.essentials.getUser(prisonerUuid);
+      if (user != null) {
+        user.setJailed(true);
+        if (isPlayerOnline) {
+          user.setJailTimeout(jailedUntil.toEpochMilli());
+        }
+      }
+    }
+
+    // If we never got a last location for this player, it means we need to get it when they log in.
+    final boolean incomplete = knownLastLocation == null;
+    // TODO(rymiel): backupLocation continues to be problematic
+    final ImmutableLocation lastLocation = ImmutableLocation.copyOf(knownLastLocation == null ? this.backupLocation : knownLastLocation);
+    final PermissionInterface permissionInterface = this.plugin.permissionInterface();
+
+    final boolean groupsUnknown = existingPrisoner == null || existingPrisoner.primaryGroup() == null || existingPrisoner.released();
+
+    final CompletionStage<? extends String> primaryGroupFuture = groupsUnknown
+        ? permissionInterface.fetchPrimaryGroup(player).exceptionally(ex -> null)
+        : CompletableFuture.completedFuture(existingPrisoner.primaryGroup());
+    final CompletionStage<? extends Set<? extends String>> parentGroupsFuture = groupsUnknown
+        ? permissionInterface.fetchParentGroups(player).thenApply(Function.<Set<? extends String>>identity()).exceptionally(ex -> ImmutableSet.of())
+        : CompletableFuture.completedFuture(existingPrisoner.parentGroups());
+
+    primaryGroupFuture.thenCombineAsync(parentGroupsFuture, (primaryGroup, parentGroups) -> {
+      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, jailedUntil, timeLeft, sentence, lastLocation, false, incomplete);
+      this.plugin.getLogger().info(prisoner.toString());
+
+      this.plugin.eventBus().post(PlayerImprisonEvent.class, prisoner);
+      final CompletionStage<?> setGroupFuture = groupsUnknown
+          ? permissionInterface.setPrisonerGroup(player, jailer, jailerName)
+          : CompletableFuture.completedFuture(null);
+      return setGroupFuture.exceptionally(exception -> {
+        if (permissionInterface != PermissionInterface.NULL) {
+          this.plugin.getLogger().log(Level.SEVERE, null, exception);
+        }
+
+        return null;
+      }).thenComposeAsync(v -> savePrisoner(prisoner), this.plugin);
+    }, this.plugin);
+
+    return true;
+  }
+
+  public CompletableFuture<Void> savePrisoner(ApiPrisoner prisoner) {
+    final YamlConfiguration yaml = new YamlConfiguration();
+    yaml.set("version", DataUpgrader.VERSION);
+    V1ToV2.setVersionWarning(yaml);
+
+    yaml.set(UUID_FIELD, prisoner.uuid().toString());
+    yaml.set(NAME_FIELD, prisoner.name());
+    yaml.set(JAIL_FIELD, prisoner.jail().name().toLowerCase(Locale.ROOT));
+    yaml.set(JAILED_BY_FIELD, prisoner.jailedBy());
+    yaml.set(SECONDS_LEFT_FIELD, prisoner.timeLeft().getSeconds());
+    yaml.set(TOTAL_SENTENCE_TIME, prisoner.totalSentenceTime().getSeconds());
+    yaml.set(IS_RELEASED_FIELD, prisoner.released());
+    yaml.set(LAST_LOCATION_FIELD, prisoner.lastLocation().mutable());
+    yaml.set(GROUP_FIELD, prisoner.primaryGroup());
+    yaml.set(EXTRA_GROUPS_FIELD, ImmutableList.copyOf(prisoner.parentGroups()));
+
+    this.plugin.getLogger().info(yaml.saveToString());
+    return FileIO.writeString(this.playerDataFolder.resolve(prisoner.uuid() + ".yml"), yaml.saveToString()).exceptionally(ex -> {
+      this.plugin.getLogger().log(Level.SEVERE, null, ex);
+      return null;
+    });
+  }
+
+  public @Deprecated boolean addJailedPlayer(
       final OfflinePlayer player,
       final String jailName,
       final UUID jailer,
