@@ -162,6 +162,16 @@ public class ApiPrisoner implements Prisoner {
     return this.lastLocation;
   }
 
+  public boolean released() { return this.released; }
+
+  public @NotNull Duration timeLeft() {
+    if (this.timeLeft == null) {
+      return Duration.between(Instant.now(), Objects.requireNonNull(jailedUntil));
+    } else {
+      return timeLeft;
+    }
+  }
+
   @Override
   public boolean equals(final Object other) {
     if (this == other) { return true; }
