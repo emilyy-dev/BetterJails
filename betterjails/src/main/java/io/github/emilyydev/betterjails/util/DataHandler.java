@@ -189,6 +189,8 @@ public final class DataHandler {
         prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, timeLeft, totalSentenceTime, lastLocation, released, incomplete));
       });
     }
+
+    this.prisoners.entrySet().forEach(p -> this.plugin.getLogger().info(p.toString()));
   }
 
   private void loadJails() throws IOException {
