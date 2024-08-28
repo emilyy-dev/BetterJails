@@ -28,6 +28,7 @@ import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.collect.ImmutableSet;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -35,6 +36,7 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -46,18 +48,19 @@ public class ApiPrisoner implements Prisoner {
   private final Set<String> parentGroups;
   private final Jail jail;
   private final String jailedBy;
-  private final Instant jailedUntil;
+  private final @Nullable Instant jailedUntil;
+  private final @Nullable Duration timeLeft;
   private final Duration totalSentenceTime;
   private final ImmutableLocation lastLocation;
 
-  public ApiPrisoner(
+  public @Deprecated ApiPrisoner(
       final UUID uuid,
       final String name,
       final String primaryGroup,
       final Collection<? extends String> parentGroups,
       final Jail jail,
       final String jailedBy,
-      final Instant jailedUntil,
+      final @NotNull Instant jailedUntil,
       final Duration totalSentenceTime,
       final ImmutableLocation lastLocation
   ) {
@@ -68,6 +71,32 @@ public class ApiPrisoner implements Prisoner {
     this.jail = jail;
     this.jailedBy = jailedBy;
     this.jailedUntil = jailedUntil;
+    this.timeLeft = null;
+    this.totalSentenceTime = totalSentenceTime;
+    this.lastLocation = lastLocation;
+  }
+
+  @Contract("_, _, _, _, _, _, null, null, _, _ -> fail")
+  public ApiPrisoner(
+      final UUID uuid,
+      final String name,
+      final String primaryGroup,
+      final Collection<? extends String> parentGroups,
+      final Jail jail,
+      final String jailedBy,
+      final @Nullable Instant jailedUntil,
+      final @Nullable Duration timeLeft,
+      final Duration totalSentenceTime,
+      final ImmutableLocation lastLocation
+  ) {
+    this.uuid = uuid;
+    this.name = name;
+    this.primaryGroup = primaryGroup;
+    this.parentGroups = ImmutableSet.copyOf(parentGroups);
+    this.jail = jail;
+    this.jailedBy = jailedBy;
+    this.jailedUntil = jailedUntil;
+    this.timeLeft = timeLeft;
     this.totalSentenceTime = totalSentenceTime;
     this.lastLocation = lastLocation;
   }
@@ -104,7 +133,11 @@ public class ApiPrisoner implements Prisoner {
 
   @Override
   public @NotNull Instant jailedUntil() {
-    return this.jailedUntil;
+    if (this.jailedUntil == null) {
+      return Instant.now().plus(Objects.requireNonNull(timeLeft));
+    } else {
+      return jailedUntil;
+    }
   }
 
   @Override

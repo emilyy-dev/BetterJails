@@ -36,6 +36,7 @@ import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.collect.ImmutableList;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
+import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.dataupgrade.DataUpgrader;
@@ -58,6 +59,8 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -150,6 +153,46 @@ public final class DataHandler {
         }
 
         this.prisonerIds.add(uuid);
+
+        // TODO: check null instead, or maybe add a separate field
+        final boolean incomplete = this.backupLocation.equals(yaml.get(LAST_LOCATION_FIELD, null));
+
+        if (!yaml.contains(LAST_LOCATION_FIELD)) {
+          // TODO: issue #11
+          this.plugin.getLogger().severe("Failed to load last known location of prisoner " + uuid + " (" + name + "). The world they were previously in might have been removed.");
+          yaml.set(LAST_LOCATION_FIELD, this.backupLocation);
+        }
+
+        final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) yaml.get(LAST_LOCATION_FIELD, this.backupLocation));
+        final String group = yaml.getString(GROUP_FIELD);
+        final List<String> parentGroups = yaml.getStringList(EXTRA_GROUPS_FIELD);
+        final Jail jail = getJail(yaml.getString(JAIL_FIELD));
+        final String jailedBy = yaml.getString(JAILED_BY_FIELD);
+        final Duration timeLeft = Duration.ofMillis(now + yaml.getLong(SECONDS_LEFT_FIELD, 0L) * 1000L);
+        final Duration totalSentenceTime = Duration.ofSeconds(yaml.getInt(TOTAL_SENTENCE_TIME, 0));
+        final boolean released = yaml.getBoolean(IS_RELEASED_FIELD);
+
+        Prisoner prisoner;
+        if (this.config.considerOfflineTime()) {
+          // If considering offline time, all players will have a "deadline", jailedUntil, whereas timeLeft would be
+          // constantly changing. Therefore, we don't store it, and timeLeft will be null.
+          final Instant jailedUntil = released ? Instant.MIN : Instant.now().plus(timeLeft);
+          prisoner = new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, null, totalSentenceTime, lastLocation);
+        } else {
+          // If not considering offline time, all players currently have a remaining time, timeLeft, but when they'd
+          // be released, jailedUntil, will remain unknown until the player actually joins, unless they're already
+          // released.
+          final Instant jailedUntil = released ? Instant.MIN : null;
+          prisoner = new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, timeLeft, totalSentenceTime, lastLocation);
+        }
+
+        if (released) {
+          releasedPrisoners.put(uuid, prisoner);
+        } else if (incomplete) {
+          incompletePrisoners.put(uuid, prisoner);
+        } else {
+          prisoners.put(uuid, prisoner);
+        }
       });
     }
   }
