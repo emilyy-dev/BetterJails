@@ -96,11 +96,19 @@ public final class DataHandler {
   private final BetterJailsConfiguration config;
   private final SubCommandsConfiguration subCommands;
   private final Server server;
-  private final Set<String> prisonerNames = new HashSet<>();
-  private final Set<UUID> prisonerIds = new HashSet<>();
   private final Map<String, Jail> jails = new HashMap<>();
-  private final Map<UUID, YamlConfiguration> prisonersMap = new HashMap<>();
-  private final Map<UUID, Long> playersJailedUntil = new HashMap<>();
+
+  // old
+  private final @Deprecated Set<String> prisonerNames = new HashSet<>();
+  private final @Deprecated Set<UUID> prisonerIds = new HashSet<>();
+  private final @Deprecated Map<UUID, YamlConfiguration> prisonersMap = new HashMap<>();
+  private final @Deprecated Map<UUID, Long> playersJailedUntil = new HashMap<>();
+
+  // new
+  private final Map<UUID, Prisoner> prisoners = new HashMap<>();
+  private final Map<UUID, Prisoner> incompletePrisoners = new HashMap<>();
+  private final Map<UUID, Prisoner> releasedPrisoners = new HashMap<>();
+
   private final Path jailsFile;
   private Location backupLocation;
   private YamlConfiguration jailsYaml;
