@@ -52,6 +52,12 @@ public class ApiPrisoner implements Prisoner {
   private final @Nullable Duration timeLeft;
   private final Duration totalSentenceTime;
   private final ImmutableLocation lastLocation;
+  // If true, this prisoner isn't actually imprisoned any more and will be released when they join the server.
+  private final boolean released;
+  // If true, then we don't actually know this prisoner's lastLocation, it will be filled in when they join the server.
+  // Ideally lastLocation would just be optional, but that would break API and stuff.
+  private final boolean incomplete;
+  // TODO: maybe replace these booleans with a three-state enum, because I'm pretty sure both can't be true at once.
 
   public @Deprecated ApiPrisoner(
       final UUID uuid,
@@ -74,9 +80,11 @@ public class ApiPrisoner implements Prisoner {
     this.timeLeft = null;
     this.totalSentenceTime = totalSentenceTime;
     this.lastLocation = lastLocation;
+    this.released = false;
+    this.incomplete = false;
   }
 
-  @Contract("_, _, _, _, _, _, null, null, _, _ -> fail")
+  @Contract("_, _, _, _, _, _, null, null, _, _, _, _ -> fail")
   public ApiPrisoner(
       final UUID uuid,
       final String name,
@@ -87,7 +95,9 @@ public class ApiPrisoner implements Prisoner {
       final @Nullable Instant jailedUntil,
       final @Nullable Duration timeLeft,
       final Duration totalSentenceTime,
-      final ImmutableLocation lastLocation
+      final ImmutableLocation lastLocation,
+      final boolean released,
+      final boolean incomplete
   ) {
     this.uuid = uuid;
     this.name = name;
@@ -99,6 +109,8 @@ public class ApiPrisoner implements Prisoner {
     this.timeLeft = timeLeft;
     this.totalSentenceTime = totalSentenceTime;
     this.lastLocation = lastLocation;
+    this.released = released;
+    this.incomplete = incomplete;
   }
 
   @Override

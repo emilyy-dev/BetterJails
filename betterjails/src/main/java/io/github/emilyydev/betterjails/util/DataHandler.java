@@ -108,9 +108,7 @@ public final class DataHandler {
   private final @Deprecated Map<UUID, Long> playersJailedUntil = new HashMap<>();
 
   // new
-  private final Map<UUID, Prisoner> prisoners = new HashMap<>();
-  private final Map<UUID, Prisoner> incompletePrisoners = new HashMap<>();
-  private final Map<UUID, Prisoner> releasedPrisoners = new HashMap<>();
+  private final Map<UUID, ApiPrisoner> prisoners = new HashMap<>();
 
   private final Path jailsFile;
   private Location backupLocation;
@@ -168,31 +166,23 @@ public final class DataHandler {
         final List<String> parentGroups = yaml.getStringList(EXTRA_GROUPS_FIELD);
         final Jail jail = getJail(yaml.getString(JAIL_FIELD));
         final String jailedBy = yaml.getString(JAILED_BY_FIELD);
-        final Duration timeLeft = Duration.ofMillis(now + yaml.getLong(SECONDS_LEFT_FIELD, 0L) * 1000L);
+        Duration timeLeft = Duration.ofMillis(now + yaml.getLong(SECONDS_LEFT_FIELD, 0L) * 1000L);
         final Duration totalSentenceTime = Duration.ofSeconds(yaml.getInt(TOTAL_SENTENCE_TIME, 0));
         final boolean released = yaml.getBoolean(IS_RELEASED_FIELD);
 
-        Prisoner prisoner;
+        Instant jailedUntil;
         if (this.config.considerOfflineTime()) {
           // If considering offline time, all players will have a "deadline", jailedUntil, whereas timeLeft would be
           // constantly changing. Therefore, we don't store it, and timeLeft will be null.
-          final Instant jailedUntil = released ? Instant.MIN : Instant.now().plus(timeLeft);
-          prisoner = new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, null, totalSentenceTime, lastLocation);
+          jailedUntil = released ? Instant.MIN : Instant.now().plus(timeLeft);
+          timeLeft = null;
         } else {
           // If not considering offline time, all players currently have a remaining time, timeLeft, but when they'd
           // be released, jailedUntil, will remain unknown until the player actually joins, unless they're already
           // released.
-          final Instant jailedUntil = released ? Instant.MIN : null;
-          prisoner = new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, timeLeft, totalSentenceTime, lastLocation);
+          jailedUntil = released ? Instant.MIN : null;
         }
-
-        if (released) {
-          releasedPrisoners.put(uuid, prisoner);
-        } else if (incomplete) {
-          incompletePrisoners.put(uuid, prisoner);
-        } else {
-          prisoners.put(uuid, prisoner);
-        }
+        prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, timeLeft, totalSentenceTime, lastLocation, released, incomplete));
       });
     }
   }
