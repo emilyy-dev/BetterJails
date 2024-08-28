@@ -166,7 +166,7 @@ public final class DataHandler {
         final List<String> parentGroups = yaml.getStringList(EXTRA_GROUPS_FIELD);
         final Jail jail = getJail(yaml.getString(JAIL_FIELD));
         final String jailedBy = yaml.getString(JAILED_BY_FIELD);
-        Duration timeLeft = Duration.ofMillis(now + yaml.getLong(SECONDS_LEFT_FIELD, 0L) * 1000L);
+        Duration timeLeft = Duration.ofSeconds(yaml.getLong(SECONDS_LEFT_FIELD, 0L));
         final Duration totalSentenceTime = Duration.ofSeconds(yaml.getInt(TOTAL_SENTENCE_TIME, 0));
         final boolean released = yaml.getBoolean(IS_RELEASED_FIELD);
 
