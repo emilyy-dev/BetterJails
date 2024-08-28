@@ -152,11 +152,11 @@ public final class DataHandler {
 
         this.prisonerIds.add(uuid);
 
-        // TODO: check null instead, or maybe add a separate field
+        // TODO(rymiel): check null instead, or maybe add a separate field
         final boolean incomplete = this.backupLocation.equals(yaml.get(LAST_LOCATION_FIELD, null));
 
         if (!yaml.contains(LAST_LOCATION_FIELD)) {
-          // TODO: issue #11
+          // TODO(rymiel): issue #11
           this.plugin.getLogger().severe("Failed to load last known location of prisoner " + uuid + " (" + name + "). The world they were previously in might have been removed.");
           yaml.set(LAST_LOCATION_FIELD, this.backupLocation);
         }
