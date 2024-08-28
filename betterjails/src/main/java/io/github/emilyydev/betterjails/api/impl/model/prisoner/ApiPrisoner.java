@@ -184,7 +184,11 @@ public class ApiPrisoner implements Prisoner {
            ',' + this.jail +
            ',' + '"' + this.jailedBy + '"' +
            ',' + this.jailedUntil +
+           ',' + this.timeLeft +
+           ',' + this.totalSentenceTime +
            ',' + this.lastLocation +
+           ',' + this.released +
+           ',' + this.incomplete +
            ')';
   }
 }
