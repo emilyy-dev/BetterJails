@@ -276,7 +276,7 @@ public final class DataHandler {
     }
 
     if (isPlayerOnline || this.config.considerOfflineTime()) {
-      // If the player is online or offline time is enabled, their remaining time will stack ticking down immediately,
+      // If the player is online or offline time is enabled, their remaining time will start ticking down immediately,
       // so we store the deadline of their release, and don't store timeLeft.
       jailedUntil = Instant.now().plus(sentence);
       timeLeft = null;
