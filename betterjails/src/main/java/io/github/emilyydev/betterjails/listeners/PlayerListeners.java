@@ -30,7 +30,6 @@ import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.util.DataHandler;
-import io.github.emilyydev.betterjails.util.FileIO;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -42,7 +41,6 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.PluginManager;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
-import java.nio.file.Path;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
