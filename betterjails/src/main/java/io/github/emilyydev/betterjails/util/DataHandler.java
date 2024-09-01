@@ -354,6 +354,15 @@ public final class DataHandler {
     });
   }
 
+  public void deletePrisonerFile(Prisoner prisoner) {
+    final Path playerFile = this.playerDataFolder.resolve(prisoner.uuid() + ".yml");
+    try {
+      Files.deleteIfExists(playerFile);
+    } catch (final IOException ex) {
+      this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
+    }
+  }
+
   public boolean releaseJailedPlayer(final OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
     final UUID prisonerUuid = player.getUniqueId();
     final ApiPrisoner prisoner = prisoners.get(prisonerUuid);
@@ -361,8 +370,6 @@ public final class DataHandler {
     if (prisoner == null) {
       return false;
     }
-
-    final Path playerFile = this.playerDataFolder.resolve(prisonerUuid + ".yml");
 
     final PermissionInterface permissionInterface = this.plugin.permissionInterface();
     permissionInterface.setParentGroups(player, prisoner.parentGroups(), source, sourceName)
@@ -384,11 +391,7 @@ public final class DataHandler {
       }
 
       this.prisoners.remove(prisonerUuid);
-      try {
-        Files.deleteIfExists(playerFile);
-      } catch (final IOException ex) {
-        this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
-      }
+      deletePrisonerFile(prisoner);
 
       final SubCommandsConfiguration.SubCommands subCommands = this.subCommands.onRelease();
       subCommands.executeAsPrisoner(this.server, online, prisoner.jailedBy() == null ? "" : prisoner.jailedBy());
@@ -402,11 +405,7 @@ public final class DataHandler {
       // TODO(rymiel): backupLocation continues to be problematic
       if (prisoner.lastLocation().mutable().equals(this.backupLocation)) {
         this.prisoners.remove(prisonerUuid);
-        try {
-          Files.deleteIfExists(playerFile);
-        } catch (final IOException ex) {
-          this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
-        }
+        deletePrisonerFile(prisoner);
       } else {
         savePrisoner(prisoner.withReleased(true));
       }
@@ -473,13 +472,7 @@ public final class DataHandler {
       if (prisoner.incomplete()) {
         if (released) {
           iterator.remove();
-
-          final Path playerFile = this.playerDataFolder.resolve(key + ".yml");
-          try {
-            Files.deleteIfExists(playerFile);
-          } catch (final IOException ex) {
-            this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
-          }
+          deletePrisonerFile(prisoner);
         }
         continue;
       }
