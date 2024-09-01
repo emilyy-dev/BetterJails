@@ -117,35 +117,30 @@ public final class PlayerListeners implements Listener {
   private void playerQuit(final PlayerQuitEvent event) {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
-    if (!this.plugin.dataHandler().isPlayerJailed(uuid)) {
+    ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
+    if (prisoner == null) {
       return;
     }
 
-    this.plugin.dataHandler().updateSecondsLeft(uuid);
-    final Path playerFile = this.plugin.dataHandler().playerDataFolder.resolve(uuid + ".yml");
-    final YamlConfiguration jailedPlayer = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
-    FileIO.writeString(playerFile, jailedPlayer.saveToString()).exceptionally(ex -> {
-      this.logger.log(Level.SEVERE, null, ex);
-      return null;
-    });
     if (!this.plugin.configuration().considerOfflineTime()) {
-      this.plugin.dataHandler().unloadJailedPlayer(uuid);
+      prisoner = prisoner.withTimePaused();
       if (this.plugin.essentials != null) {
         final User user = this.plugin.essentials.getUser(uuid);
         user.setJailTimeout(0L);
         user.setJailed(true);
       }
     }
+
+    this.plugin.dataHandler().savePrisoner(prisoner);
   }
 
   private void playerRespawn(final PlayerRespawnEvent event) {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
+    ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
 
-    if (this.plugin.dataHandler().isPlayerJailed(uuid)) {
-      final YamlConfiguration jailedPlayer = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
-      final Jail jail = getValidJail(jailedPlayer, player.getName(), uuid);
-      event.setRespawnLocation(jail.location().mutable());
+    if (prisoner != null) {
+      event.setRespawnLocation(prisoner.jail().location().mutable());
     }
   }
 
