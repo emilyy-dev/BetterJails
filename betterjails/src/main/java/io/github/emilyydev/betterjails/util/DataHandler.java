@@ -154,6 +154,19 @@ public final class DataHandler {
         }
 
         this.prisonerIds.add(uuid);
+      });
+    }
+
+    loadPrisoners();
+  }
+
+  private void loadPrisoners() throws IOException {
+    try (final Stream<Path> s = Files.list(this.playerDataFolder)) {
+      s.forEach(file -> {
+        final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file.toFile());
+        migratePrisonerData(yaml, file);
+        final UUID uuid = UUID.fromString(file.getFileName().toString().replace(".yml", ""));
+        final String name = yaml.getString(NAME_FIELD);
 
         // TODO(rymiel): check null instead, or maybe add a separate field
         final boolean incomplete = this.backupLocation.equals(yaml.get(LAST_LOCATION_FIELD, null));
