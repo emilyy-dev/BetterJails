@@ -157,7 +157,8 @@ public final class CommandHandler implements CommandExecutor, Listener {
         ));
       }
     } else if (argument.equalsIgnoreCase("save") && sender.hasPermission("betterjails.betterjails.save")) {
-      this.plugin.dataHandler().save().whenCompleteAsync((v, ex) -> {
+//      this.plugin.dataHandler().save().whenCompleteAsync((v, ex) -> {
+      this.plugin.dataHandler().saveNew().whenCompleteAsync((v, ex) -> {
         if (ex != null) {
           this.plugin.getLogger().log(Level.SEVERE, null, ex);
           sender.sendMessage(color(

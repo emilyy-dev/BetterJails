@@ -189,7 +189,8 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
     final Duration autoSavePeriod = this.configuration.autoSavePeriod();
     if (!autoSavePeriod.isZero()) {
-      scheduler.runTaskTimer(this, () -> this.dataHandler.save().exceptionally(ex -> {
+//      scheduler.runTaskTimer(this, () -> this.dataHandler.save().exceptionally(ex -> {
+      scheduler.runTaskTimer(this, () -> this.dataHandler.saveNew().exceptionally(ex -> {
         getLogger().log(Level.SEVERE, "Could not save data files", ex);
         return null;
       }), autoSavePeriod.getSeconds() * 20L, autoSavePeriod.getSeconds() * 20L);
@@ -207,7 +208,8 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   @Override
   public void onDisable() {
     try {
-      this.dataHandler.save().get();
+//      this.dataHandler.save().get();
+      this.dataHandler.saveNew().get();
     } catch (final InterruptedException | ExecutionException exception) {
       getLogger().log(Level.SEVERE, "Could not save data files", exception);
     }

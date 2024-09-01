@@ -742,6 +742,23 @@ public final class DataHandler {
     }
   }
 
+  public CompletableFuture<Void> saveNew() {
+    // A Jail's location can be changed...
+    this.jails.forEach((name, jail) -> this.jailsYaml.set(name.toLowerCase(Locale.ROOT), jail.location().mutable()));
+    CompletableFuture<Void> cf = FileIO.writeString(this.jailsFile, this.jailsYaml.saveToString());
+
+    for (final ApiPrisoner prisoner : this.prisoners.values()) {
+      cf = cf.thenCompose(v -> savePrisoner(prisoner).whenComplete((v1, ex) -> {
+        if (ex != null) {
+          this.plugin.getLogger().log(Level.SEVERE, null, ex);
+        }
+      }));
+    }
+
+    this.plugin.eventBus().post(PluginSaveDataEvent.class);
+    return cf;
+  }
+
   public CompletableFuture<Void> save() {
     // A Jail's location can be changed...
     this.jails.forEach((name, jail) -> this.jailsYaml.set(name.toLowerCase(Locale.ROOT), jail.location().mutable()));
