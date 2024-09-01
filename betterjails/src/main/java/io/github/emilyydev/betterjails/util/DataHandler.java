@@ -52,7 +52,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -65,7 +64,6 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -104,14 +102,6 @@ public final class DataHandler {
   private final SubCommandsConfiguration subCommands;
   private final Server server;
   private final Map<String, Jail> jails = new HashMap<>();
-
-  // old
-  private final @Deprecated Set<String> prisonerNames = new HashSet<>();
-  private final @Deprecated Set<UUID> prisonerIds = new HashSet<>();
-  private final @Deprecated Map<UUID, YamlConfiguration> prisonersMap = new HashMap<>();
-  private final @Deprecated Map<UUID, Long> playersJailedUntil = new HashMap<>();
-
-  // new
   private final Map<UUID, ApiPrisoner> prisoners = new HashMap<>();
 
   private final Path jailsFile;
@@ -208,43 +198,6 @@ public final class DataHandler {
     return prisoners.get(uuid);
   }
 
-  public @Deprecated YamlConfiguration retrieveJailedPlayer(final UUID uuid) {
-    if (!isPlayerJailed(uuid)) {
-      final YamlConfiguration config = new YamlConfiguration();
-      config.set("version", DataUpgrader.VERSION);
-      V1ToV2.setVersionWarning(config);
-      return config;
-    }
-
-    if (this.prisonersMap.containsKey(uuid)) {
-      return this.prisonersMap.get(uuid);
-    } else {
-      final Path playerFile = this.playerDataFolder.resolve(uuid + ".yml");
-      final YamlConfiguration config = new YamlConfiguration();
-      try {
-        config.load(playerFile.toFile());
-        migratePrisonerData(config, playerFile);
-      } catch (final IOException exception) {
-        if (!(exception instanceof FileNotFoundException)) {
-          this.plugin.getLogger().log(Level.SEVERE, "Couldn't read file " + playerFile, exception);
-        }
-      } catch (final InvalidConfigurationException exception) {
-        this.plugin.getLogger().log(Level.SEVERE, "Invalid YAML configuration in file " + playerFile, exception);
-      }
-
-      return config;
-    }
-  }
-
-  public void loadJailedPlayer(final UUID uuid, final YamlConfiguration jailedPlayer) {
-    this.prisonersMap.put(uuid, jailedPlayer);
-  }
-
-  public void unloadJailedPlayer(final UUID uuid) {
-    this.prisonersMap.remove(uuid);
-    this.playersJailedUntil.remove(uuid);
-  }
-
   public Map<String, Jail> getJails() {
     return this.jails;
   }
@@ -269,11 +222,6 @@ public final class DataHandler {
     this.jailsYaml.set(lowerCaseName, null);
     this.plugin.eventBus().post(JailDeleteEvent.class, jail);
     return FileIO.writeString(this.jailsFile, this.jailsYaml.saveToString());
-  }
-
-  public @Deprecated boolean addJailedPlayer(final OfflinePlayer player, final String jailName, final UUID jailer, final @Nullable String jailerName, final long secondsLeft) {
-    final Location alternativeLastLocation = player.isOnline() ? player.getPlayer().getLocation() : this.backupLocation;
-    return addJailedPlayer(player, jailName, jailer, jailerName, secondsLeft, true, alternativeLastLocation);
   }
 
   public boolean addJailedPlayerNew(
@@ -411,127 +359,6 @@ public final class DataHandler {
     });
   }
 
-  public @Deprecated boolean addJailedPlayer(
-      final OfflinePlayer player,
-      final String jailName,
-      final UUID jailer,
-      final @Nullable String jailerName,
-      final long secondsLeft,
-      final boolean teleport,
-      final Location alternativeLastLocation
-  ) {
-    final UUID prisonerUuid = player.getUniqueId();
-    final YamlConfiguration yaml = retrieveJailedPlayer(prisonerUuid);
-    final Jail jail = getJail(jailName);
-    final boolean jailExists = jail != null;
-    final boolean isPlayerOnline = player.isOnline();
-    final Player online = player.getPlayer();
-    final boolean isPlayerJailed = isPlayerJailed(prisonerUuid);
-
-    if (!jailExists) {
-      return false;
-    }
-
-    yaml.set(UUID_FIELD, prisonerUuid.toString());
-    yaml.set(NAME_FIELD, player.getName());
-    yaml.set(JAIL_FIELD, jailName.toLowerCase(Locale.ROOT));
-    if (jailerName != null) {
-      yaml.set(JAILED_BY_FIELD, jailerName);
-    }
-    yaml.set(SECONDS_LEFT_FIELD, secondsLeft);
-    yaml.set(TOTAL_SENTENCE_TIME, secondsLeft);
-    yaml.set(IS_RELEASED_FIELD, false);
-
-    if (isPlayerOnline && !isPlayerJailed) {
-      assert online != null;
-      yaml.set(LAST_LOCATION_FIELD, alternativeLastLocation);
-
-      if (teleport) {
-        Teleport.teleportAsync(online, jail.location().mutable());
-      }
-
-      this.prisonersMap.put(prisonerUuid, yaml);
-
-      final SubCommandsConfiguration.SubCommands subCommands = this.subCommands.onJail();
-      subCommands.executeAsPrisoner(this.server, online, yaml.getString(JAILED_BY_FIELD, ""));
-      subCommands.executeAsConsole(this.server, online, yaml.getString(JAILED_BY_FIELD, ""));
-    } else if (!isPlayerOnline && !isPlayerJailed) {
-      yaml.set(LAST_LOCATION_FIELD, this.backupLocation);
-
-      if (this.config.considerOfflineTime()) {
-        this.prisonersMap.put(prisonerUuid, yaml);
-      }
-
-    } else if (isPlayerOnline) {
-      assert online != null;
-      Location lastLocation = (Location) yaml.get(LAST_LOCATION_FIELD, null);
-      if (lastLocation == null) {
-        yaml.set(LAST_LOCATION_FIELD, this.backupLocation);
-        lastLocation = this.backupLocation;
-      }
-
-      if (lastLocation.equals(this.backupLocation)) {
-        yaml.set(LAST_LOCATION_FIELD, alternativeLastLocation);
-      }
-
-      if (teleport) {
-        Teleport.teleportAsync(online, jail.location().mutable());
-      }
-
-      this.prisonersMap.put(prisonerUuid, yaml);
-    }
-
-    final PermissionInterface permissionInterface = this.plugin.permissionInterface();
-    if (yaml.getString(GROUP_FIELD) == null || yaml.getBoolean(IS_RELEASED_FIELD, true)) {
-      permissionInterface.fetchPrimaryGroup(player).thenCombineAsync(permissionInterface.fetchParentGroups(player), (primaryGroup, parentGroups) -> {
-        yaml.set(GROUP_FIELD, primaryGroup);
-        yaml.set(EXTRA_GROUPS_FIELD, ImmutableList.copyOf(parentGroups));
-
-        return permissionInterface.setPrisonerGroup(player, jailer, jailerName);
-      }, this.plugin).thenCompose(stage -> stage).exceptionally(exception -> {
-        if (permissionInterface != PermissionInterface.NULL) {
-          this.plugin.getLogger().log(Level.SEVERE, null, exception);
-        }
-
-        return null;
-      }).thenComposeAsync(v -> {
-        final CompletableFuture<Void> saveFuture = FileIO.writeString(this.playerDataFolder.resolve(prisonerUuid + ".yml"), yaml.saveToString());
-        return saveFuture.exceptionally(ex -> {
-          this.plugin.getLogger().log(Level.SEVERE, null, ex);
-          return null;
-        });
-      }, this.plugin);
-    }
-
-    if (!isPlayerJailed) {
-      final String name = player.getName();
-      if (name != null) {
-        this.prisonerNames.add(name.toLowerCase(Locale.ROOT));
-      }
-
-      this.prisonerIds.add(prisonerUuid);
-    }
-
-    if (isPlayerOnline) {
-      final long jailedUntil = System.currentTimeMillis() + secondsLeft * 1000L;
-      this.playersJailedUntil.put(prisonerUuid, jailedUntil);
-    }
-
-    if (this.plugin.essentials != null) {
-      final User user = this.plugin.essentials.getUser(prisonerUuid);
-      if (user != null) {
-        user.setJailed(true);
-        if (isPlayerOnline) {
-          user.setJailTimeout(this.playersJailedUntil.get(prisonerUuid));
-        }
-      }
-    }
-
-    final Prisoner prisoner = this.plugin.api().getPrisonerManager().getPrisoner(prisonerUuid);
-    this.plugin.eventBus().post(PlayerImprisonEvent.class, prisoner);
-    return true;
-  }
-
   public boolean releaseJailedPlayerNew(final OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
     final UUID prisonerUuid = player.getUniqueId();
     final ApiPrisoner prisoner = prisoners.get(prisonerUuid);
@@ -600,109 +427,6 @@ public final class DataHandler {
 
     this.plugin.eventBus().post(PrisonerReleaseEvent.class, prisoner);
     return true;
-  }
-
-  public @Deprecated boolean releaseJailedPlayer(final OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
-    final UUID prisonerUuid = player.getUniqueId();
-    if (!isPlayerJailed(prisonerUuid)) {
-      return false;
-    }
-
-    final YamlConfiguration yaml = retrieveJailedPlayer(prisonerUuid);
-    final Path playerFile = this.playerDataFolder.resolve(prisonerUuid + ".yml");
-
-    final Prisoner prisoner = this.plugin.api().getPrisonerManager().getPrisoner(prisonerUuid);
-
-    final PermissionInterface permissionInterface = this.plugin.permissionInterface();
-    permissionInterface.setParentGroups(player, yaml.getStringList(EXTRA_GROUPS_FIELD), source, sourceName)
-        .whenComplete((ignored, exception) -> {
-          if (exception != null && permissionInterface != PermissionInterface.NULL) {
-            this.plugin.getLogger().log(Level.SEVERE, null, exception);
-          }
-        });
-
-    if (player.isOnline() || player instanceof Player) {
-      final Player online = player.isOnline() ? player.getPlayer() : (Player) player;
-      assert online != null;
-      if (teleport) {
-        final Location lastLocation = (Location) yaml.get(LAST_LOCATION_FIELD, this.backupLocation);
-        if (!lastLocation.equals(this.backupLocation)) {
-          Teleport.teleportAsync(online, lastLocation);
-        }
-      }
-
-      this.prisonersMap.remove(prisonerUuid);
-      try {
-        Files.deleteIfExists(playerFile);
-      } catch (final IOException ex) {
-        this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
-      }
-
-      this.prisonerNames.remove(online.getName().toLowerCase(Locale.ROOT));
-      this.prisonerIds.remove(prisonerUuid);
-      this.playersJailedUntil.remove(prisonerUuid);
-
-      final SubCommandsConfiguration.SubCommands subCommands = this.subCommands.onRelease();
-      subCommands.executeAsPrisoner(this.server, online, yaml.getString(JAILED_BY_FIELD, ""));
-      subCommands.executeAsConsole(this.server, online, yaml.getString(JAILED_BY_FIELD, ""));
-    } else {
-      if (yaml.getBoolean(IS_RELEASED_FIELD, false)) {
-        return true;
-      }
-
-      if (yaml.get(LAST_LOCATION_FIELD, this.backupLocation).equals(this.backupLocation)) {
-        this.prisonersMap.remove(prisonerUuid);
-        try {
-          Files.deleteIfExists(playerFile);
-        } catch (final IOException ex) {
-          this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
-        }
-
-        final String name = player.getName();
-        if (name != null) {
-          this.prisonerNames.remove(name.toLowerCase(Locale.ROOT));
-        }
-
-        this.prisonerIds.remove(prisonerUuid);
-        this.playersJailedUntil.remove(prisonerUuid);
-      } else {
-        yaml.set(IS_RELEASED_FIELD, true);
-        FileIO.writeString(playerFile, yaml.saveToString()).exceptionally(ex -> {
-          this.plugin.getLogger().log(Level.SEVERE, null, ex);
-          return null;
-        });
-      }
-    }
-
-    if (this.plugin.essentials != null) {
-      final User user = this.plugin.essentials.getUser(prisonerUuid);
-      if (user != null && user.isJailed()) {
-        user.setJailTimeout(0L);
-        user.setJailed(false);
-      }
-    }
-
-    this.plugin.eventBus().post(PrisonerReleaseEvent.class, prisoner);
-    return true;
-  }
-
-  public @Deprecated long getSecondsLeft(final UUID uuid, final int fallback) {
-    if (this.playersJailedUntil.containsKey(uuid)) {
-      return (this.playersJailedUntil.get(uuid) - System.currentTimeMillis()) / 1000L;
-    } else {
-      return retrieveJailedPlayer(uuid).getLong(SECONDS_LEFT_FIELD, fallback);
-    }
-  }
-
-  public @Deprecated Location getLastLocation(final UUID uuid) {
-    return (Location) retrieveJailedPlayer(uuid).get(LAST_LOCATION_FIELD, this.backupLocation);
-  }
-
-  public @Deprecated void updateSecondsLeft(final UUID uuid) {
-    final OfflinePlayer player = this.server.getOfflinePlayer(uuid);
-    if (this.config.considerOfflineTime() && !getLastLocation(uuid).equals(this.backupLocation) || player.isOnline()) {
-      retrieveJailedPlayer(uuid).set(SECONDS_LEFT_FIELD, getSecondsLeft(uuid, 0));
-    }
   }
 
   public CompletableFuture<Void> saveNew() {
