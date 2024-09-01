@@ -57,7 +57,8 @@ public class ApiPrisoner implements Prisoner {
   // If true, then we don't actually know this prisoner's lastLocation, it will be filled in when they join the server.
   // Ideally lastLocation would just be optional, but that would break API and stuff.
   private final boolean incomplete;
-  // TODO: maybe replace these booleans with a three-state enum, because I'm pretty sure both can't be true at once.
+  // TODO(rymiel): maybe replace these booleans with a three-state enum, because I'm pretty sure both can't be true at once.
+  // TODO(rymiel): okay turns out these can both be true at once, but if they are, "released" overrides "incomplete", so an enum is still possible.
 
   public @Deprecated ApiPrisoner(
       final UUID uuid,
