@@ -74,7 +74,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -404,6 +403,7 @@ public final class DataHandler {
     final YamlConfiguration yaml = new YamlConfiguration();
     yaml.set("version", DataUpgrader.VERSION);
     V1ToV2.setVersionWarning(yaml);
+    yaml.set("encoder", "Emilia"); // just for debug
 
     yaml.set(UUID_FIELD, prisoner.uuid().toString());
     yaml.set(NAME_FIELD, prisoner.name());
