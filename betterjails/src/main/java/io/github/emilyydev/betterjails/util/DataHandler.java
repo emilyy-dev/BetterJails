@@ -588,8 +588,7 @@ public final class DataHandler {
           this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
         }
       } else {
-        final ApiPrisoner newPrisoner = new ApiPrisoner(prisoner.uuid(), prisoner.name(), prisoner.primaryGroup(), prisoner.parentGroups(), prisoner.jail(), prisoner.jailedBy(), prisoner.jailedUntil(), prisoner.timeLeft(), prisoner.totalSentenceTime(), prisoner.lastLocation(), true, false);
-        savePrisoner(newPrisoner);
+        savePrisoner(prisoner.withReleased(true));
       }
     }
 
