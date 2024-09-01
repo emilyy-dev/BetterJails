@@ -228,6 +228,6 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   public void reload() throws IOException {
     this.configuration.load();
     this.subCommands.load();
-    this.dataHandler.reload();
+    this.dataHandler.reloadNew();
   }
 }

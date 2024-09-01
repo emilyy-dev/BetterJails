@@ -187,9 +187,10 @@ public final class DataHandler {
         final boolean released = yaml.getBoolean(IS_RELEASED_FIELD);
 
         Instant jailedUntil;
-        if (this.config.considerOfflineTime()) {
-          // If considering offline time, all players will have a "deadline", jailedUntil, whereas timeLeft would be
-          // constantly changing. Therefore, we don't store it, and timeLeft will be null.
+        final Player existingPlayer = this.plugin.getServer().getPlayer(uuid); // This is only relevant for reloading
+        if (this.config.considerOfflineTime() || existingPlayer != null) {
+          // If considering offline time, or if the player is online, the player will have a "deadline", jailedUntil,
+          // whereas timeLeft would be constantly changing. Therefore, we don't store it, and timeLeft will be null.
           jailedUntil = released ? Instant.MIN : Instant.now().plus(timeLeft);
           timeLeft = null;
         } else {
@@ -792,6 +793,26 @@ public final class DataHandler {
 
     this.plugin.eventBus().post(PluginSaveDataEvent.class);
     return cf;
+  }
+
+  public void reloadNew() throws IOException {
+    this.backupLocation = this.config.backupLocation().mutable();
+
+    this.jails.clear();
+    loadJails();
+
+    this.prisoners.clear();
+    loadPrisoners();
+
+    if (this.config.permissionHookEnabled()) {
+      this.config.prisonerPermissionGroup().ifPresent(prisonerGroup ->
+          this.plugin.resetPermissionInterface(
+              PermissionInterface.determinePermissionInterface(this.plugin, prisonerGroup)
+          )
+      );
+    } else {
+      this.plugin.resetPermissionInterface(PermissionInterface.NULL);
+    }
   }
 
   public void reload() throws IOException {
