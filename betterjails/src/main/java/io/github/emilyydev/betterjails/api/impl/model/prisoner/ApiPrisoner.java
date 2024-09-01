@@ -60,31 +60,6 @@ public class ApiPrisoner implements Prisoner {
   // TODO(rymiel): maybe replace these booleans with a three-state enum, because I'm pretty sure both can't be true at once.
   // TODO(rymiel): okay turns out these can both be true at once, but if they are, "released" overrides "incomplete", so an enum is still possible.
 
-  public @Deprecated ApiPrisoner(
-      final UUID uuid,
-      final String name,
-      final String primaryGroup,
-      final Collection<? extends String> parentGroups,
-      final Jail jail,
-      final String jailedBy,
-      final @NotNull Instant jailedUntil,
-      final Duration totalSentenceTime,
-      final ImmutableLocation lastLocation
-  ) {
-    this.uuid = uuid;
-    this.name = name;
-    this.primaryGroup = primaryGroup;
-    this.parentGroups = ImmutableSet.copyOf(parentGroups);
-    this.jail = jail;
-    this.jailedBy = jailedBy;
-    this.jailedUntil = jailedUntil;
-    this.timeLeft = null;
-    this.totalSentenceTime = totalSentenceTime;
-    this.lastLocation = lastLocation;
-    this.released = false;
-    this.incomplete = false;
-  }
-
   @Contract("_, _, _, _, _, _, null, null, _, _, _, _ -> fail")
   public ApiPrisoner(
       final UUID uuid,
