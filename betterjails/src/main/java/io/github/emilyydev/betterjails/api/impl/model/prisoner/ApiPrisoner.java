@@ -28,7 +28,6 @@ import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.collect.ImmutableSet;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -52,15 +51,8 @@ public class ApiPrisoner implements Prisoner {
   private final @Nullable Duration timeLeft;
   private final Duration totalSentenceTime;
   private final ImmutableLocation lastLocation;
-  // If true, this prisoner isn't actually imprisoned any more and will be released when they join the server.
-  private final boolean released;
-  // If true, then we don't actually know this prisoner's lastLocation, it will be filled in when they join the server.
-  // Ideally lastLocation would just be optional, but that would break API and stuff.
-  private final boolean incomplete;
-  // TODO(rymiel): maybe replace these booleans with a three-state enum, because I'm pretty sure both can't be true at once.
-  // TODO(rymiel): okay turns out these can both be true at once, but if they are, "released" overrides "incomplete", so an enum is still possible.
+  private final ImprisonmentState imprisonmentState;
 
-  @Contract("_, _, _, _, _, _, null, null, _, _, _, _ -> fail")
   public ApiPrisoner(
       final UUID uuid,
       final String name,
@@ -72,8 +64,7 @@ public class ApiPrisoner implements Prisoner {
       final @Nullable Duration timeLeft,
       final Duration totalSentenceTime,
       final ImmutableLocation lastLocation,
-      final boolean released,
-      final boolean incomplete
+      final ImprisonmentState imprisonmentState
   ) {
     this.uuid = uuid;
     this.name = name;
@@ -85,8 +76,7 @@ public class ApiPrisoner implements Prisoner {
     this.timeLeft = timeLeft;
     this.totalSentenceTime = totalSentenceTime;
     this.lastLocation = lastLocation;
-    this.released = released;
-    this.incomplete = incomplete;
+    this.imprisonmentState = imprisonmentState;
   }
 
   @Override
@@ -121,7 +111,7 @@ public class ApiPrisoner implements Prisoner {
 
   @Override
   public @NotNull Instant jailedUntil() {
-    if (this.released) {
+    if (released()) {
       return Instant.MIN;
     } else if (this.jailedUntil == null) {
       return Instant.now().plus(Objects.requireNonNull(this.timeLeft));
@@ -141,15 +131,15 @@ public class ApiPrisoner implements Prisoner {
   }
 
   public boolean released() {
-    return this.released;
+    return this.imprisonmentState == ImprisonmentState.RELEASED;
   }
 
   public boolean incomplete() {
-    return this.incomplete;
+    return this.imprisonmentState == ImprisonmentState.UNKNOWN_LOCATION;
   }
 
   public @NotNull Duration timeLeft() {
-    if (this.released) {
+    if (released()) {
       return Duration.ZERO;
     } else if (this.timeLeft == null) {
       return Duration.between(Instant.now(), Objects.requireNonNull(this.jailedUntil));
@@ -158,12 +148,12 @@ public class ApiPrisoner implements Prisoner {
     }
   }
 
-  public @NotNull ApiPrisoner withReleased(boolean released) {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil, this.timeLeft, this.totalSentenceTime, this.lastLocation, released, this.incomplete);
+  public @NotNull ApiPrisoner withReleased() {
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil, this.timeLeft, this.totalSentenceTime, this.lastLocation, ImprisonmentState.RELEASED);
   }
 
   public @NotNull ApiPrisoner withLastLocation(ImmutableLocation location) {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil, this.timeLeft, this.totalSentenceTime, location, this.released, false);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil, this.timeLeft, this.totalSentenceTime, location, ImprisonmentState.KNOWN_LOCATION);
   }
 
   /**
@@ -171,7 +161,7 @@ public class ApiPrisoner implements Prisoner {
    * This method swaps out {@link #timeLeft} for {@link #jailedUntil}
    */
   public @NotNull ApiPrisoner withTimeRunning() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil(), null, this.totalSentenceTime, this.lastLocation, this.released, this.incomplete);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil(), null, this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
   }
 
   /**
@@ -179,7 +169,7 @@ public class ApiPrisoner implements Prisoner {
    * This method swaps out {@link #jailedUntil} for {@link #timeLeft}
    */
   public @NotNull ApiPrisoner withTimePaused() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, null, this.timeLeft(), this.totalSentenceTime, this.lastLocation, this.released, this.incomplete);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, null, this.timeLeft(), this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
   }
 
   @Override
@@ -207,8 +197,17 @@ public class ApiPrisoner implements Prisoner {
            ',' + this.timeLeft +
            ',' + this.totalSentenceTime +
            ',' + this.lastLocation +
-           ',' + this.released +
-           ',' + this.incomplete +
+           ',' + this.imprisonmentState +
            ')';
+  }
+
+  public enum ImprisonmentState {
+    // We don't actually know this prisoner's lastLocation, it will be filled in when they join the server.
+    // Ideally lastLocation would just be optional, but that would break API and stuff
+    UNKNOWN_LOCATION,
+    KNOWN_LOCATION,
+
+    // This prisoner isn't actually imprisoned any more and will be released when they join the server.
+    RELEASED
   }
 }

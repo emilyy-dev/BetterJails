@@ -167,7 +167,8 @@ public final class DataHandler {
           // be released, jailedUntil, will remain unknown until the player actually joins.
           jailedUntil = null;
         }
-        this.prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, timeLeft, totalSentenceTime, lastLocation, released, incomplete));
+        final ApiPrisoner.ImprisonmentState imprisonmentState = released ? ApiPrisoner.ImprisonmentState.RELEASED : incomplete ? ApiPrisoner.ImprisonmentState.UNKNOWN_LOCATION : ApiPrisoner.ImprisonmentState.KNOWN_LOCATION;
+        this.prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, timeLeft, totalSentenceTime, lastLocation, imprisonmentState));
       });
     }
   }
@@ -312,7 +313,8 @@ public final class DataHandler {
         : CompletableFuture.completedFuture(existingPrisoner.parentGroups());
 
     primaryGroupFuture.thenCombineAsync(parentGroupsFuture, (primaryGroup, parentGroups) -> {
-      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, jailedUntil, timeLeft, sentence, lastLocation, false, incomplete);
+      final ApiPrisoner.ImprisonmentState imprisonmentState = incomplete ? ApiPrisoner.ImprisonmentState.UNKNOWN_LOCATION : ApiPrisoner.ImprisonmentState.KNOWN_LOCATION;
+      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, jailedUntil, timeLeft, sentence, lastLocation, imprisonmentState);
 
       this.plugin.eventBus().post(PlayerImprisonEvent.class, prisoner);
       final CompletionStage<?> setGroupFuture = groupsUnknown
@@ -407,7 +409,7 @@ public final class DataHandler {
         this.prisoners.remove(prisonerUuid);
         deletePrisonerFile(prisoner);
       } else {
-        prisoner = prisoner.withReleased(true);
+        prisoner = prisoner.withReleased();
         savePrisoner(prisoner);
       }
     }
