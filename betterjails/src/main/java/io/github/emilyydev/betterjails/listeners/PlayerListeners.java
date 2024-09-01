@@ -136,7 +136,7 @@ public final class PlayerListeners implements Listener {
   private void playerRespawn(final PlayerRespawnEvent event) {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
-    ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
+    final ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
 
     if (prisoner != null) {
       event.setRespawnLocation(prisoner.jail().location().mutable());

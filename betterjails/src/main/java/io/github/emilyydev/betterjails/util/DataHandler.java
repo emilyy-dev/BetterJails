@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableSet;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
+import io.github.emilyydev.betterjails.api.impl.model.prisoner.SentenceExpiry;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.dataupgrade.DataUpgrader;
@@ -151,24 +152,24 @@ public final class DataHandler {
         // TODO(rymiel): handle the case where the jail is removed
         final Jail jail = getJail(yaml.getString(JAIL_FIELD));
         final String jailedBy = yaml.getString(JAILED_BY_FIELD);
-        Duration timeLeft = Duration.ofSeconds(yaml.getLong(SECONDS_LEFT_FIELD, 0L));
+        final Duration timeLeft = Duration.ofSeconds(yaml.getLong(SECONDS_LEFT_FIELD, 0L));
         final Duration totalSentenceTime = Duration.ofSeconds(yaml.getInt(TOTAL_SENTENCE_TIME, 0));
         final boolean released = yaml.getBoolean(IS_RELEASED_FIELD);
 
-        Instant jailedUntil;
         final Player existingPlayer = this.server.getPlayer(uuid); // This is only relevant for reloading
+
+        final SentenceExpiry expiry;
         if (this.config.considerOfflineTime() || existingPlayer != null) {
           // If considering offline time, or if the player is online, the player will have a "deadline", jailedUntil,
-          // whereas timeLeft would be constantly changing. Therefore, we don't store it, and timeLeft will be null.
-          jailedUntil = Instant.now().plus(timeLeft);
-          timeLeft = null;
+          // whereas timeLeft would be constantly changing.
+          expiry = SentenceExpiry.of(Instant.now().plus(timeLeft));
         } else {
           // If not considering offline time, all players currently have a remaining time, timeLeft, but when they'd
           // be released, jailedUntil, will remain unknown until the player actually joins.
-          jailedUntil = null;
+          expiry = SentenceExpiry.of(timeLeft);
         }
         final ApiPrisoner.ImprisonmentState imprisonmentState = released ? ApiPrisoner.ImprisonmentState.RELEASED : incomplete ? ApiPrisoner.ImprisonmentState.UNKNOWN_LOCATION : ApiPrisoner.ImprisonmentState.KNOWN_LOCATION;
-        this.prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, timeLeft, totalSentenceTime, lastLocation, imprisonmentState));
+        this.prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, expiry, totalSentenceTime, lastLocation, imprisonmentState));
       });
     }
   }
@@ -242,8 +243,7 @@ public final class DataHandler {
     final boolean isPlayerOnline = player.isOnline();
     final boolean isPlayerJailed = existingPrisoner != null;
     final Duration sentence = Duration.ofSeconds(secondsLeft);
-    final Duration timeLeft;
-    final Instant jailedUntil;
+    final SentenceExpiry expiry;
     Location knownLastLocation = null;
 
     if (isPlayerJailed) {
@@ -278,13 +278,11 @@ public final class DataHandler {
 
     if (isPlayerOnline || this.config.considerOfflineTime()) {
       // If the player is online or offline time is enabled, their remaining time will start ticking down immediately,
-      // so we store the deadline of their release, and don't store timeLeft.
-      jailedUntil = Instant.now().plus(sentence);
-      timeLeft = null;
+      // so we store the deadline of their release.
+      expiry = SentenceExpiry.of(Instant.now().plus(sentence));
     } else {
       // Otherwise, the time doesn't start ticking until the player joins.
-      jailedUntil = null;
-      timeLeft = sentence;
+      expiry = SentenceExpiry.of(sentence);
     }
 
     if (this.plugin.essentials != null) {
@@ -292,7 +290,7 @@ public final class DataHandler {
       if (user != null) {
         user.setJailed(true);
         if (isPlayerOnline) {
-          user.setJailTimeout(jailedUntil.toEpochMilli());
+          user.setJailTimeout(expiry.expiryDate().toEpochMilli());
         }
       }
     }
@@ -314,7 +312,7 @@ public final class DataHandler {
 
     primaryGroupFuture.thenCombineAsync(parentGroupsFuture, (primaryGroup, parentGroups) -> {
       final ApiPrisoner.ImprisonmentState imprisonmentState = incomplete ? ApiPrisoner.ImprisonmentState.UNKNOWN_LOCATION : ApiPrisoner.ImprisonmentState.KNOWN_LOCATION;
-      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, jailedUntil, timeLeft, sentence, lastLocation, imprisonmentState);
+      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, expiry, sentence, lastLocation, imprisonmentState);
 
       this.plugin.eventBus().post(PlayerImprisonEvent.class, prisoner);
       final CompletionStage<?> setGroupFuture = groupsUnknown
@@ -332,7 +330,7 @@ public final class DataHandler {
     return true;
   }
 
-  public CompletableFuture<Void> savePrisoner(ApiPrisoner prisoner) {
+  public CompletableFuture<Void> savePrisoner(final ApiPrisoner prisoner) {
     this.prisoners.put(prisoner.uuid(), prisoner);
 
     final YamlConfiguration yaml = new YamlConfiguration();
@@ -356,7 +354,7 @@ public final class DataHandler {
     });
   }
 
-  public void deletePrisonerFile(Prisoner prisoner) {
+  public void deletePrisonerFile(final Prisoner prisoner) {
     final Path playerFile = this.playerDataFolder.resolve(prisoner.uuid() + ".yml");
     try {
       Files.deleteIfExists(playerFile);

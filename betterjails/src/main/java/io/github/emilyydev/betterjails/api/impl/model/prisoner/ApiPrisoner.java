@@ -35,7 +35,6 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -47,8 +46,7 @@ public class ApiPrisoner implements Prisoner {
   private final Set<String> parentGroups;
   private final Jail jail;
   private final String jailedBy;
-  private final @Nullable Instant jailedUntil;
-  private final @Nullable Duration timeLeft;
+  private final SentenceExpiry expiry;
   private final Duration totalSentenceTime;
   private final ImmutableLocation lastLocation;
   private final ImprisonmentState imprisonmentState;
@@ -60,8 +58,7 @@ public class ApiPrisoner implements Prisoner {
       final Collection<? extends String> parentGroups,
       final Jail jail,
       final String jailedBy,
-      final @Nullable Instant jailedUntil,
-      final @Nullable Duration timeLeft,
+      final SentenceExpiry expiry,
       final Duration totalSentenceTime,
       final ImmutableLocation lastLocation,
       final ImprisonmentState imprisonmentState
@@ -72,8 +69,7 @@ public class ApiPrisoner implements Prisoner {
     this.parentGroups = ImmutableSet.copyOf(parentGroups);
     this.jail = jail;
     this.jailedBy = jailedBy;
-    this.jailedUntil = jailedUntil;
-    this.timeLeft = timeLeft;
+    this.expiry = expiry;
     this.totalSentenceTime = totalSentenceTime;
     this.lastLocation = lastLocation;
     this.imprisonmentState = imprisonmentState;
@@ -111,13 +107,7 @@ public class ApiPrisoner implements Prisoner {
 
   @Override
   public @NotNull Instant jailedUntil() {
-    if (released()) {
-      return Instant.MIN;
-    } else if (this.jailedUntil == null) {
-      return Instant.now().plus(Objects.requireNonNull(this.timeLeft));
-    } else {
-      return this.jailedUntil;
-    }
+    return released() ? Instant.MIN : this.expiry.expiryDate();
   }
 
   @Override
@@ -139,21 +129,19 @@ public class ApiPrisoner implements Prisoner {
   }
 
   public @NotNull Duration timeLeft() {
-    if (released()) {
-      return Duration.ZERO;
-    } else if (this.timeLeft == null) {
-      return Duration.between(Instant.now(), Objects.requireNonNull(this.jailedUntil));
-    } else {
-      return this.timeLeft;
-    }
+    return released() ? Duration.ZERO : this.expiry.timeLeft();
+  }
+
+  public SentenceExpiry expiry() {
+    return this.expiry;
   }
 
   public @NotNull ApiPrisoner withReleased() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil, this.timeLeft, this.totalSentenceTime, this.lastLocation, ImprisonmentState.RELEASED);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.expiry, this.totalSentenceTime, this.lastLocation, ImprisonmentState.RELEASED);
   }
 
-  public @NotNull ApiPrisoner withLastLocation(ImmutableLocation location) {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil, this.timeLeft, this.totalSentenceTime, location, ImprisonmentState.KNOWN_LOCATION);
+  public @NotNull ApiPrisoner withLastLocation(final ImmutableLocation location) {
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.expiry, this.totalSentenceTime, location, ImprisonmentState.KNOWN_LOCATION);
   }
 
   /**
@@ -161,7 +149,7 @@ public class ApiPrisoner implements Prisoner {
    * This method swaps out {@link #timeLeft} for {@link #jailedUntil}
    */
   public @NotNull ApiPrisoner withTimeRunning() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil(), null, this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(jailedUntil()), this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
   }
 
   /**
@@ -169,7 +157,7 @@ public class ApiPrisoner implements Prisoner {
    * This method swaps out {@link #jailedUntil} for {@link #timeLeft}
    */
   public @NotNull ApiPrisoner withTimePaused() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, null, this.timeLeft(), this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(timeLeft()), this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
   }
 
   @Override
@@ -193,8 +181,7 @@ public class ApiPrisoner implements Prisoner {
            ',' + this.parentGroups +
            ',' + this.jail +
            ',' + '"' + this.jailedBy + '"' +
-           ',' + this.jailedUntil +
-           ',' + this.timeLeft +
+           ',' + this.expiry +
            ',' + this.totalSentenceTime +
            ',' + this.lastLocation +
            ',' + this.imprisonmentState +
