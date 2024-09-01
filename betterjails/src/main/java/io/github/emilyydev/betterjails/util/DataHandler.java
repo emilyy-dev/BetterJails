@@ -170,8 +170,6 @@ public final class DataHandler {
         prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, timeLeft, totalSentenceTime, lastLocation, released, incomplete));
       });
     }
-
-    this.prisoners.entrySet().forEach(p -> this.plugin.getLogger().info(p.toString()));
   }
 
   private void loadJails() throws IOException {
@@ -315,7 +313,6 @@ public final class DataHandler {
 
     primaryGroupFuture.thenCombineAsync(parentGroupsFuture, (primaryGroup, parentGroups) -> {
       final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, jailedUntil, timeLeft, sentence, lastLocation, false, incomplete);
-      this.plugin.getLogger().info(prisoner.toString());
 
       this.plugin.eventBus().post(PlayerImprisonEvent.class, prisoner);
       final CompletionStage<?> setGroupFuture = groupsUnknown
@@ -339,7 +336,6 @@ public final class DataHandler {
     final YamlConfiguration yaml = new YamlConfiguration();
     yaml.set("version", DataUpgrader.VERSION);
     V1ToV2.setVersionWarning(yaml);
-    yaml.set("encoder", "Emilia"); // just for debug
 
     yaml.set(UUID_FIELD, prisoner.uuid().toString());
     yaml.set(NAME_FIELD, prisoner.name());
@@ -352,7 +348,6 @@ public final class DataHandler {
     yaml.set(GROUP_FIELD, prisoner.primaryGroup());
     yaml.set(EXTRA_GROUPS_FIELD, ImmutableList.copyOf(prisoner.parentGroups()));
 
-    this.plugin.getLogger().info(yaml.saveToString());
     return FileIO.writeString(this.playerDataFolder.resolve(prisoner.uuid() + ".yml"), yaml.saveToString()).exceptionally(ex -> {
       this.plugin.getLogger().log(Level.SEVERE, null, ex);
       return null;
