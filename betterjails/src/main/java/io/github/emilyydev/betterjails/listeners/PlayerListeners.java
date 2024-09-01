@@ -94,6 +94,7 @@ public final class PlayerListeners implements Listener {
       } else {
         if (prisoner.incomplete()) {
           prisoner = prisoner.withLastLocation(ImmutableLocation.copyOf(player.getLocation()));
+          // TODO(rymiel): the "onJail" commands aren't run here. Is that intentional?
         }
 
         prisoner = prisoner.withTimeRunning();
