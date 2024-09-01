@@ -355,7 +355,8 @@ public final class CommandHandler implements CommandExecutor, Listener {
       return;
     }
 
-    final boolean wasReleased = this.plugin.dataHandler().releaseJailedPlayer(player, uuidOrNil(sender), executioner, true);
+//    final boolean wasReleased = this.plugin.dataHandler().releaseJailedPlayer(player, uuidOrNil(sender), executioner, true);
+    final boolean wasReleased = this.plugin.dataHandler().releaseJailedPlayerNew(player, uuidOrNil(sender), executioner, true);
     if (wasReleased) {
       this.server.broadcast(
           this.configuration.messages().releasePrisonerSuccess(prisoner, executioner),

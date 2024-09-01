@@ -544,7 +544,78 @@ public final class DataHandler {
     return true;
   }
 
-  public boolean releaseJailedPlayer(final OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
+  public boolean releaseJailedPlayerNew(final OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
+    final UUID prisonerUuid = player.getUniqueId();
+    final ApiPrisoner prisoner = prisoners.get(prisonerUuid);
+
+    if (prisoner == null) {
+      return false;
+    }
+
+    final Path playerFile = this.playerDataFolder.resolve(prisonerUuid + ".yml");
+
+    final PermissionInterface permissionInterface = this.plugin.permissionInterface();
+    permissionInterface.setParentGroups(player, prisoner.parentGroups(), source, sourceName)
+        .whenComplete((ignored, exception) -> {
+          if (exception != null && permissionInterface != PermissionInterface.NULL) {
+            this.plugin.getLogger().log(Level.SEVERE, null, exception);
+          }
+        });
+
+    if (player.isOnline()) {
+      // Player is online, we can teleport them out of jail right away and clear up all their data
+      final Player online = Objects.requireNonNull(player.getPlayer());
+      if (teleport) {
+        final Location lastLocation = prisoner.lastLocation().mutable();
+        // TODO(rymiel): backupLocation continues to be problematic
+        if (!lastLocation.equals(this.backupLocation)) {
+          Teleport.teleportAsync(online, lastLocation);
+        }
+      }
+
+      this.prisoners.remove(prisonerUuid);
+      try {
+        Files.deleteIfExists(playerFile);
+      } catch (final IOException ex) {
+        this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
+      }
+
+      final SubCommandsConfiguration.SubCommands subCommands = this.subCommands.onRelease();
+      subCommands.executeAsPrisoner(this.server, online, prisoner.jailedBy() == null ? "" : prisoner.jailedBy());
+      subCommands.executeAsConsole(this.server, online, prisoner.jailedBy() == null ? "" : prisoner.jailedBy());
+    } else {
+      if (prisoner.released()) {
+        // This player has already been released, don't need to do anything
+        return true;
+      }
+
+      // TODO(rymiel): backupLocation continues to be problematic
+      if (prisoner.lastLocation().mutable().equals(this.backupLocation)) {
+        this.prisoners.remove(prisonerUuid);
+        try {
+          Files.deleteIfExists(playerFile);
+        } catch (final IOException ex) {
+          this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
+        }
+      } else {
+        final ApiPrisoner newPrisoner = new ApiPrisoner(prisoner.uuid(), prisoner.name(), prisoner.primaryGroup(), prisoner.parentGroups(), prisoner.jail(), prisoner.jailedBy(), prisoner.jailedUntil(), prisoner.timeLeft(), prisoner.totalSentenceTime(), prisoner.lastLocation(), true, false);
+        savePrisoner(newPrisoner);
+      }
+    }
+
+    if (this.plugin.essentials != null) {
+      final User user = this.plugin.essentials.getUser(prisonerUuid);
+      if (user != null && user.isJailed()) {
+        user.setJailTimeout(0L);
+        user.setJailed(false);
+      }
+    }
+
+    this.plugin.eventBus().post(PrisonerReleaseEvent.class, prisoner);
+    return true;
+  }
+
+  public @Deprecated boolean releaseJailedPlayer(final OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
     final UUID prisonerUuid = player.getUniqueId();
     if (!isPlayerJailed(prisonerUuid)) {
       return false;
