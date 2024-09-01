@@ -26,7 +26,9 @@ package io.github.emilyydev.betterjails.listeners;
 
 import com.earth2me.essentials.User;
 import com.github.fefo.betterjails.api.model.jail.Jail;
+import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.util.DataHandler;
 import io.github.emilyydev.betterjails.util.FileIO;
 import io.github.emilyydev.betterjails.util.Util;
@@ -79,25 +81,26 @@ public final class PlayerListeners implements Listener {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
 
-    if (this.plugin.dataHandler().isPlayerJailed(uuid)) {
-      final YamlConfiguration jailedPlayer = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
+    ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
+    if (prisoner != null) {
       final Location backupLocation = this.plugin.configuration().backupLocation().mutable();
-      final Location lastLocation =
-          (Location) jailedPlayer.get(DataHandler.LAST_LOCATION_FIELD, backupLocation);
-      if (!jailedPlayer.getBoolean(DataHandler.IS_RELEASED_FIELD) && !player.hasPermission("betterjails.jail.exempt")) {
-        if (lastLocation.equals(backupLocation)) {
-          jailedPlayer.set(DataHandler.LAST_LOCATION_FIELD, player.getLocation());
-        }
-
-        this.plugin.dataHandler().loadJailedPlayer(uuid, jailedPlayer);
-        final Jail jail = getValidJail(jailedPlayer, player.getName(), uuid);
-        event.setSpawnLocation(jail.location().mutable());
-      } else {
+      final Location lastLocation = prisoner.lastLocation().mutable();
+      if (prisoner.released() || player.hasPermission("betterjails.jail.exempt")) {
+        // The player has been released, put them back where they were
+        // TODO(rymiel): backupLocation continues to be problematic
         if (!lastLocation.equals(backupLocation)) {
           event.setSpawnLocation(lastLocation);
         }
 
-        this.plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, null, false);
+        this.plugin.dataHandler().releaseJailedPlayerNew(player, Util.NIL_UUID, null, false);
+      } else {
+        if (prisoner.incomplete()) {
+          prisoner = prisoner.withLastLocation(ImmutableLocation.copyOf(player.getLocation()));
+        }
+
+        prisoner = prisoner.withTimeRunning();
+        this.plugin.dataHandler().savePrisoner(prisoner);
+        event.setSpawnLocation(prisoner.jail().location().mutable());
       }
     }
 
