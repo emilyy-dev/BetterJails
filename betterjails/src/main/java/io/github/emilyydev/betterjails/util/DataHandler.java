@@ -399,6 +399,8 @@ public final class DataHandler {
   }
 
   public CompletableFuture<Void> savePrisoner(ApiPrisoner prisoner) {
+    this.prisoners.put(prisoner.uuid(), prisoner);
+
     final YamlConfiguration yaml = new YamlConfiguration();
     yaml.set("version", DataUpgrader.VERSION);
     V1ToV2.setVersionWarning(yaml);
