@@ -140,9 +140,13 @@ public class ApiPrisoner implements Prisoner {
     return this.lastLocation;
   }
 
-  public boolean released() { return this.released; }
+  public boolean released() {
+    return this.released;
+  }
 
-  public boolean incomplete() { return this.incomplete; }
+  public boolean incomplete() {
+    return this.incomplete;
+  }
 
   public @NotNull Duration timeLeft() {
     if (this.released) {

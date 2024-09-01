@@ -156,7 +156,7 @@ public final class DataHandler {
         final boolean released = yaml.getBoolean(IS_RELEASED_FIELD);
 
         Instant jailedUntil;
-        final Player existingPlayer = this.plugin.getServer().getPlayer(uuid); // This is only relevant for reloading
+        final Player existingPlayer = this.server.getPlayer(uuid); // This is only relevant for reloading
         if (this.config.considerOfflineTime() || existingPlayer != null) {
           // If considering offline time, or if the player is online, the player will have a "deadline", jailedUntil,
           // whereas timeLeft would be constantly changing. Therefore, we don't store it, and timeLeft will be null.
@@ -167,7 +167,7 @@ public final class DataHandler {
           // be released, jailedUntil, will remain unknown until the player actually joins.
           jailedUntil = null;
         }
-        prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, timeLeft, totalSentenceTime, lastLocation, released, incomplete));
+        this.prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, timeLeft, totalSentenceTime, lastLocation, released, incomplete));
       });
     }
   }
@@ -193,7 +193,7 @@ public final class DataHandler {
   }
 
   public ApiPrisoner getPrisoner(final UUID uuid) {
-    return prisoners.get(uuid);
+    return this.prisoners.get(uuid);
   }
 
   public Map<String, Jail> getJails() {
@@ -231,7 +231,7 @@ public final class DataHandler {
       final boolean teleport
   ) {
     final UUID prisonerUuid = player.getUniqueId();
-    final ApiPrisoner existingPrisoner = prisoners.get(prisonerUuid);
+    final ApiPrisoner existingPrisoner = this.prisoners.get(prisonerUuid);
     final Jail jail = getJail(jailName);
 
     if (jail == null) {
@@ -365,7 +365,7 @@ public final class DataHandler {
 
   public boolean releaseJailedPlayer(final OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
     final UUID prisonerUuid = player.getUniqueId();
-    final ApiPrisoner prisoner = prisoners.get(prisonerUuid);
+    ApiPrisoner prisoner = this.prisoners.get(prisonerUuid);
 
     if (prisoner == null) {
       return false;
@@ -407,7 +407,8 @@ public final class DataHandler {
         this.prisoners.remove(prisonerUuid);
         deletePrisonerFile(prisoner);
       } else {
-        savePrisoner(prisoner.withReleased(true));
+        prisoner = prisoner.withReleased(true);
+        savePrisoner(prisoner);
       }
     }
 
