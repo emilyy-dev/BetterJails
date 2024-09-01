@@ -168,13 +168,12 @@ public final class DataHandler {
         if (this.config.considerOfflineTime() || existingPlayer != null) {
           // If considering offline time, or if the player is online, the player will have a "deadline", jailedUntil,
           // whereas timeLeft would be constantly changing. Therefore, we don't store it, and timeLeft will be null.
-          jailedUntil = released ? Instant.MIN : Instant.now().plus(timeLeft);
+          jailedUntil = Instant.now().plus(timeLeft);
           timeLeft = null;
         } else {
           // If not considering offline time, all players currently have a remaining time, timeLeft, but when they'd
-          // be released, jailedUntil, will remain unknown until the player actually joins, unless they're already
-          // released.
-          jailedUntil = released ? Instant.MIN : null;
+          // be released, jailedUntil, will remain unknown until the player actually joins.
+          jailedUntil = null;
         }
         prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, timeLeft, totalSentenceTime, lastLocation, released, incomplete));
       });
@@ -769,7 +768,7 @@ public final class DataHandler {
         continue;
       }
 
-      if (released || prisoner.timeLeft().isNegative()) {
+      if (released || prisoner.timeLeft().isZero() || prisoner.timeLeft().isNegative()) {
         releaseJailedPlayerNew(this.server.getOfflinePlayer(key), Util.NIL_UUID, "timer", true);
       }
     }

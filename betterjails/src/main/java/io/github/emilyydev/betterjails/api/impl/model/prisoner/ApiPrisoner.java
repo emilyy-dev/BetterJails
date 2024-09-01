@@ -121,10 +121,12 @@ public class ApiPrisoner implements Prisoner {
 
   @Override
   public @NotNull Instant jailedUntil() {
-    if (this.jailedUntil == null) {
-      return Instant.now().plus(Objects.requireNonNull(timeLeft));
+    if (this.released) {
+      return Instant.MIN;
+    } else if (this.jailedUntil == null) {
+      return Instant.now().plus(Objects.requireNonNull(this.timeLeft));
     } else {
-      return jailedUntil;
+      return this.jailedUntil;
     }
   }
 
@@ -143,10 +145,12 @@ public class ApiPrisoner implements Prisoner {
   public boolean incomplete() { return this.incomplete; }
 
   public @NotNull Duration timeLeft() {
-    if (this.timeLeft == null) {
-      return Duration.between(Instant.now(), Objects.requireNonNull(jailedUntil));
+    if (this.released) {
+      return Duration.ZERO;
+    } else if (this.timeLeft == null) {
+      return Duration.between(Instant.now(), Objects.requireNonNull(this.jailedUntil));
     } else {
-      return timeLeft;
+      return this.timeLeft;
     }
   }
 

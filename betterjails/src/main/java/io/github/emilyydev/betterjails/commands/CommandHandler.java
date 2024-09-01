@@ -268,7 +268,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
       return;
     }
 
-    if (prisoner.released() || prisoner.timeLeft().isNegative()) {
+    if (prisoner.released() || prisoner.timeLeft().isZero() || prisoner.timeLeft().isNegative()) {
       sender.sendMessage(this.configuration.messages().prisonerInfoFailedNotJailed(prisonerName, executioner));
       return;
     }
