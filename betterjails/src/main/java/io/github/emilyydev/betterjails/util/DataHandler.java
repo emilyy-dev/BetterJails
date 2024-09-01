@@ -157,6 +157,7 @@ public final class DataHandler {
         final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) yaml.get(LAST_LOCATION_FIELD, this.backupLocation));
         final String group = yaml.getString(GROUP_FIELD);
         final List<String> parentGroups = yaml.getStringList(EXTRA_GROUPS_FIELD);
+        // TODO(rymiel): handle the case where the jail is removed
         final Jail jail = getJail(yaml.getString(JAIL_FIELD));
         final String jailedBy = yaml.getString(JAILED_BY_FIELD);
         Duration timeLeft = Duration.ofSeconds(yaml.getLong(SECONDS_LEFT_FIELD, 0L));
