@@ -713,7 +713,7 @@ public final class DataHandler {
     return true;
   }
 
-  public long getSecondsLeft(final UUID uuid, final int fallback) {
+  public @Deprecated long getSecondsLeft(final UUID uuid, final int fallback) {
     if (this.playersJailedUntil.containsKey(uuid)) {
       return (this.playersJailedUntil.get(uuid) - System.currentTimeMillis()) / 1000L;
     } else {
@@ -721,35 +721,35 @@ public final class DataHandler {
     }
   }
 
-  public boolean isReleased(final UUID uuid, final boolean def) {
+  public @Deprecated boolean isReleased(final UUID uuid, final boolean def) {
     return retrieveJailedPlayer(uuid).getBoolean(IS_RELEASED_FIELD, def);
   }
 
-  public String getName(final UUID uuid, final @Nullable String def) {
+  public @Deprecated String getName(final UUID uuid, final @Nullable String def) {
     return retrieveJailedPlayer(uuid).getString(NAME_FIELD, def);
   }
 
-  public String getJail(final UUID uuid, final @Nullable String def) {
+  public @Deprecated String getJail(final UUID uuid, final @Nullable String def) {
     return retrieveJailedPlayer(uuid).getString(JAIL_FIELD, def);
   }
 
-  public String getJailer(final UUID uuid, final @Nullable String def) {
+  public @Deprecated String getJailer(final UUID uuid, final @Nullable String def) {
     return retrieveJailedPlayer(uuid).getString(JAILED_BY_FIELD, def);
   }
 
-  public Location getLastLocation(final UUID uuid) {
+  public @Deprecated Location getLastLocation(final UUID uuid) {
     return (Location) retrieveJailedPlayer(uuid).get(LAST_LOCATION_FIELD, this.backupLocation);
   }
 
-  public String getPrimaryGroup(final UUID uuid, final @Nullable String def) {
+  public @Deprecated String getPrimaryGroup(final UUID uuid, final @Nullable String def) {
     return retrieveJailedPlayer(uuid).getString(GROUP_FIELD, def);
   }
 
-  public List<String> getAllParentGroups(final UUID uuid) {
+  public @Deprecated List<String> getAllParentGroups(final UUID uuid) {
     return retrieveJailedPlayer(uuid).getStringList(EXTRA_GROUPS_FIELD);
   }
 
-  public void updateSecondsLeft(final UUID uuid) {
+  public @Deprecated void updateSecondsLeft(final UUID uuid) {
     final OfflinePlayer player = this.server.getOfflinePlayer(uuid);
     if (this.config.considerOfflineTime() && !getLastLocation(uuid).equals(this.backupLocation) || player.isOnline()) {
       retrieveJailedPlayer(uuid).set(SECONDS_LEFT_FIELD, getSecondsLeft(uuid, 0));
