@@ -806,6 +806,35 @@ public final class DataHandler {
     }
   }
 
+  public void timerNew() {
+    final Iterator<Map.Entry<UUID, ApiPrisoner>> iterator = this.prisoners.entrySet().iterator();
+    while (iterator.hasNext()) {
+      final Map.Entry<UUID, ApiPrisoner> entry = iterator.next();
+      final UUID key = entry.getKey();
+      final ApiPrisoner prisoner = entry.getValue();
+      final boolean released = prisoner.released();
+
+      // TODO(rymiel): Not actually sure why this is here, I just copied it from the old code, probably can be removed
+      if (prisoner.incomplete()) {
+        if (released) {
+          iterator.remove();
+
+          final Path playerFile = this.playerDataFolder.resolve(key + ".yml");
+          try {
+            Files.deleteIfExists(playerFile);
+          } catch (final IOException ex) {
+            this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
+          }
+        }
+        continue;
+      }
+
+      if (released || prisoner.timeLeft().isNegative()) {
+        releaseJailedPlayerNew(this.server.getOfflinePlayer(key), Util.NIL_UUID, "timer", true);
+      }
+    }
+  }
+
   public void timer() {
     final Iterator<Map.Entry<UUID, YamlConfiguration>> iterator = this.prisonersMap.entrySet().iterator();
     while (iterator.hasNext()) {

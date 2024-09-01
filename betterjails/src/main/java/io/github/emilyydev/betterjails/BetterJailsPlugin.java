@@ -185,7 +185,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
       }
     }
 
-    scheduler.runTaskTimer(this, this.dataHandler::timer, 0L, 20L);
+    scheduler.runTaskTimer(this, this.dataHandler::timerNew, 0L, 20L);
 
     final Duration autoSavePeriod = this.configuration.autoSavePeriod();
     if (!autoSavePeriod.isZero()) {

@@ -165,6 +165,8 @@ public class ApiPrisoner implements Prisoner {
 
   public boolean released() { return this.released; }
 
+  public boolean incomplete() { return this.incomplete; }
+
   public @NotNull Duration timeLeft() {
     if (this.timeLeft == null) {
       return Duration.between(Instant.now(), Objects.requireNonNull(jailedUntil));
