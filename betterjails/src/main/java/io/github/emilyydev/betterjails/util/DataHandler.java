@@ -134,29 +134,6 @@ public final class DataHandler {
     Files.createDirectories(this.playerDataFolder);
     loadJails();
     alertNewConfigAvailable();
-
-    final long now = System.currentTimeMillis();
-    try (final Stream<Path> s = Files.list(this.playerDataFolder)) {
-      s.forEach(file -> {
-        final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file.toFile());
-        migratePrisonerData(yaml, file);
-        final UUID uuid = UUID.fromString(file.getFileName().toString().replace(".yml", ""));
-        if (this.config.considerOfflineTime()) {
-          this.prisonersMap.put(uuid, yaml);
-          if (yaml.get(LAST_LOCATION_FIELD, this.backupLocation) != this.backupLocation) {
-            this.playersJailedUntil.put(uuid, now + yaml.getLong(SECONDS_LEFT_FIELD, 0L) * 1000L);
-          }
-        }
-
-        final String name = yaml.getString(NAME_FIELD);
-        if (name != null) {
-          this.prisonerNames.add(name.toLowerCase(Locale.ROOT));
-        }
-
-        this.prisonerIds.add(uuid);
-      });
-    }
-
     loadPrisoners();
   }
 
@@ -218,7 +195,7 @@ public final class DataHandler {
     }
   }
 
-  public Set<UUID> getPrisonerIds() {
+  public @Deprecated Set<UUID> getPrisonerIds() {
     return Collections.unmodifiableSet(this.prisonerIds);
   }
 
@@ -228,10 +205,6 @@ public final class DataHandler {
 
   public boolean isPlayerJailedNew(final UUID uuid) {
     return this.prisoners.containsKey(uuid);
-  }
-
-  public boolean isPlayerJailed(final String playerName) {
-    return this.prisonerNames.contains(playerName.toLowerCase(Locale.ROOT));
   }
 
   public ApiPrisoner getPrisoner(final UUID uuid) {
@@ -725,32 +698,8 @@ public final class DataHandler {
     }
   }
 
-  public @Deprecated boolean isReleased(final UUID uuid, final boolean def) {
-    return retrieveJailedPlayer(uuid).getBoolean(IS_RELEASED_FIELD, def);
-  }
-
-  public @Deprecated String getName(final UUID uuid, final @Nullable String def) {
-    return retrieveJailedPlayer(uuid).getString(NAME_FIELD, def);
-  }
-
-  public @Deprecated String getJail(final UUID uuid, final @Nullable String def) {
-    return retrieveJailedPlayer(uuid).getString(JAIL_FIELD, def);
-  }
-
-  public @Deprecated String getJailer(final UUID uuid, final @Nullable String def) {
-    return retrieveJailedPlayer(uuid).getString(JAILED_BY_FIELD, def);
-  }
-
   public @Deprecated Location getLastLocation(final UUID uuid) {
     return (Location) retrieveJailedPlayer(uuid).get(LAST_LOCATION_FIELD, this.backupLocation);
-  }
-
-  public @Deprecated String getPrimaryGroup(final UUID uuid, final @Nullable String def) {
-    return retrieveJailedPlayer(uuid).getString(GROUP_FIELD, def);
-  }
-
-  public @Deprecated List<String> getAllParentGroups(final UUID uuid) {
-    return retrieveJailedPlayer(uuid).getStringList(EXTRA_GROUPS_FIELD);
   }
 
   public @Deprecated void updateSecondsLeft(final UUID uuid) {
@@ -777,28 +726,6 @@ public final class DataHandler {
     return cf;
   }
 
-  public CompletableFuture<Void> save() {
-    // A Jail's location can be changed...
-    this.jails.forEach((name, jail) -> this.jailsYaml.set(name.toLowerCase(Locale.ROOT), jail.location().mutable()));
-    CompletableFuture<Void> cf = FileIO.writeString(this.jailsFile, this.jailsYaml.saveToString());
-
-    for (final Map.Entry<UUID, YamlConfiguration> entry : this.prisonersMap.entrySet()) {
-      final UUID key = entry.getKey();
-      final YamlConfiguration value = entry.getValue();
-      value.set(SECONDS_LEFT_FIELD, getSecondsLeft(key, 0));
-      final Path playerFile = this.playerDataFolder.resolve(key + ".yml");
-      final String str = value.saveToString();
-      cf = cf.thenCompose(v -> FileIO.writeString(playerFile, str).whenComplete((v1, ex) -> {
-        if (ex != null) {
-          this.plugin.getLogger().log(Level.SEVERE, null, ex);
-        }
-      }));
-    }
-
-    this.plugin.eventBus().post(PluginSaveDataEvent.class);
-    return cf;
-  }
-
   public void reloadNew() throws IOException {
     this.backupLocation = this.config.backupLocation().mutable();
 
@@ -807,48 +734,6 @@ public final class DataHandler {
 
     this.prisoners.clear();
     loadPrisoners();
-
-    if (this.config.permissionHookEnabled()) {
-      this.config.prisonerPermissionGroup().ifPresent(prisonerGroup ->
-          this.plugin.resetPermissionInterface(
-              PermissionInterface.determinePermissionInterface(this.plugin, prisonerGroup)
-          )
-      );
-    } else {
-      this.plugin.resetPermissionInterface(PermissionInterface.NULL);
-    }
-  }
-
-  public void reload() throws IOException {
-    this.backupLocation = this.config.backupLocation().mutable();
-    this.jailsYaml = YamlConfiguration.loadConfiguration(this.jailsFile.toFile());
-    for (final String key : this.jailsYaml.getKeys(false)) {
-      final String lowerCaseKey = key.toLowerCase(Locale.ROOT);
-      this.jails.put(lowerCaseKey, new ApiJail(lowerCaseKey, (Location) this.jailsYaml.get(key)));
-    }
-
-    this.prisonersMap.clear();
-    this.playersJailedUntil.clear();
-    final long now = System.currentTimeMillis();
-    if (this.config.considerOfflineTime()) {
-      try (final Stream<Path> s = Files.list(this.playerDataFolder)) {
-        s.forEach(file -> {
-          final UUID uuid = UUID.fromString(file.getFileName().toString().replace(".yml", ""));
-          final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file.toFile());
-          migratePrisonerData(yaml, file);
-          this.prisonersMap.put(uuid, yaml);
-          this.playersJailedUntil.put(uuid, now + yaml.getLong(SECONDS_LEFT_FIELD) * 1000L);
-        });
-      }
-    } else {
-      for (final Player player : this.server.getOnlinePlayers()) {
-        if (isPlayerJailed(player.getUniqueId())) {
-          final YamlConfiguration yaml = retrieveJailedPlayer(player.getUniqueId());
-          this.prisonersMap.put(player.getUniqueId(), yaml);
-          this.playersJailedUntil.put(player.getUniqueId(), now + yaml.getLong(SECONDS_LEFT_FIELD) * 1000L);
-        }
-      }
-    }
 
     if (this.config.permissionHookEnabled()) {
       this.config.prisonerPermissionGroup().ifPresent(prisonerGroup ->
@@ -886,43 +771,6 @@ public final class DataHandler {
 
       if (released || prisoner.timeLeft().isNegative()) {
         releaseJailedPlayerNew(this.server.getOfflinePlayer(key), Util.NIL_UUID, "timer", true);
-      }
-    }
-  }
-
-  public void timer() {
-    final Iterator<Map.Entry<UUID, YamlConfiguration>> iterator = this.prisonersMap.entrySet().iterator();
-    while (iterator.hasNext()) {
-      final Map.Entry<UUID, YamlConfiguration> entry = iterator.next();
-      final UUID key = entry.getKey();
-      final YamlConfiguration value = entry.getValue();
-      final Location location = (Location) value.get(LAST_LOCATION_FIELD, this.backupLocation);
-      final boolean released = value.getBoolean(IS_RELEASED_FIELD, false);
-
-      if (location.equals(this.backupLocation)) {
-        if (released) {
-          iterator.remove();
-
-          final Path playerFile = this.playerDataFolder.resolve(key + ".yml");
-          try {
-            Files.deleteIfExists(playerFile);
-          } catch (final IOException ex) {
-            this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
-          }
-
-          final String name = value.getString(NAME_FIELD);
-          if (name != null) {
-            this.prisonerNames.remove(name.toLowerCase(Locale.ROOT));
-          }
-
-          this.prisonerIds.remove(key);
-          this.playersJailedUntil.remove(key);
-        }
-        continue;
-      }
-
-      if (released || getSecondsLeft(key, 0) <= 0) {
-        releaseJailedPlayer(this.server.getOfflinePlayer(key), Util.NIL_UUID, "timer", true);
       }
     }
   }
