@@ -154,6 +154,30 @@ public class ApiPrisoner implements Prisoner {
     }
   }
 
+  public @NotNull ApiPrisoner withReleased(boolean released) {
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil, this.timeLeft, this.totalSentenceTime, this.lastLocation, released, this.incomplete);
+  }
+
+  public @NotNull ApiPrisoner withLastLocation(ImmutableLocation location) {
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil, this.timeLeft, this.totalSentenceTime, location, this.released, false);
+  }
+
+  /**
+   * Creates a copy of this prisoner, but with their sentence time running if it wasn't already.
+   * This method swaps out {@link #timeLeft} for {@link #jailedUntil}
+   */
+  public @NotNull ApiPrisoner withTimeRunning() {
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.jailedUntil(), null, this.totalSentenceTime, this.lastLocation, this.released, this.incomplete);
+  }
+
+  /**
+   * Creates a copy of this prisoner, but with their sentence time paused if it wasn't already.
+   * This method swaps out {@link #jailedUntil} for {@link #timeLeft}
+   */
+  public @NotNull ApiPrisoner withTimePaused() {
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, null, this.timeLeft(), this.totalSentenceTime, this.lastLocation, this.released, this.incomplete);
+  }
+
   @Override
   public boolean equals(final Object other) {
     if (this == other) { return true; }
