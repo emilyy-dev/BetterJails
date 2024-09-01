@@ -91,9 +91,6 @@ public final class ApiPrisonerManager implements PrisonerManager {
 
   @Override
   public @NotNull @Unmodifiable Collection<@NotNull Prisoner> getAllPrisoners() {
-    return this.plugin.dataHandler().getPrisonerIds().stream()
-        .map(this::getPrisoner)
-        .filter(Objects::nonNull)
-        .collect(Util.toImmutableSet());
+    return this.plugin.dataHandler().getAllPrisoners();
   }
 }

@@ -62,6 +62,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -195,12 +196,8 @@ public final class DataHandler {
     }
   }
 
-  public @Deprecated Set<UUID> getPrisonerIds() {
-    return Collections.unmodifiableSet(this.prisonerIds);
-  }
-
-  public @Deprecated boolean isPlayerJailed(final UUID uuid) {
-    return this.prisonerIds.contains(uuid);
+  public Collection<Prisoner> getAllPrisoners() {
+    return Collections.unmodifiableCollection(this.prisoners.values());
   }
 
   public boolean isPlayerJailedNew(final UUID uuid) {
