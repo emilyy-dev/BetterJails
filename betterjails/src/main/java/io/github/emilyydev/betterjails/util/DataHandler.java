@@ -234,6 +234,10 @@ public final class DataHandler {
     return this.prisonerNames.contains(playerName.toLowerCase(Locale.ROOT));
   }
 
+  public ApiPrisoner getPrisoner(final UUID uuid) {
+    return prisoners.get(uuid);
+  }
+
   public @Deprecated YamlConfiguration retrieveJailedPlayer(final UUID uuid) {
     if (!isPlayerJailed(uuid)) {
       final YamlConfiguration config = new YamlConfiguration();

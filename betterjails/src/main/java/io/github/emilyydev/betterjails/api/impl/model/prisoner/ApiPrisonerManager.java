@@ -56,28 +56,7 @@ public final class ApiPrisonerManager implements PrisonerManager {
 
   @Override
   public @Nullable Prisoner getPrisoner(final @NotNull UUID uuid) {
-    Objects.requireNonNull(uuid, "uuid");
-    final Configuration config = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
-    if (!config.contains(DataHandler.UUID_FIELD)) {
-      return null;
-    }
-
-    final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) config.get(DataHandler.LAST_LOCATION_FIELD));
-    final String name = config.getString(DataHandler.NAME_FIELD);
-    final String group = config.getString(DataHandler.GROUP_FIELD);
-    final List<String> parentGroups = config.getStringList(DataHandler.EXTRA_GROUPS_FIELD);
-    final Jail jail = this.plugin.dataHandler().getJail(config.getString(DataHandler.JAIL_FIELD));
-    final String jailedBy = config.getString(DataHandler.JAILED_BY_FIELD);
-    final Instant jailedUntil =
-        config.getBoolean(DataHandler.IS_RELEASED_FIELD)
-            ? Instant.MIN
-            : Instant.now().plusSeconds(this.plugin.dataHandler().getSecondsLeft(uuid, 0));
-    final Duration totalSentenceTime =
-        config.contains(DataHandler.TOTAL_SENTENCE_TIME)
-            ? Duration.ofSeconds(config.getInt(DataHandler.TOTAL_SENTENCE_TIME))
-            : Duration.ZERO;
-
-    return new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, totalSentenceTime, lastLocation);
+    return this.plugin.dataHandler().getPrisoner(uuid);
   }
 
   @Override
@@ -93,7 +72,7 @@ public final class ApiPrisonerManager implements PrisonerManager {
     Preconditions.checkState(jailedUntil.isAfter(now), "duration must be positive");
 
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
-    this.plugin.dataHandler().addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds());
+    this.plugin.dataHandler().addJailedPlayerNew(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds(), true);
     return getPrisoner(uuid);
   }
 
@@ -101,13 +80,13 @@ public final class ApiPrisonerManager implements PrisonerManager {
   public boolean releasePrisoner(final @NotNull Prisoner prisoner) {
     Objects.requireNonNull(prisoner, "prisoner");
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(prisoner.uuid());
-    return this.plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, "api", true);
+    return this.plugin.dataHandler().releaseJailedPlayerNew(player, Util.NIL_UUID, "api", true);
   }
 
   @Override
   public boolean isPlayerJailed(final @NotNull UUID uuid) {
     Objects.requireNonNull(uuid, "uuid");
-    return this.plugin.dataHandler().isPlayerJailed(uuid);
+    return this.plugin.dataHandler().isPlayerJailedNew(uuid);
   }
 
   @Override
