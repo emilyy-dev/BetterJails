@@ -72,7 +72,7 @@ public final class ApiPrisonerManager implements PrisonerManager {
     Preconditions.checkState(jailedUntil.isAfter(now), "duration must be positive");
 
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
-    this.plugin.dataHandler().addJailedPlayerNew(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds(), true);
+    this.plugin.dataHandler().addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds(), true);
     return getPrisoner(uuid);
   }
 
@@ -80,13 +80,13 @@ public final class ApiPrisonerManager implements PrisonerManager {
   public boolean releasePrisoner(final @NotNull Prisoner prisoner) {
     Objects.requireNonNull(prisoner, "prisoner");
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(prisoner.uuid());
-    return this.plugin.dataHandler().releaseJailedPlayerNew(player, Util.NIL_UUID, "api", true);
+    return this.plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, "api", true);
   }
 
   @Override
   public boolean isPlayerJailed(final @NotNull UUID uuid) {
     Objects.requireNonNull(uuid, "uuid");
-    return this.plugin.dataHandler().isPlayerJailedNew(uuid);
+    return this.plugin.dataHandler().isPlayerJailed(uuid);
   }
 
   @Override

@@ -190,7 +190,7 @@ public final class DataHandler {
     return Collections.unmodifiableCollection(this.prisoners.values());
   }
 
-  public boolean isPlayerJailedNew(final UUID uuid) {
+  public boolean isPlayerJailed(final UUID uuid) {
     return this.prisoners.containsKey(uuid);
   }
 
@@ -224,7 +224,7 @@ public final class DataHandler {
     return FileIO.writeString(this.jailsFile, this.jailsYaml.saveToString());
   }
 
-  public boolean addJailedPlayerNew(
+  public boolean addJailedPlayer(
       final OfflinePlayer player,
       final String jailName,
       final UUID jailer,
@@ -359,7 +359,7 @@ public final class DataHandler {
     });
   }
 
-  public boolean releaseJailedPlayerNew(final OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
+  public boolean releaseJailedPlayer(final OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
     final UUID prisonerUuid = player.getUniqueId();
     final ApiPrisoner prisoner = prisoners.get(prisonerUuid);
 
@@ -429,7 +429,7 @@ public final class DataHandler {
     return true;
   }
 
-  public CompletableFuture<Void> saveNew() {
+  public CompletableFuture<Void> save() {
     // A Jail's location can be changed...
     this.jails.forEach((name, jail) -> this.jailsYaml.set(name.toLowerCase(Locale.ROOT), jail.location().mutable()));
     CompletableFuture<Void> cf = FileIO.writeString(this.jailsFile, this.jailsYaml.saveToString());
@@ -446,7 +446,7 @@ public final class DataHandler {
     return cf;
   }
 
-  public void reloadNew() throws IOException {
+  public void reload() throws IOException {
     this.backupLocation = this.config.backupLocation().mutable();
 
     this.jails.clear();
@@ -466,7 +466,7 @@ public final class DataHandler {
     }
   }
 
-  public void timerNew() {
+  public void timer() {
     final Iterator<Map.Entry<UUID, ApiPrisoner>> iterator = this.prisoners.entrySet().iterator();
     while (iterator.hasNext()) {
       final Map.Entry<UUID, ApiPrisoner> entry = iterator.next();
@@ -490,7 +490,7 @@ public final class DataHandler {
       }
 
       if (released || prisoner.timeLeft().isZero() || prisoner.timeLeft().isNegative()) {
-        releaseJailedPlayerNew(this.server.getOfflinePlayer(key), Util.NIL_UUID, "timer", true);
+        releaseJailedPlayer(this.server.getOfflinePlayer(key), Util.NIL_UUID, "timer", true);
       }
     }
   }

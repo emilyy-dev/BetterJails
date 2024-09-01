@@ -92,7 +92,7 @@ public final class PlayerListeners implements Listener {
           event.setSpawnLocation(lastLocation);
         }
 
-        this.plugin.dataHandler().releaseJailedPlayerNew(player, Util.NIL_UUID, null, false);
+        this.plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, null, false);
       } else {
         if (prisoner.incomplete()) {
           prisoner = prisoner.withLastLocation(ImmutableLocation.copyOf(player.getLocation()));

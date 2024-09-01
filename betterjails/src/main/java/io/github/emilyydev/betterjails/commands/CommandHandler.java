@@ -158,8 +158,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
         ));
       }
     } else if (argument.equalsIgnoreCase("save") && sender.hasPermission("betterjails.betterjails.save")) {
-//      this.plugin.dataHandler().save().whenCompleteAsync((v, ex) -> {
-      this.plugin.dataHandler().saveNew().whenCompleteAsync((v, ex) -> {
+      this.plugin.dataHandler().save().whenCompleteAsync((v, ex) -> {
         if (ex != null) {
           this.plugin.getLogger().log(Level.SEVERE, null, ex);
           sender.sendMessage(color(
@@ -236,8 +235,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
     }
 
     final long seconds = (long) (scale * Double.parseDouble(time.substring(0, time.length() - 1)));
-//    if (!this.plugin.dataHandler().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds)) {
-    if (!this.plugin.dataHandler().addJailedPlayerNew(player, jail, uuidOrNil(sender), executioner, seconds, true)) {
+    if (!this.plugin.dataHandler().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds, true)) {
       sender.sendMessage(this.configuration.messages().jailPlayerFailedJailNotFound(
           prisoner, executioner, jail, time
       ));
@@ -356,8 +354,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
       return;
     }
 
-//    final boolean wasReleased = this.plugin.dataHandler().releaseJailedPlayer(player, uuidOrNil(sender), executioner, true);
-    final boolean wasReleased = this.plugin.dataHandler().releaseJailedPlayerNew(player, uuidOrNil(sender), executioner, true);
+    final boolean wasReleased = this.plugin.dataHandler().releaseJailedPlayer(player, uuidOrNil(sender), executioner, true);
     if (wasReleased) {
       this.server.broadcast(
           this.configuration.messages().releasePrisonerSuccess(prisoner, executioner),
