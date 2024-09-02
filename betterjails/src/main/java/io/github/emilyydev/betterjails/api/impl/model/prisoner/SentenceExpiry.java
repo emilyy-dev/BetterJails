@@ -84,7 +84,7 @@ public interface SentenceExpiry {
 
     @Override
     public String toString() {
-      return "SentenceExpiry.OfExpiryDate[" + this.expiryDate + ']';
+      return "SentenceExpiry.OfExpiryDate(" + this.expiryDate + ')';
     }
   }
 }
