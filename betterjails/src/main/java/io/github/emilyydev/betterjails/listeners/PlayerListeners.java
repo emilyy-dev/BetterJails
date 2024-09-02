@@ -142,18 +142,4 @@ public final class PlayerListeners implements Listener {
       event.setRespawnLocation(prisoner.jail().location().mutable());
     }
   }
-
-  private Jail getValidJail(final YamlConfiguration prisonerData, final String playerName, final UUID uuid) {
-    final String jailName = prisonerData.getString(DataHandler.JAIL_FIELD);
-    Jail jail = this.plugin.dataHandler().getJail(jailName);
-    if (jail == null) {
-      jail = this.plugin.dataHandler().getJails().values().iterator().next();
-      prisonerData.set(DataHandler.JAIL_FIELD, jail.name());
-      this.logger.log(Level.WARNING, "Jail {0} does not exist", jailName);
-      this.logger.log(Level.WARNING, "Player {0}/{1} was attempted to relocate to {2}", new Object[]{playerName, uuid, jailName});
-      this.logger.log(Level.WARNING, "Teleporting player to jail {0} instead", jail.name());
-    }
-
-    return jail;
-  }
 }

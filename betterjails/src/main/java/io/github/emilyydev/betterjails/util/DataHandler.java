@@ -146,11 +146,20 @@ public final class DataHandler {
           yaml.set(LAST_LOCATION_FIELD, this.backupLocation);
         }
 
+        final String jailName = yaml.getString(JAIL_FIELD);
+        Jail jail = getJail(jailName);
+        if (jail == null) {
+          // If the jail has been removed, just fall back to the first jail in the config. If there are no jails, this
+          // will throw an exception, but why would you have no jails?
+          jail = this.jails.values().iterator().next();
+          this.plugin.getLogger().log(Level.WARNING, "Jail {0} does not exist", jailName);
+          this.plugin.getLogger().log(Level.WARNING, "Player {0}/{1} was attempted to relocate to {2}", new Object[]{name, uuid, jail.name()});
+        }
+
+
         final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) yaml.get(LAST_LOCATION_FIELD, this.backupLocation));
         final String group = yaml.getString(GROUP_FIELD);
         final List<String> parentGroups = yaml.getStringList(EXTRA_GROUPS_FIELD);
-        // TODO(rymiel): handle the case where the jail is removed
-        final Jail jail = getJail(yaml.getString(JAIL_FIELD));
         final String jailedBy = yaml.getString(JAILED_BY_FIELD);
         final Duration timeLeft = Duration.ofSeconds(yaml.getLong(SECONDS_LEFT_FIELD, 0L));
         final Duration totalSentenceTime = Duration.ofSeconds(yaml.getInt(TOTAL_SENTENCE_TIME, 0));
