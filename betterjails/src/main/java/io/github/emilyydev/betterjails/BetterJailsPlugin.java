@@ -25,6 +25,7 @@
 package io.github.emilyydev.betterjails;
 
 import com.github.fefo.betterjails.api.BetterJails;
+import com.github.fefo.betterjails.api.event.plugin.PluginSaveDataEvent;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.api.impl.BetterJailsApi;
 import io.github.emilyydev.betterjails.api.impl.event.ApiEventBus;
@@ -34,10 +35,11 @@ import io.github.emilyydev.betterjails.commands.CommandHandler;
 import io.github.emilyydev.betterjails.commands.CommandTabCompleter;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
+import io.github.emilyydev.betterjails.data.JailDataHandler;
+import io.github.emilyydev.betterjails.data.PrisonerDataHandler;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
 import io.github.emilyydev.betterjails.listeners.PlayerListeners;
 import io.github.emilyydev.betterjails.listeners.PluginDisableListener;
-import io.github.emilyydev.betterjails.util.DataHandler;
 import io.github.emilyydev.betterjails.util.FileIO;
 import io.github.emilyydev.betterjails.util.Util;
 import net.ess3.api.IEssentials;
@@ -45,6 +47,8 @@ import org.bstats.bukkit.Metrics;
 import org.bukkit.Server;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicePriority;
@@ -53,8 +57,13 @@ import org.bukkit.scheduler.BukkitScheduler;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -75,7 +84,8 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   private final Path pluginDir = getDataFolder().toPath();
   private final BetterJailsConfiguration configuration = new BetterJailsConfiguration(this.pluginDir);
   private final SubCommandsConfiguration subCommands = new SubCommandsConfiguration(this.pluginDir);
-  private final DataHandler dataHandler = new DataHandler(this);
+  private final PrisonerDataHandler prisonerData = new PrisonerDataHandler(this);
+  private final JailDataHandler jailData = new JailDataHandler(this);
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
   private Metrics metrics = null;
 
@@ -86,8 +96,12 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   public BetterJailsPlugin(final String str) { // for mockbukkit, just a dummy ctor to not enable bstats
   }
 
-  public DataHandler dataHandler() {
-    return this.dataHandler;
+  public PrisonerDataHandler prisonerData() {
+    return this.prisonerData;
+  }
+
+  public JailDataHandler jailData() {
+    return this.jailData;
   }
 
   public BetterJailsApi api() {
@@ -166,7 +180,10 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
     // delay data loading to allow plugins to load additional worlds that might have jails in them
     scheduler.runTask(this, () -> {
       try {
-        this.dataHandler.init();
+        alertNewConfigAvailable();
+        // Jails must be loaded first, loading prisoners depends on jails already being loaded
+        this.jailData.init();
+        this.prisonerData.init();
       } catch (final IOException | InvalidConfigurationException exception) {
         getLogger().log(Level.SEVERE, "Error loading plugin data", exception);
         pluginManager.disablePlugin(this);
@@ -185,13 +202,16 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
       }
     }
 
-    scheduler.runTaskTimer(this, this.dataHandler::timer, 0L, 20L);
+    scheduler.runTaskTimer(this, this.prisonerData::timer, 0L, 20L);
 
     final Duration autoSavePeriod = this.configuration.autoSavePeriod();
     if (!autoSavePeriod.isZero()) {
-      scheduler.runTaskTimer(this, () -> this.dataHandler.save().exceptionally(ex -> {
-        getLogger().log(Level.SEVERE, "Could not save data files", ex);
-        return null;
+      scheduler.runTaskTimer(this, () -> this.jailData.save().thenCompose(v -> this.prisonerData.save()).whenComplete((v, ex) -> {
+        this.eventBus.post(PluginSaveDataEvent.class);
+
+        if (ex != null) {
+          getLogger().log(Level.SEVERE, "Could not save data files", ex);
+        }
       }), autoSavePeriod.getSeconds() * 20L, autoSavePeriod.getSeconds() * 20L);
     }
 
@@ -207,7 +227,8 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   @Override
   public void onDisable() {
     try {
-      this.dataHandler.save().get();
+      this.prisonerData.save().get();
+      this.jailData.save().get();
     } catch (final InterruptedException | ExecutionException exception) {
       getLogger().log(Level.SEVERE, "Could not save data files", exception);
     }
@@ -226,6 +247,34 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   public void reload() throws IOException {
     this.configuration.load();
     this.subCommands.load();
-    this.dataHandler.reload();
+    this.prisonerData.reload();
+    this.jailData.reload();
+
+    if (this.configuration.permissionHookEnabled()) {
+      this.configuration.prisonerPermissionGroup().ifPresent(prisonerGroup ->
+          this.resetPermissionInterface(
+              PermissionInterface.determinePermissionInterface(this, prisonerGroup)
+          )
+      );
+    } else {
+      this.resetPermissionInterface(PermissionInterface.NULL);
+    }
+  }
+
+  // TODO keep this or perform some kind of automatic migration?
+  private void alertNewConfigAvailable() throws IOException, InvalidConfigurationException {
+    final YamlConfiguration bundledConfig = new YamlConfiguration();
+    try (
+        final InputStream in = this.getResource("config.yml");
+        final Reader reader = new InputStreamReader(Objects.requireNonNull(in, "bundled config not present"), StandardCharsets.UTF_8)
+    ) {
+      bundledConfig.load(reader);
+    }
+
+    final FileConfiguration existingConfig = this.getConfig();
+    if (!bundledConfig.getKeys(true).equals(existingConfig.getKeys(true))) {
+      this.getLogger().warning("New config.yml found!");
+      this.getLogger().warning("Make sure to make a backup of your settings before deleting your current config.yml!");
+    }
   }
 }

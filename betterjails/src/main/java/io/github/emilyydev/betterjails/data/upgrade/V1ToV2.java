@@ -22,7 +22,7 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.dataupgrade;
+package io.github.emilyydev.betterjails.data.upgrade;
 
 import com.google.common.collect.ImmutableMap;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;

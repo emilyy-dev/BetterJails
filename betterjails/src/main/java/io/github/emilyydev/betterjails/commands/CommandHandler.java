@@ -25,6 +25,7 @@
 package io.github.emilyydev.betterjails.commands;
 
 import com.github.fefo.betterjails.api.event.plugin.PluginReloadEvent;
+import com.github.fefo.betterjails.api.event.plugin.PluginSaveDataEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
@@ -158,7 +159,9 @@ public final class CommandHandler implements CommandExecutor, Listener {
         ));
       }
     } else if (argument.equalsIgnoreCase("save") && sender.hasPermission("betterjails.betterjails.save")) {
-      this.plugin.dataHandler().save().whenCompleteAsync((v, ex) -> {
+      this.plugin.jailData().save().thenCompose(v -> this.plugin.prisonerData().save()).whenCompleteAsync((v, ex) -> {
+        this.plugin.eventBus().post(PluginSaveDataEvent.class);
+
         if (ex != null) {
           this.plugin.getLogger().log(Level.SEVERE, null, ex);
           sender.sendMessage(color(
@@ -235,7 +238,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
     }
 
     final long seconds = (long) (scale * Double.parseDouble(time.substring(0, time.length() - 1)));
-    if (!this.plugin.dataHandler().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds, true)) {
+    if (!this.plugin.prisonerData().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds, true)) {
       sender.sendMessage(this.configuration.messages().jailPlayerFailedJailNotFound(
           prisoner, executioner, jail, time
       ));
@@ -260,7 +263,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
     }
 
     final UUID uuid = player.getUniqueId();
-    final ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
+    final ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(uuid);
     if (prisoner == null) {
       sender.sendMessage(this.configuration.messages().prisonerInfoFailedNotJailed(prisonerName, executioner));
       return;
@@ -330,7 +333,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
 
   private void listJails(final CommandSender sender) {
     final BetterJailsConfiguration.MessageHolder messages = this.configuration.messages();
-    final Map<String, Jail> jails = this.plugin.dataHandler().getJails();
+    final Map<String, Jail> jails = this.plugin.jailData().getJails();
     final List<String> jailListMessageThingu = new ArrayList<>();
 
     if (jails.isEmpty()) {
@@ -354,7 +357,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
       return;
     }
 
-    final boolean wasReleased = this.plugin.dataHandler().releaseJailedPlayer(player, uuidOrNil(sender), executioner, true);
+    final boolean wasReleased = this.plugin.prisonerData().releaseJailedPlayer(player, uuidOrNil(sender), executioner, true);
     if (wasReleased) {
       this.server.broadcast(
           this.configuration.messages().releasePrisonerSuccess(prisoner, executioner),
@@ -372,7 +375,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
     }
 
     final Player player = (Player) sender;
-    this.plugin.dataHandler().addJail(jail, player.getLocation()).whenCompleteAsync((v, ex) -> {
+    this.plugin.jailData().addJail(jail, player.getLocation()).whenCompleteAsync((v, ex) -> {
       if (ex != null) {
         this.plugin.getLogger().log(Level.SEVERE, null, ex);
         sender.sendMessage(color("&cThere was an error while trying to add the jail."));
@@ -384,12 +387,12 @@ public final class CommandHandler implements CommandExecutor, Listener {
   }
 
   private void deleteJail(final CommandSender sender, final String jail) {
-    if (this.plugin.dataHandler().getJail(jail) == null) {
+    if (this.plugin.jailData().getJail(jail) == null) {
       sender.sendMessage(this.configuration.messages().deleteJailFailed(sender.getName(), jail));
       return;
     }
 
-    this.plugin.dataHandler().removeJail(jail).whenCompleteAsync((v, ex) -> {
+    this.plugin.jailData().removeJail(jail).whenCompleteAsync((v, ex) -> {
       if (ex != null) {
         this.plugin.getLogger().log(Level.SEVERE, null, ex);
         sender.sendMessage(color("&cThere was an error while trying to remove the jail."));

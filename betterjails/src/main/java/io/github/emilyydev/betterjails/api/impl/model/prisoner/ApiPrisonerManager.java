@@ -51,7 +51,7 @@ public final class ApiPrisonerManager implements PrisonerManager {
 
   @Override
   public @Nullable Prisoner getPrisoner(final @NotNull UUID uuid) {
-    return this.plugin.dataHandler().getPrisoner(uuid);
+    return this.plugin.prisonerData().getPrisoner(uuid);
   }
 
   @Override
@@ -67,7 +67,7 @@ public final class ApiPrisonerManager implements PrisonerManager {
     Preconditions.checkState(jailedUntil.isAfter(now), "duration must be positive");
 
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
-    this.plugin.dataHandler().addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds(), true);
+    this.plugin.prisonerData().addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds(), true);
     return getPrisoner(uuid);
   }
 
@@ -75,17 +75,17 @@ public final class ApiPrisonerManager implements PrisonerManager {
   public boolean releasePrisoner(final @NotNull Prisoner prisoner) {
     Objects.requireNonNull(prisoner, "prisoner");
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(prisoner.uuid());
-    return this.plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, "api", true);
+    return this.plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, "api", true);
   }
 
   @Override
   public boolean isPlayerJailed(final @NotNull UUID uuid) {
     Objects.requireNonNull(uuid, "uuid");
-    return this.plugin.dataHandler().isPlayerJailed(uuid);
+    return this.plugin.prisonerData().isPlayerJailed(uuid);
   }
 
   @Override
   public @NotNull @Unmodifiable Collection<@NotNull Prisoner> getAllPrisoners() {
-    return this.plugin.dataHandler().getAllPrisoners();
+    return this.plugin.prisonerData().getAllPrisoners();
   }
 }

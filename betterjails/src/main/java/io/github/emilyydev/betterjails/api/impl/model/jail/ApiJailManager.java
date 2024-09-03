@@ -27,7 +27,7 @@ package io.github.emilyydev.betterjails.api.impl.model.jail;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.jail.JailManager;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
-import io.github.emilyydev.betterjails.util.DataHandler;
+import io.github.emilyydev.betterjails.data.JailDataHandler;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -53,26 +53,26 @@ public class ApiJailManager implements JailManager {
     Objects.requireNonNull(name, "name");
     Objects.requireNonNull(location, "location");
 
-    final DataHandler dataHandler = this.plugin.dataHandler();
-    if (dataHandler.getJail(name) != null) {
+    final JailDataHandler jailData = this.plugin.jailData();
+    if (jailData.getJail(name) != null) {
       throw new IllegalArgumentException("name");
     }
 
     try {
-      dataHandler.addJail(name, location).get();
+      jailData.addJail(name, location).get();
     } catch (final InterruptedException exception) {
       // bleh
     } catch (final ExecutionException exception) {
       throw new RuntimeException(exception.getCause());
     }
 
-    return dataHandler.getJail(name);
+    return jailData.getJail(name);
   }
 
   @Override
   public @Nullable Jail getJail(final @NotNull String name) {
     Objects.requireNonNull(name, "name");
-    return this.plugin.dataHandler().getJail(name);
+    return this.plugin.jailData().getJail(name);
   }
 
   @Override
@@ -80,7 +80,7 @@ public class ApiJailManager implements JailManager {
     Objects.requireNonNull(jail, "jail");
 
     try {
-      this.plugin.dataHandler().removeJail(jail.name()).get();
+      this.plugin.jailData().removeJail(jail.name()).get();
     } catch (final InterruptedException exception) {
       // bleh
     } catch (final ExecutionException exception) {
@@ -90,6 +90,6 @@ public class ApiJailManager implements JailManager {
 
   @Override
   public @NotNull @UnmodifiableView Collection<@NotNull Jail> getAllJails() {
-    return Collections.unmodifiableCollection(this.plugin.dataHandler().getJails().values());
+    return Collections.unmodifiableCollection(this.plugin.jailData().getJails().values());
   }
 }
