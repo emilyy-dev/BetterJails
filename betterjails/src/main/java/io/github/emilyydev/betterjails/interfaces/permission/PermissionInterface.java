@@ -35,7 +35,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-public interface PermissionInterface extends AutoCloseable {
+public interface PermissionInterface {
 
   PermissionInterface NULL = new PermissionInterface() {
 
