@@ -120,8 +120,11 @@ public class ApiPrisoner implements Prisoner {
     return this.lastLocation;
   }
 
+  /**
+   * True if this prisoner isn't actually imprisoned any more and will be released when they join the server.
+   */
   public boolean released() {
-    return this.imprisonmentState == ImprisonmentState.RELEASED;
+    return timeLeft().isZero() || timeLeft().isNegative();
   }
 
   public boolean incomplete() {
@@ -129,7 +132,7 @@ public class ApiPrisoner implements Prisoner {
   }
 
   public @NotNull Duration timeLeft() {
-    return released() ? Duration.ZERO : this.expiry.timeLeft();
+    return this.expiry.timeLeft();
   }
 
   public SentenceExpiry expiry() {
@@ -137,7 +140,7 @@ public class ApiPrisoner implements Prisoner {
   }
 
   public @NotNull ApiPrisoner withReleased() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.expiry, this.totalSentenceTime, this.lastLocation, ImprisonmentState.RELEASED);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(Duration.ZERO), this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
   }
 
   public @NotNull ApiPrisoner withLastLocation(final ImmutableLocation location) {
@@ -193,8 +196,5 @@ public class ApiPrisoner implements Prisoner {
     // Ideally lastLocation would just be optional, but that would break API and stuff
     UNKNOWN_LOCATION,
     KNOWN_LOCATION,
-
-    // This prisoner isn't actually imprisoned any more and will be released when they join the server.
-    RELEASED
   }
 }

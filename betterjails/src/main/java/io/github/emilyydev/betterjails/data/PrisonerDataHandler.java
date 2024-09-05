@@ -39,6 +39,7 @@ import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
 import io.github.emilyydev.betterjails.data.upgrade.V1ToV2;
+import io.github.emilyydev.betterjails.data.upgrade.V2ToV3;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
 import io.github.emilyydev.betterjails.util.FileIO;
 import io.github.emilyydev.betterjails.util.Teleport;
@@ -74,7 +75,6 @@ import java.util.stream.Stream;
 
 public class PrisonerDataHandler {
 
-  public static final String IS_RELEASED_FIELD = "released";
   public static final String LAST_LOCATION_FIELD = "last-location";
   public static final String GROUP_FIELD = "group";
   public static final String EXTRA_GROUPS_FIELD = "extra-groups";
@@ -88,6 +88,7 @@ public class PrisonerDataHandler {
   private static final List<DataUpgrader> DATA_UPGRADERS =
       ImmutableList.of(
           new V1ToV2(),
+          new V2ToV3(),
           DataUpgrader.TAIL
       );
 
@@ -144,14 +145,12 @@ public class PrisonerDataHandler {
           this.plugin.getLogger().log(Level.WARNING, "Player {0}/{1} was attempted to relocate to {2}", new Object[]{name, uuid, jail.name()});
         }
 
-
         final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) yaml.get(LAST_LOCATION_FIELD, this.backupLocation));
         final String group = yaml.getString(GROUP_FIELD);
         final List<String> parentGroups = yaml.getStringList(EXTRA_GROUPS_FIELD);
         final String jailedBy = yaml.getString(JAILED_BY_FIELD);
         final Duration timeLeft = Duration.ofSeconds(yaml.getLong(SECONDS_LEFT_FIELD, 0L));
         final Duration totalSentenceTime = Duration.ofSeconds(yaml.getInt(TOTAL_SENTENCE_TIME, 0));
-        final boolean released = yaml.getBoolean(IS_RELEASED_FIELD);
 
         final Player existingPlayer = this.server.getPlayer(uuid); // This is only relevant for reloading
 
@@ -165,7 +164,7 @@ public class PrisonerDataHandler {
           // be released, jailedUntil, will remain unknown until the player actually joins.
           expiry = SentenceExpiry.of(timeLeft);
         }
-        final ApiPrisoner.ImprisonmentState imprisonmentState = released ? ApiPrisoner.ImprisonmentState.RELEASED : incomplete ? ApiPrisoner.ImprisonmentState.UNKNOWN_LOCATION : ApiPrisoner.ImprisonmentState.KNOWN_LOCATION;
+        final ApiPrisoner.ImprisonmentState imprisonmentState = incomplete ? ApiPrisoner.ImprisonmentState.UNKNOWN_LOCATION : ApiPrisoner.ImprisonmentState.KNOWN_LOCATION;
         this.prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, expiry, totalSentenceTime, lastLocation, imprisonmentState));
       });
     }
@@ -302,7 +301,6 @@ public class PrisonerDataHandler {
     yaml.set(JAILED_BY_FIELD, prisoner.jailedBy());
     yaml.set(SECONDS_LEFT_FIELD, prisoner.timeLeft().getSeconds());
     yaml.set(TOTAL_SENTENCE_TIME, prisoner.totalSentenceTime().getSeconds());
-    yaml.set(IS_RELEASED_FIELD, prisoner.released());
     yaml.set(LAST_LOCATION_FIELD, prisoner.lastLocation().mutable());
     yaml.set(GROUP_FIELD, prisoner.primaryGroup());
     yaml.set(EXTRA_GROUPS_FIELD, ImmutableList.copyOf(prisoner.parentGroups()));
@@ -412,7 +410,8 @@ public class PrisonerDataHandler {
       final ApiPrisoner prisoner = entry.getValue();
       final boolean released = prisoner.released();
 
-      // TODO(rymiel): Not actually sure why this is here, I just copied it from the old code, probably can be removed
+      // This prisoner has no known location, but they're also released. This means they're exactly where they need to
+      // be once they join, and so we can forget they exist.
       if (prisoner.incomplete()) {
         if (released) {
           iterator.remove();
@@ -421,7 +420,7 @@ public class PrisonerDataHandler {
         continue;
       }
 
-      if (released || prisoner.timeLeft().isZero() || prisoner.timeLeft().isNegative()) {
+      if (released) {
         releaseJailedPlayer(this.server.getOfflinePlayer(key), Util.NIL_UUID, "timer", true);
       }
     }

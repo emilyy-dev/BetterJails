@@ -30,7 +30,6 @@ import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
-import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.util.FileIO;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
