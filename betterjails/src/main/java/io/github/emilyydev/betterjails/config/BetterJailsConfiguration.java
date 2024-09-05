@@ -96,6 +96,7 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
         jailList.stream()
             .map(Jail::name)
             .map("&7· "::concat)
+            .map(Util::color)
             .collect(Util.toImmutableList());
 
     JailListFormatter LINE = jailList ->
@@ -103,7 +104,7 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
             .map(Jail::name)
             .collect(collectingAndThen(
                 joining(", ", "&7", "."),
-                ImmutableList::of
+                (s) -> ImmutableList.of(Util.color(s))
             ));
 
     Collection<String> formatJailList(Collection<Jail> jailList);
