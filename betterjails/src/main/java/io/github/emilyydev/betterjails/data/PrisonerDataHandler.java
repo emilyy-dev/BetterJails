@@ -40,6 +40,7 @@ import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
 import io.github.emilyydev.betterjails.data.upgrade.V1ToV2;
 import io.github.emilyydev.betterjails.data.upgrade.V2ToV3;
+import io.github.emilyydev.betterjails.data.upgrade.V3ToV4;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
 import io.github.emilyydev.betterjails.util.FileIO;
 import io.github.emilyydev.betterjails.util.Teleport;
@@ -76,6 +77,7 @@ import java.util.stream.Stream;
 public class PrisonerDataHandler {
 
   public static final String LAST_LOCATION_FIELD = "last-location";
+  public static final String UNKNOWN_LOCATION_FIELD = "unknown-location";
   public static final String GROUP_FIELD = "group";
   public static final String EXTRA_GROUPS_FIELD = "extra-groups";
   public static final String UUID_FIELD = "uuid";
@@ -89,6 +91,7 @@ public class PrisonerDataHandler {
       ImmutableList.of(
           new V1ToV2(),
           new V2ToV3(),
+          new V3ToV4(),
           DataUpgrader.TAIL
       );
 
@@ -99,7 +102,7 @@ public class PrisonerDataHandler {
   private final Server server;
   private final Map<UUID, ApiPrisoner> prisoners = new HashMap<>();
 
-  private Location backupLocation;
+  private @Deprecated Location backupLocation;
 
   public PrisonerDataHandler(final BetterJailsPlugin plugin) {
     this.plugin = plugin;
@@ -112,6 +115,7 @@ public class PrisonerDataHandler {
   }
 
   public void init() throws IOException, InvalidConfigurationException {
+    // TODO(v2): can't remove this yet
     this.backupLocation = this.config.backupLocation().mutable();
 
     Files.createDirectories(this.playerDataFolder);
@@ -126,13 +130,12 @@ public class PrisonerDataHandler {
         final UUID uuid = UUID.fromString(file.getFileName().toString().replace(".yml", ""));
         final String name = yaml.getString(NAME_FIELD);
 
-        // TODO(rymiel): check null instead, or maybe add a separate field
-        final boolean incomplete = this.backupLocation.equals(yaml.get(LAST_LOCATION_FIELD, null));
+        boolean unknownLocation = yaml.getBoolean(UNKNOWN_LOCATION_FIELD, false);
 
-        if (!yaml.contains(LAST_LOCATION_FIELD)) {
+        if (!unknownLocation && !yaml.contains(LAST_LOCATION_FIELD)) {
           // TODO(rymiel): issue #11
           this.plugin.getLogger().severe("Failed to load last known location of prisoner " + uuid + " (" + name + "). The world they were previously in might have been removed.");
-          yaml.set(LAST_LOCATION_FIELD, this.backupLocation);
+          unknownLocation = true;
         }
 
         final String jailName = yaml.getString(JAIL_FIELD);
@@ -145,6 +148,8 @@ public class PrisonerDataHandler {
           this.plugin.getLogger().log(Level.WARNING, "Player {0}/{1} was attempted to relocate to {2}", new Object[]{name, uuid, jail.name()});
         }
 
+        // TODO(v2): We have to set some location here, due to @NotNull API contract in Prisoner. It should be made
+        //  nullable eventually, since backupLocation no longer carries any significance.
         final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) yaml.get(LAST_LOCATION_FIELD, this.backupLocation));
         final String group = yaml.getString(GROUP_FIELD);
         final List<String> parentGroups = yaml.getStringList(EXTRA_GROUPS_FIELD);
@@ -164,8 +169,8 @@ public class PrisonerDataHandler {
           // be released, jailedUntil, will remain unknown until the player actually joins.
           expiry = SentenceExpiry.of(timeLeft);
         }
-        final ApiPrisoner.ImprisonmentState imprisonmentState = incomplete ? ApiPrisoner.ImprisonmentState.UNKNOWN_LOCATION : ApiPrisoner.ImprisonmentState.KNOWN_LOCATION;
-        this.prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, expiry, totalSentenceTime, lastLocation, imprisonmentState));
+        
+        this.prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, expiry, totalSentenceTime, lastLocation, unknownLocation));
       });
     }
   }
@@ -207,7 +212,7 @@ public class PrisonerDataHandler {
     if (isPlayerJailed) {
       // The player is already jailed, and being put in a new jail. Since we don't want to put their last location
       // inside the previous jail, we use their existing last location.
-      knownLastLocation = existingPrisoner.lastLocation().mutable();
+      knownLastLocation = existingPrisoner.lastLocationMutable();
     }
 
     if (isPlayerOnline) {
@@ -215,10 +220,6 @@ public class PrisonerDataHandler {
       final Player onlinePlayer = player.getPlayer();
 
       if (knownLastLocation == null) {
-        knownLastLocation = onlinePlayer.getLocation();
-      } else if (knownLastLocation.equals(this.backupLocation)) {
-        // TODO(rymiel): This is fragile, if backupLocation changes. Maybe we need another field in ApiPrisoner,
-        //  which is like, "locationIsCorrupt", so we know to fetch it again here. See also issue #11
         knownLastLocation = onlinePlayer.getLocation();
       }
 
@@ -254,8 +255,8 @@ public class PrisonerDataHandler {
     }
 
     // If we never got a last location for this player, it means we need to get it when they log in.
-    final boolean incomplete = knownLastLocation == null;
-    // TODO(rymiel): backupLocation continues to be problematic
+    final boolean unknownLocation = knownLastLocation == null;
+    // TODO(v2): We have to set some location here
     final ImmutableLocation lastLocation = ImmutableLocation.copyOf(knownLastLocation == null ? this.backupLocation : knownLastLocation);
     final PermissionInterface permissionInterface = this.plugin.permissionInterface();
 
@@ -269,8 +270,7 @@ public class PrisonerDataHandler {
         : CompletableFuture.completedFuture(existingPrisoner.parentGroups());
 
     primaryGroupFuture.thenCombineAsync(parentGroupsFuture, (primaryGroup, parentGroups) -> {
-      final ApiPrisoner.ImprisonmentState imprisonmentState = incomplete ? ApiPrisoner.ImprisonmentState.UNKNOWN_LOCATION : ApiPrisoner.ImprisonmentState.KNOWN_LOCATION;
-      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, expiry, sentence, lastLocation, imprisonmentState);
+      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, expiry, sentence, lastLocation, unknownLocation);
 
       this.plugin.eventBus().post(PlayerImprisonEvent.class, prisoner);
       final CompletionStage<?> setGroupFuture = groupsUnknown
@@ -301,7 +301,8 @@ public class PrisonerDataHandler {
     yaml.set(JAILED_BY_FIELD, prisoner.jailedBy());
     yaml.set(SECONDS_LEFT_FIELD, prisoner.timeLeft().getSeconds());
     yaml.set(TOTAL_SENTENCE_TIME, prisoner.totalSentenceTime().getSeconds());
-    yaml.set(LAST_LOCATION_FIELD, prisoner.lastLocation().mutable());
+    yaml.set(LAST_LOCATION_FIELD, prisoner.lastLocationMutable());
+    yaml.set(UNKNOWN_LOCATION_FIELD, prisoner.unknownLocation());
     yaml.set(GROUP_FIELD, prisoner.primaryGroup());
     yaml.set(EXTRA_GROUPS_FIELD, ImmutableList.copyOf(prisoner.parentGroups()));
 
@@ -340,9 +341,8 @@ public class PrisonerDataHandler {
       // Player is online, we can teleport them out of jail right away and clear up all their data
       final Player online = Objects.requireNonNull(player.getPlayer());
       if (teleport) {
-        final Location lastLocation = prisoner.lastLocation().mutable();
-        // TODO(rymiel): backupLocation continues to be problematic
-        if (!lastLocation.equals(this.backupLocation)) {
+        final Location lastLocation = prisoner.lastLocationMutable();
+        if (lastLocation != null) {
           Teleport.teleportAsync(online, lastLocation);
         }
       }
@@ -359,8 +359,9 @@ public class PrisonerDataHandler {
         return true;
       }
 
-      // TODO(rymiel): backupLocation continues to be problematic
-      if (prisoner.lastLocation().mutable().equals(this.backupLocation)) {
+      if (prisoner.unknownLocation()) {
+        // This prisoner has never joined during the entire duration of their sentence, meaning they are already where
+        // they need to be, so we can immediately forget they exist.
         this.prisoners.remove(prisonerUuid);
         deletePrisonerFile(prisoner);
       } else {
@@ -412,7 +413,7 @@ public class PrisonerDataHandler {
 
       // This prisoner has no known location, but they're also released. This means they're exactly where they need to
       // be once they join, and so we can forget they exist.
-      if (prisoner.incomplete()) {
+      if (prisoner.unknownLocation()) {
         if (released) {
           iterator.remove();
           deletePrisonerFile(prisoner);

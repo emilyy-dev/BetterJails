@@ -25,13 +25,36 @@
 package io.github.emilyydev.betterjails.data.upgrade;
 
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-@FunctionalInterface
-public interface DataUpgrader {
+public final class V3ToV4 implements DataUpgrader {
+  private static final String LAST_LOCATION_FIELD = "last-location";
+  private static final String V3_UNKNOWN_LOCATION_FIELD = "unknown-location";
 
-  int VERSION = 4;
-  DataUpgrader TAIL = (config, plugin) -> false;
+  @Override
+  public boolean upgrade(final YamlConfiguration config, final BetterJailsPlugin plugin) {
+    if (config.getInt("version") >= 4) {
+      return false;
+    }
 
-  boolean upgrade(YamlConfiguration config, BetterJailsPlugin plugin);
+    config.set("version", 4);
+
+    if (!config.contains(LAST_LOCATION_FIELD)) {
+      // Location was corrupt, let code in PrisonerDataHandler deal with it.
+      config.set(V3_UNKNOWN_LOCATION_FIELD, true);
+      return true;
+    }
+
+    final Location location = (Location) config.get(LAST_LOCATION_FIELD);
+    final Location backup = plugin.configuration().backupLocation().mutable();
+    if (location == null || backup.equals(location)) {
+      config.set(LAST_LOCATION_FIELD, null);
+      config.set(V3_UNKNOWN_LOCATION_FIELD, true);
+    } else {
+      config.set(V3_UNKNOWN_LOCATION_FIELD, false);
+    }
+
+    return true;
+  }
 }

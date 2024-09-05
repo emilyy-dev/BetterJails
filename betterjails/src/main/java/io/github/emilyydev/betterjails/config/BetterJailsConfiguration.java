@@ -58,7 +58,7 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
     super(dir, "config.yml", HashMap::new);
   }
 
-  public ImmutableLocation backupLocation() {
+  public @Deprecated ImmutableLocation backupLocation() {
     return setting(
         BACKUP_LOCATION,
         key -> ImmutableLocation.deserialize(config().getConfigurationSection(key).getValues(false))

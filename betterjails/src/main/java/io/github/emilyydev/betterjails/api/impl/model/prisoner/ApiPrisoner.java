@@ -28,6 +28,7 @@ import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.collect.ImmutableSet;
+import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -49,7 +50,7 @@ public class ApiPrisoner implements Prisoner {
   private final SentenceExpiry expiry;
   private final Duration totalSentenceTime;
   private final ImmutableLocation lastLocation;
-  private final ImprisonmentState imprisonmentState;
+  private final boolean unknownLocation; // TODO(v2): lastLocation should just be nullable
 
   public ApiPrisoner(
       final UUID uuid,
@@ -61,7 +62,7 @@ public class ApiPrisoner implements Prisoner {
       final SentenceExpiry expiry,
       final Duration totalSentenceTime,
       final ImmutableLocation lastLocation,
-      final ImprisonmentState imprisonmentState
+      final boolean unknownLocation
   ) {
     this.uuid = uuid;
     this.name = name;
@@ -72,7 +73,7 @@ public class ApiPrisoner implements Prisoner {
     this.expiry = expiry;
     this.totalSentenceTime = totalSentenceTime;
     this.lastLocation = lastLocation;
-    this.imprisonmentState = imprisonmentState;
+    this.unknownLocation = unknownLocation;
   }
 
   @Override
@@ -115,9 +116,17 @@ public class ApiPrisoner implements Prisoner {
     return this.totalSentenceTime;
   }
 
-  @Override
+  // TODO(v2): make nullable, remove deprecation
+  @Override @Deprecated
   public @NotNull ImmutableLocation lastLocation() {
     return this.lastLocation;
+  }
+
+  // TODO(rymiel): I know this is an awkward method. It's here to avoid doing stuff like
+  //   prisoner.lastLocation() == null ? null : prisoner.lastLocation().mutable();
+  //   I mean, in theory, it could be an Optional or something, and then you could map it.
+  public @Nullable Location lastLocationMutable() {
+    return this.unknownLocation ? null : this.lastLocation.mutable();
   }
 
   /**
@@ -127,8 +136,8 @@ public class ApiPrisoner implements Prisoner {
     return timeLeft().isZero() || timeLeft().isNegative();
   }
 
-  public boolean incomplete() {
-    return this.imprisonmentState == ImprisonmentState.UNKNOWN_LOCATION;
+  public boolean unknownLocation() {
+    return this.unknownLocation;
   }
 
   public @NotNull Duration timeLeft() {
@@ -140,11 +149,11 @@ public class ApiPrisoner implements Prisoner {
   }
 
   public @NotNull ApiPrisoner withReleased() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(Duration.ZERO), this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(Duration.ZERO), this.totalSentenceTime, this.lastLocation, this.unknownLocation);
   }
 
   public @NotNull ApiPrisoner withLastLocation(final ImmutableLocation location) {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.expiry, this.totalSentenceTime, location, ImprisonmentState.KNOWN_LOCATION);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.expiry, this.totalSentenceTime, location, false);
   }
 
   /**
@@ -152,7 +161,7 @@ public class ApiPrisoner implements Prisoner {
    * This method swaps out {@link #timeLeft} for {@link #jailedUntil}
    */
   public @NotNull ApiPrisoner withTimeRunning() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(jailedUntil()), this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(jailedUntil()), this.totalSentenceTime, this.lastLocation, this.unknownLocation);
   }
 
   /**
@@ -160,7 +169,7 @@ public class ApiPrisoner implements Prisoner {
    * This method swaps out {@link #jailedUntil} for {@link #timeLeft}
    */
   public @NotNull ApiPrisoner withTimePaused() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(timeLeft()), this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(timeLeft()), this.totalSentenceTime, this.lastLocation, this.unknownLocation);
   }
 
   @Override
@@ -187,14 +196,7 @@ public class ApiPrisoner implements Prisoner {
            ',' + this.expiry +
            ',' + this.totalSentenceTime +
            ',' + this.lastLocation +
-           ',' + this.imprisonmentState +
+           ',' + this.unknownLocation +
            ')';
-  }
-
-  public enum ImprisonmentState {
-    // We don't actually know this prisoner's lastLocation, it will be filled in when they join the server.
-    // Ideally lastLocation would just be optional, but that would break API and stuff
-    UNKNOWN_LOCATION,
-    KNOWN_LOCATION,
   }
 }
