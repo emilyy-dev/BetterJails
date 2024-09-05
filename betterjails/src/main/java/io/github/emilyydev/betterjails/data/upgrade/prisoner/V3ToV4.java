@@ -22,18 +22,19 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.data.upgrade;
+package io.github.emilyydev.betterjails.data.upgrade.prisoner;
 
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 
 public final class V3ToV4 implements DataUpgrader {
   private static final String LAST_LOCATION_FIELD = "last-location";
   private static final String V4_UNKNOWN_LOCATION_FIELD = "unknown-location";
 
   @Override
-  public boolean upgrade(final YamlConfiguration config, final BetterJailsPlugin plugin) {
+  public boolean upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
     if (config.getInt("version") >= 4) {
       return false;
     }
