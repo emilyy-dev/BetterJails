@@ -65,6 +65,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.logging.Level;
@@ -79,13 +80,13 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
   public IEssentials essentials = null;
 
-  private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this), new ApiPrisonerManager(this));
-  private final ApiEventBus eventBus = this.api.getEventBus();
   private final Path pluginDir = getDataFolder().toPath();
   private final BetterJailsConfiguration configuration = new BetterJailsConfiguration(this.pluginDir);
   private final SubCommandsConfiguration subCommands = new SubCommandsConfiguration(this.pluginDir);
   private final PrisonerDataHandler prisonerData = new PrisonerDataHandler(this);
   private final JailDataHandler jailData = new JailDataHandler(this);
+  private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this.jailData), new ApiPrisonerManager(this));
+  private final ApiEventBus eventBus = this.api.getEventBus();
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
   private Metrics metrics = null;
 
@@ -206,13 +207,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
     final Duration autoSavePeriod = this.configuration.autoSavePeriod();
     if (!autoSavePeriod.isZero()) {
-      scheduler.runTaskTimer(this, () -> this.jailData.save().thenCompose(v -> this.prisonerData.save()).whenComplete((v, ex) -> {
-        this.eventBus.post(PluginSaveDataEvent.class);
-
-        if (ex != null) {
-          getLogger().log(Level.SEVERE, "Could not save data files", ex);
-        }
-      }), autoSavePeriod.getSeconds() * 20L, autoSavePeriod.getSeconds() * 20L);
+      scheduler.runTaskTimer(this, this::saveAll, autoSavePeriod.getSeconds() * 20L, autoSavePeriod.getSeconds() * 20L);
     }
 
     if (!getDescription().getVersion().endsWith("-SNAPSHOT")) {
@@ -244,6 +239,16 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
     }
   }
 
+  public CompletableFuture<Void> saveAll() {
+    final CompletableFuture<Void> prisonerSaveFuture = this.prisonerData.save();
+    return this.jailData.save().thenCompose(v -> prisonerSaveFuture).whenCompleteAsync((v, error) -> {
+      this.eventBus.post(PluginSaveDataEvent.class);
+      if (error != null) {
+        getLogger().log(Level.SEVERE, "An error occurred while saving plugin data", error);
+      }
+    }, this);
+  }
+
   public void reload() throws IOException {
     this.configuration.load();
     this.subCommands.load();
@@ -252,9 +257,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
     if (this.configuration.permissionHookEnabled()) {
       this.configuration.prisonerPermissionGroup().ifPresent(prisonerGroup ->
-          this.resetPermissionInterface(
-              PermissionInterface.determinePermissionInterface(this, prisonerGroup)
-          )
+          this.resetPermissionInterface(PermissionInterface.determinePermissionInterface(this, prisonerGroup))
       );
     } else {
       this.resetPermissionInterface(PermissionInterface.NULL);

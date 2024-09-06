@@ -25,7 +25,6 @@
 package io.github.emilyydev.betterjails.commands;
 
 import com.github.fefo.betterjails.api.event.plugin.PluginReloadEvent;
-import com.github.fefo.betterjails.api.event.plugin.PluginSaveDataEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
@@ -159,20 +158,16 @@ public final class CommandHandler implements CommandExecutor, Listener {
         ));
       }
     } else if (argument.equalsIgnoreCase("save") && sender.hasPermission("betterjails.betterjails.save")) {
-      this.plugin.jailData().save().thenCompose(v -> this.plugin.prisonerData().save()).whenCompleteAsync((v, ex) -> {
-        this.plugin.eventBus().post(PluginSaveDataEvent.class);
-
-        if (ex != null) {
-          this.plugin.getLogger().log(Level.SEVERE, null, ex);
+      this.plugin.saveAll().whenComplete((v, ex) -> {
+        if (ex == null) {
+          sender.sendMessage(this.configuration.messages().saveData(sender.getName()));
+        } else {
           sender.sendMessage(color(
               "&cThere was an internal error while trying to save the data files.\n" +
                   "Please check console for more information."
           ));
-          return;
         }
-
-        sender.sendMessage(this.configuration.messages().saveData(sender.getName()));
-      }, this.plugin);
+      });
     } else {
       sender.sendMessage(color("&bBetterJails &3by &bemilyy-dev &3- v%s", this.plugin.getDescription().getVersion()));
     }
