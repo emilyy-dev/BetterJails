@@ -281,7 +281,10 @@ public final class PrisonerDataHandler {
         }
 
         return null;
-      }).thenComposeAsync(v -> savePrisoner(prisoner), this.plugin);
+      }).thenComposeAsync(v -> savePrisoner(prisoner), this.plugin).exceptionally(error -> {
+        this.plugin.getLogger().log(Level.SEVERE, null, error);
+        return null;
+      });
     }, this.plugin);
 
     return true;
@@ -304,10 +307,7 @@ public final class PrisonerDataHandler {
     yaml.set(GROUP_FIELD, prisoner.primaryGroup());
     yaml.set(EXTRA_GROUPS_FIELD, ImmutableList.copyOf(prisoner.parentGroups()));
 
-    return FileIO.writeString(this.playerDataFolder.resolve(prisoner.uuid() + ".yml"), yaml.saveToString()).exceptionally(ex -> {
-      this.plugin.getLogger().log(Level.SEVERE, null, ex);
-      return null;
-    });
+    return FileIO.writeString(this.playerDataFolder.resolve(prisoner.uuid() + ".yml"), yaml.saveToString());
   }
 
   public void deletePrisonerFile(final Prisoner prisoner) {
@@ -328,10 +328,11 @@ public final class PrisonerDataHandler {
     }
 
     final PermissionInterface permissionInterface = this.plugin.permissionInterface();
-    permissionInterface.setParentGroups(player, prisoner.parentGroups(), source, sourceName)
+    final Set<String> parentGroups = prisoner.parentGroups();
+    permissionInterface.setParentGroups(player, parentGroups, source, sourceName)
         .whenComplete((ignored, exception) -> {
           if (exception != null && permissionInterface != PermissionInterface.NULL) {
-            this.plugin.getLogger().log(Level.SEVERE, null, exception);
+            this.plugin.getLogger().log(Level.SEVERE, "An error occurred setting back prisoner's parent groups for " + prisonerUuid + parentGroups, exception);
           }
         });
 
@@ -364,7 +365,10 @@ public final class PrisonerDataHandler {
         deletePrisonerFile(prisoner);
       } else {
         prisoner = prisoner.withReleased();
-        savePrisoner(prisoner);
+        savePrisoner(prisoner).exceptionally(error -> {
+          this.plugin.getLogger().log(Level.SEVERE, "An error occurred saving data for prisoner " + prisonerUuid, error);
+          return null;
+        });
       }
     }
 
@@ -384,11 +388,8 @@ public final class PrisonerDataHandler {
     CompletableFuture<Void> cf = CompletableFuture.completedFuture(null);
 
     for (final ApiPrisoner prisoner : this.prisoners.values()) {
-      cf = cf.thenCompose(v -> savePrisoner(prisoner).whenComplete((v1, ex) -> {
-        if (ex != null) {
-          this.plugin.getLogger().log(Level.SEVERE, null, ex);
-        }
-      }));
+      final CompletableFuture<Void> savePrisonerFuture = savePrisoner(prisoner);
+      cf = cf.thenCompose(v -> savePrisonerFuture);
     }
 
     return cf;

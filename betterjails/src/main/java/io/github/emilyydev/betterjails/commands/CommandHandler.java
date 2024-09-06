@@ -373,13 +373,12 @@ public final class CommandHandler implements CommandExecutor, Listener {
 
     final Player player = (Player) sender;
     this.plugin.jailData().addJail(jail, player.getLocation()).whenCompleteAsync((v, ex) -> {
-      if (ex != null) {
+      if (ex == null) {
+        sender.sendMessage(this.configuration.messages().createJailSuccess(sender.getName(), jail));
+      } else {
         this.plugin.getLogger().log(Level.SEVERE, null, ex);
         sender.sendMessage(color("&cThere was an error while trying to add the jail."));
-        return;
       }
-
-      sender.sendMessage(this.configuration.messages().createJailSuccess(sender.getName(), jail));
     }, this.plugin);
   }
 
@@ -390,13 +389,12 @@ public final class CommandHandler implements CommandExecutor, Listener {
     }
 
     this.plugin.jailData().removeJail(jail).whenCompleteAsync((v, ex) -> {
-      if (ex != null) {
+      if (ex == null) {
+        sender.sendMessage(this.configuration.messages().deleteJailSuccess(sender.getName(), jail));
+      } else {
         this.plugin.getLogger().log(Level.SEVERE, null, ex);
         sender.sendMessage(color("&cThere was an error while trying to remove the jail."));
-        return;
       }
-
-      sender.sendMessage(this.configuration.messages().deleteJailSuccess(sender.getName(), jail));
     }, this.plugin);
   }
 

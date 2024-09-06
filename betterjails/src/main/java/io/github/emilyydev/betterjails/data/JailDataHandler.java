@@ -103,10 +103,7 @@ public final class JailDataHandler {
     }
     yaml.set("jails", jails);
 
-    return FileIO.writeString(this.jailsFile, yaml.saveToString()).exceptionally(ex -> {
-      this.plugin.getLogger().log(Level.SEVERE, null, ex);
-      return null;
-    });
+    return FileIO.writeString(this.jailsFile, yaml.saveToString());
   }
 
   public Map<String, Jail> getJails() {
