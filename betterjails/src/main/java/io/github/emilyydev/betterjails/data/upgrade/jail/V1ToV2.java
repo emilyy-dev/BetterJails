@@ -41,6 +41,7 @@ import static java.lang.invoke.MethodHandles.lookup;
 import static java.lang.invoke.MethodType.methodType;
 
 public final class V1ToV2 implements DataUpgrader {
+  // TODO(rymiel): this is duplicated, i know it's my fault
   private static final MethodHandle SET_INLINE_COMMENTS_MH;
 
   static {
