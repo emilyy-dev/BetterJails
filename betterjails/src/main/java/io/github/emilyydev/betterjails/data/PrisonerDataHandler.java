@@ -74,7 +74,7 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
-public class PrisonerDataHandler {
+public final class PrisonerDataHandler {
 
   public static final String LAST_LOCATION_FIELD = "last-location";
   public static final String UNKNOWN_LOCATION_FIELD = "unknown-location";
@@ -91,8 +91,7 @@ public class PrisonerDataHandler {
       ImmutableList.of(
           new V1ToV2(),
           new V2ToV3(),
-          new V3ToV4(),
-          DataUpgrader.TAIL
+          new V3ToV4()
       );
 
   public final Path playerDataFolder;
@@ -292,8 +291,7 @@ public class PrisonerDataHandler {
     this.prisoners.put(prisoner.uuid(), prisoner);
 
     final YamlConfiguration yaml = new YamlConfiguration();
-    yaml.set("version", DataUpgrader.PRISONER_VERSION);
-    V1ToV2.setVersionWarning(yaml);
+    DataUpgrader.markPrisonerVersion(yaml);
 
     yaml.set(UUID_FIELD, prisoner.uuid().toString());
     yaml.set(NAME_FIELD, prisoner.name());
@@ -398,7 +396,6 @@ public class PrisonerDataHandler {
 
   public void reload() throws IOException {
     this.backupLocation = this.config.backupLocation().mutable();
-
     this.prisoners.clear();
     loadPrisoners();
   }
@@ -438,10 +435,12 @@ public class PrisonerDataHandler {
     }
 
     for (final DataUpgrader upgrader : DATA_UPGRADERS.subList(version - 1, DATA_UPGRADERS.size())) {
-      changed |= upgrader.upgrade(config, this.plugin);
+      upgrader.upgrade(config, this.plugin);
+      changed = true;
     }
 
     if (changed) {
+      DataUpgrader.markPrisonerVersion(config);
       FileIO.writeString(file, config.saveToString()).exceptionally(ex -> {
         this.plugin.getLogger().log(Level.WARNING, "Could not save player data file " + file, ex);
         return null;

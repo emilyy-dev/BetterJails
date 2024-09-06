@@ -50,14 +50,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 public final class JailDataHandler {
+
   private final BetterJailsPlugin plugin;
   private final Map<String, Jail> jails = new HashMap<>();
   private final Path jailsFile;
 
   private static final List<DataUpgrader> DATA_UPGRADERS =
       ImmutableList.of(
-          new V1ToV2(),
-          DataUpgrader.TAIL
+          new V1ToV2()
       );
 
   public JailDataHandler(final BetterJailsPlugin plugin) {
@@ -86,7 +86,7 @@ public final class JailDataHandler {
     }
   }
 
-  private Map<String, Object> serializeJail(Jail jail) {
+  private Map<String, Object> serializeJail(final Jail jail) {
     final Map<String, Object> map = new HashMap<>();
     map.put("name", jail.name());
     map.put("location", jail.location().mutable());
@@ -95,11 +95,10 @@ public final class JailDataHandler {
 
   public CompletableFuture<Void> save() {
     final YamlConfiguration yaml = new YamlConfiguration();
-    yaml.set("version", DataUpgrader.JAIL_VERSION);
-    V1ToV2.setVersionWarning(yaml);
+    DataUpgrader.markJailVersion(yaml);
 
     final List<Map<String, Object>> jails = new ArrayList<>();
-    for (Jail jail : this.jails.values()) {
+    for (final Jail jail : this.jails.values()) {
       jails.add(serializeJail(jail));
     }
     yaml.set("jails", jails);
@@ -149,10 +148,12 @@ public final class JailDataHandler {
     }
 
     for (final DataUpgrader upgrader : DATA_UPGRADERS.subList(version - 1, DATA_UPGRADERS.size())) {
-      changed |= upgrader.upgrade(config, this.plugin);
+      upgrader.upgrade(config, this.plugin);
+      changed = true;
     }
 
     if (changed) {
+      DataUpgrader.markJailVersion(config);
       FileIO.writeString(file, config.saveToString()).exceptionally(ex -> {
         this.plugin.getLogger().log(Level.WARNING, "Could not save jail file " + file, ex);
         return null;

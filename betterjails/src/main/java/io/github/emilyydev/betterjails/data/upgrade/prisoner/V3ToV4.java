@@ -30,21 +30,16 @@ import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 
 public final class V3ToV4 implements DataUpgrader {
+
   private static final String LAST_LOCATION_FIELD = "last-location";
   private static final String V4_UNKNOWN_LOCATION_FIELD = "unknown-location";
 
   @Override
-  public boolean upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
-    if (config.getInt("version") >= 4) {
-      return false;
-    }
-
-    config.set("version", 4);
-
+  public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
     if (!config.contains(LAST_LOCATION_FIELD)) {
       // Location was corrupt, let code in PrisonerDataHandler deal with it.
       config.set(V4_UNKNOWN_LOCATION_FIELD, true);
-      return true;
+      return;
     }
 
     final Location location = (Location) config.get(LAST_LOCATION_FIELD);
@@ -55,7 +50,5 @@ public final class V3ToV4 implements DataUpgrader {
     } else {
       config.set(V4_UNKNOWN_LOCATION_FIELD, false);
     }
-
-    return true;
   }
 }

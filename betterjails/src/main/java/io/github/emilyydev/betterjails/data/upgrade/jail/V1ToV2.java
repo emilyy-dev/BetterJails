@@ -41,54 +41,12 @@ import static java.lang.invoke.MethodHandles.lookup;
 import static java.lang.invoke.MethodType.methodType;
 
 public final class V1ToV2 implements DataUpgrader {
-  // TODO(rymiel): this is duplicated, i know it's my fault
-  private static final MethodHandle SET_INLINE_COMMENTS_MH;
-
-  static {
-    final Lookup lookup = lookup();
-    MethodHandle setInlineCommentsMh;
-    try {
-      setInlineCommentsMh = lookup.findVirtual(ConfigurationSection.class, "setInlineComments", methodType(void.class, String.class, List.class));
-    } catch (final NoSuchMethodException | IllegalAccessException ex) {
-      // no warning for you
-      try {
-        setInlineCommentsMh = lookup.findStatic(V1ToV2.class, "setInlineCommentsNoop", methodType(void.class, ConfigurationSection.class, String.class, List.class));
-      } catch (final NoSuchMethodException | IllegalAccessException ex2) {
-        throw new ExceptionInInitializerError(ex2);
-      }
-    }
-
-    SET_INLINE_COMMENTS_MH = setInlineCommentsMh;
-  }
-
-  private static void setInlineCommentsNoop(final ConfigurationSection section, final String path, final List<String> comments) {
-  }
-
-  public static void setVersionWarning(final ConfigurationSection section) {
-    setInlineComments(section, "version", Collections.singletonList("DO NOT CHANGE OR REMOVE THIS VALUE UNDER ANY CIRCUMSTANCES"));
-  }
-
-  // shouldn't really be here if it's public but bleh
-  private static void setInlineComments(final ConfigurationSection section, final String path, final List<String> comments) {
-    try {
-      SET_INLINE_COMMENTS_MH.invokeExact(section, path, comments);
-    } catch (final RuntimeException | Error ex) {
-      throw ex;
-    } catch (final Throwable ex) {
-      throw new RuntimeException(ex);
-    }
-  }
 
   @Override
-  public boolean upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
-    // NOTE: this accounts for if a jail named "version" exists.
-    if (config.getInt("version", 1) >= 2) {
-      return false;
-    }
-
+  public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
     final Set<String> keys = config.getKeys(false);
     final List<Map<String, Object>> jails = new ArrayList<>();
-    for (String key : keys) {
+    for (final String key : keys) {
       final Map<String, Object> jail = new HashMap<>();
       jail.put("name", key);
       jail.put("location", config.get(key));
@@ -96,10 +54,6 @@ public final class V1ToV2 implements DataUpgrader {
       jails.add(jail);
     }
 
-    config.set("version", 2);
-    setVersionWarning(config);
     config.set("jails", jails);
-
-    return true;
   }
 }
