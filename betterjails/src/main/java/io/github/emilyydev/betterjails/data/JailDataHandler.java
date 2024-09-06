@@ -78,9 +78,8 @@ public final class JailDataHandler {
 
     final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(this.jailsFile.toFile());
     migrateJailData(yaml, this.jailsFile);
-    @SuppressWarnings("unchecked")
-    final List<Map<String, Object>> jails = (List<Map<String, Object>>) yaml.get("jails");
-    for (final Map<String, Object> jail : jails) {
+    final List<Map<?, ?>> jails = yaml.getMapList("jails");
+    for (final Map<?, ?> jail : jails) {
       final String name = ((String) jail.get("name")).toLowerCase(Locale.ROOT);
       final Location location = (Location) jail.get("location");
       this.jails.put(name, new ApiJail(name, location));
