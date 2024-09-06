@@ -27,11 +27,26 @@ package io.github.emilyydev.betterjails.data.upgrade;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-@FunctionalInterface
-public interface DataUpgrader {
+/**
+ * Removes the "released" field, using just the seconds-left field for determining if a sentence has expired.
+ */
+public final class V2ToV3 implements DataUpgrader {
+  private static final String V2_IS_RELEASED_FIELD = "released";
+  private static final String SECONDS_LEFT_FIELD = "seconds-left";
 
-  int VERSION = 3;
-  DataUpgrader TAIL = (config, plugin) -> false;
+  @Override
+  public boolean upgrade(final YamlConfiguration config, final BetterJailsPlugin plugin) {
+    if (config.getInt("version") >= 3) {
+      return false;
+    }
 
-  boolean upgrade(YamlConfiguration config, BetterJailsPlugin plugin);
+    config.set("version", 3);
+
+    if (config.getBoolean(V2_IS_RELEASED_FIELD, false)) {
+      config.set(SECONDS_LEFT_FIELD, 0);
+    }
+    config.set(V2_IS_RELEASED_FIELD, null);
+
+    return true;
+  }
 }

@@ -112,7 +112,7 @@ public final class V1ToV2 implements DataUpgrader {
     }
 
     if (!config.contains("version")) {
-      config.set("version", VERSION);
+      config.set("version", 2);
       setVersionWarning(config);
       changed = true;
     }
