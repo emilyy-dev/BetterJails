@@ -23,6 +23,8 @@ dependencies {
   compileOnly(libs.vault) { isTransitive = false }
   compileOnly(libs.essentialsx) { isTransitive = false }
   compileOnly(libs.annotations)
+  implementation(libs.slf4j.api)
+  runtimeOnly(libs.slf4j.impl)
 
   testImplementation(libs.junit)
   testImplementation(libs.mockbukkit)

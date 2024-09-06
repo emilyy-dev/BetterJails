@@ -5,6 +5,7 @@ luckperms = "5.4"
 vault = "1.7"
 essentialsx = "2.18.2"
 annotations = "20.1.0"
+slf4j = "2.0.13"
 junit = "5.10.2"
 mockbukkit = "3.71.0"
 
@@ -15,5 +16,7 @@ luckperms = { module = "net.luckperms:api", version.ref = "luckperms" }
 vault = { module = "com.github.MilkBowl:VaultAPI", version.ref = "vault" }
 essentialsx = { module = "net.ess3:EssentialsX", version.ref = "essentialsx" }
 annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-impl = { module = "org.slf4j:slf4j-impl", version.ref = "slf4j" }
 junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 mockbukkit = { module = "com.github.seeseemelk:MockBukkit-v1.20", version.ref = "mockbukkit" }

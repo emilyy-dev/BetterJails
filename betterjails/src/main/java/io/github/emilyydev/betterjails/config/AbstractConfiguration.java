@@ -74,10 +74,10 @@ public class AbstractConfiguration {
 
       this.configuration = configuration;
       this.configurationMap.clear();
-    } catch (final IOException exception) {
-      throw new UncheckedIOException(exception);
-    } catch (final InvalidConfigurationException exception) {
-      throw new UncheckedIOException(new IOException(exception));
+    } catch (final IOException ex) {
+      throw new UncheckedIOException(ex);
+    } catch (final InvalidConfigurationException ex) {
+      throw new UncheckedIOException(new IOException(ex));
     }
   }
 

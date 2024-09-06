@@ -36,12 +36,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.PluginManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 import java.util.UUID;
-import java.util.logging.Level;
 
 public final class PlayerListeners implements Listener {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
   public static PlayerListeners create(final BetterJailsPlugin plugin) {
     return new PlayerListeners(plugin);
@@ -91,7 +94,7 @@ public final class PlayerListeners implements Listener {
 
         prisoner = prisoner.withTimeRunning();
         this.plugin.prisonerData().savePrisoner(prisoner).exceptionally(error -> {
-          this.plugin.getLogger().log(Level.SEVERE, "An error occurred saving data for prisoner " + uuid, error);
+          LOGGER.error("An error occurred saving data for prisoner {}", uuid, error);
           return null;
         });
         event.setSpawnLocation(prisoner.jail().location().mutable());
@@ -126,7 +129,7 @@ public final class PlayerListeners implements Listener {
     }
 
     this.plugin.prisonerData().savePrisoner(prisoner).exceptionally(error -> {
-      this.plugin.getLogger().log(Level.SEVERE, "An error occurred saving data for prisoner " + uuid, error);
+      LOGGER.error("An error occurred saving data for prisoner {}", uuid, error);
       return null;
     });
   }

@@ -78,8 +78,8 @@ public class ApiEventBus implements EventBus {
           .put(PrisonerReleaseEvent.class, constructor(PrisonerReleaseEventImpl.class, Prisoner.class))
           .put(PluginReloadEvent.class, constructor(PluginReloadEventImpl.class, CommandSender.class))
           .put(PluginSaveDataEvent.class, constructor(PluginSaveDataEventImpl.class));
-    } catch (final ReflectiveOperationException exception) {
-      throw new ExceptionInInitializerError(exception);
+    } catch (final ReflectiveOperationException ex) {
+      throw new ExceptionInInitializerError(ex);
     }
 
     KNOWN_EVENT_TYPES = builder.build();

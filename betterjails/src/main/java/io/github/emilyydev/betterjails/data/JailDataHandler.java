@@ -37,6 +37,8 @@ import io.github.emilyydev.betterjails.util.FileIO;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -47,9 +49,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 
 public final class JailDataHandler {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
   private final BetterJailsPlugin plugin;
   private final Map<String, Jail> jails = new HashMap<>();
@@ -138,9 +141,9 @@ public final class JailDataHandler {
     boolean changed = false;
     final int version = config.getInt("version", 1);
     if (version > DataUpgrader.JAIL_VERSION) {
-      this.plugin.getLogger().warning("Jails file " + file + " is from a newer version of BetterJails");
-      this.plugin.getLogger().warning("The plugin will continue to load it, but it may not function properly, errors might show up and data could be lost");
-      this.plugin.getLogger().warning("!!! Consider updating BetterJails !!!");
+      LOGGER.warn("Jails file {} is from a newer version of BetterJails", file);
+      LOGGER.warn("The plugin will continue to load it, but it may not function properly, errors might show up and data could be lost");
+      LOGGER.warn("!!! Consider updating BetterJails !!!");
       return;
     }
 
@@ -152,7 +155,7 @@ public final class JailDataHandler {
     if (changed) {
       DataUpgrader.markJailVersion(config);
       FileIO.writeString(file, config.saveToString()).exceptionally(ex -> {
-        this.plugin.getLogger().log(Level.WARNING, "Could not save jail file " + file, ex);
+        LOGGER.warn("Could not save jail file {}", file, ex);
         return null;
       });
     }

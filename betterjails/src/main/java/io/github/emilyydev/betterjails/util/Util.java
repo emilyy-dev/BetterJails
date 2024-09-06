@@ -94,8 +94,8 @@ public interface Util {
       ) {
         final String version = reader.readLine();
         plugin.getServer().getScheduler().runTask(plugin, () -> consumer.accept(version));
-      } catch (final IOException exception) {
-        plugin.getLogger().log(Level.WARNING, "Cannot look for updates", exception);
+      } catch (final IOException ex) {
+        plugin.getLogger().log(Level.WARNING, "An error occurred looking for plugin updates", ex);
       }
     });
   }

@@ -52,6 +52,8 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,7 +73,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.stream.Stream;
 
 public final class PrisonerDataHandler {
@@ -86,6 +87,8 @@ public final class PrisonerDataHandler {
   public static final String JAILED_BY_FIELD = "jailed-by";
   public static final String SECONDS_LEFT_FIELD = "seconds-left";
   public static final String TOTAL_SENTENCE_TIME = "total-sentence-time";
+
+  private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
   private static final List<DataUpgrader> DATA_UPGRADERS =
       ImmutableList.of(
@@ -133,7 +136,7 @@ public final class PrisonerDataHandler {
 
         if (!unknownLocation && !yaml.contains(LAST_LOCATION_FIELD)) {
           // TODO(rymiel): issue #11
-          this.plugin.getLogger().severe("Failed to load last known location of prisoner " + uuid + " (" + name + "). The world they were previously in might have been removed.");
+          LOGGER.error("Failed to load last known location of prisoner {} ({}). The world they were previously in might have been removed.", uuid, name);
           unknownLocation = true;
         }
 
@@ -143,8 +146,8 @@ public final class PrisonerDataHandler {
           // If the jail has been removed, just fall back to the first jail in the config. If there are no jails, this
           // will throw an exception, but why would you have no jails?
           jail = this.plugin.jailData().getJails().values().iterator().next();
-          this.plugin.getLogger().log(Level.WARNING, "Jail {0} does not exist", jailName);
-          this.plugin.getLogger().log(Level.WARNING, "Player {0}/{1} was attempted to relocate to {2}", new Object[]{name, uuid, jail.name()});
+          LOGGER.warn("Jail {} does not exist", jailName);
+          LOGGER.warn("Player {}/{} was attempted to relocate to {}", name, uuid, jail.name());
         }
 
         // TODO(v2): We have to set some location here, due to @NotNull API contract in Prisoner. It should be made
@@ -275,14 +278,14 @@ public final class PrisonerDataHandler {
       final CompletionStage<?> setGroupFuture = groupsUnknown
           ? permissionInterface.setPrisonerGroup(player, jailer, jailerName)
           : CompletableFuture.completedFuture(null);
-      return setGroupFuture.exceptionally(exception -> {
+      return setGroupFuture.exceptionally(ex -> {
         if (permissionInterface != PermissionInterface.NULL) {
-          this.plugin.getLogger().log(Level.SEVERE, null, exception);
+          LOGGER.error("An error occurred changing the prisoner group for {}", prisonerUuid, ex);
         }
 
         return null;
       }).thenComposeAsync(v -> savePrisoner(prisoner), this.plugin).exceptionally(error -> {
-        this.plugin.getLogger().log(Level.SEVERE, null, error);
+        LOGGER.error("An error occurred saving prisoner data for {}", prisonerUuid, error);
         return null;
       });
     }, this.plugin);
@@ -315,7 +318,7 @@ public final class PrisonerDataHandler {
     try {
       Files.deleteIfExists(playerFile);
     } catch (final IOException ex) {
-      this.plugin.getLogger().log(Level.WARNING, "Could not delete prisoner file " + playerFile, ex);
+      LOGGER.warn("Could not delete prisoner file {}", playerFile, ex);
     }
   }
 
@@ -330,9 +333,9 @@ public final class PrisonerDataHandler {
     final PermissionInterface permissionInterface = this.plugin.permissionInterface();
     final Set<String> parentGroups = prisoner.parentGroups();
     permissionInterface.setParentGroups(player, parentGroups, source, sourceName)
-        .whenComplete((ignored, exception) -> {
-          if (exception != null && permissionInterface != PermissionInterface.NULL) {
-            this.plugin.getLogger().log(Level.SEVERE, "An error occurred setting back prisoner's parent groups for " + prisonerUuid + parentGroups, exception);
+        .whenComplete((ignored, ex) -> {
+          if (ex != null && permissionInterface != PermissionInterface.NULL) {
+            LOGGER.error("An error occurred setting back prisoner's parent groups for {} {}", prisonerUuid, parentGroups, ex);
           }
         });
 
@@ -366,7 +369,7 @@ public final class PrisonerDataHandler {
       } else {
         prisoner = prisoner.withReleased();
         savePrisoner(prisoner).exceptionally(error -> {
-          this.plugin.getLogger().log(Level.SEVERE, "An error occurred saving data for prisoner " + prisonerUuid, error);
+          LOGGER.error("An error occurred saving data for prisoner {}", prisonerUuid, error);
           return null;
         });
       }
@@ -429,9 +432,9 @@ public final class PrisonerDataHandler {
     boolean changed = false;
     final int version = config.getInt("version", 1);
     if (version > DataUpgrader.PRISONER_VERSION) {
-      this.plugin.getLogger().warning("Prisoner file " + file + " is from a newer version of BetterJails");
-      this.plugin.getLogger().warning("The plugin will continue to load it, but it may not function properly, errors might show up and data could be lost");
-      this.plugin.getLogger().warning("!!! Consider updating BetterJails !!!");
+      LOGGER.warn("Prisoner file {} is from a newer version of BetterJails", file);
+      LOGGER.warn("The plugin will continue to load it, but it may not function properly, errors might show up and data could be lost");
+      LOGGER.warn("!!! Consider updating BetterJails !!!");
       return;
     }
 
@@ -443,7 +446,7 @@ public final class PrisonerDataHandler {
     if (changed) {
       DataUpgrader.markPrisonerVersion(config);
       FileIO.writeString(file, config.saveToString()).exceptionally(ex -> {
-        this.plugin.getLogger().log(Level.WARNING, "Could not save player data file " + file, ex);
+        LOGGER.warn("Could not save player data file {}", file, ex);
         return null;
       });
     }

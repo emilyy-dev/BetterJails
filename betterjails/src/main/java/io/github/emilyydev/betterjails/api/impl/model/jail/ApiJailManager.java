@@ -58,10 +58,10 @@ public class ApiJailManager implements JailManager {
 
     try {
       this.jailData.addJail(name, location).get();
-    } catch (final InterruptedException exception) {
+    } catch (final InterruptedException ex) {
       // bleh
-    } catch (final ExecutionException exception) {
-      throw new RuntimeException(exception.getCause());
+    } catch (final ExecutionException ex) {
+      throw new RuntimeException(ex.getCause());
     }
 
     return this.jailData.getJail(name);
@@ -79,10 +79,10 @@ public class ApiJailManager implements JailManager {
 
     try {
       this.jailData.removeJail(jail.name()).get();
-    } catch (final InterruptedException exception) {
+    } catch (final InterruptedException ex) {
       // bleh
-    } catch (final ExecutionException exception) {
-      throw new RuntimeException(exception.getCause());
+    } catch (final ExecutionException ex) {
+      throw new RuntimeException(ex.getCause());
     }
   }
 

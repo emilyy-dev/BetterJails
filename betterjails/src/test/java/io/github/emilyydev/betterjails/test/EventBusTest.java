@@ -36,6 +36,8 @@ import org.bukkit.util.Vector;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,6 +46,8 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 public class EventBusTest {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(EventBusTest.class);
 
   private static ServerMock server = null;
   private static BetterJailsPlugin plugin = null;
@@ -70,19 +74,19 @@ public class EventBusTest {
   }
 
   private static void jailCreate(final JailCreateEvent event) {
-    plugin.getLogger().info("event = " + event);
-    plugin.getLogger().info("event.jailName() = " + assertDoesNotThrow(event::jailName));
-    plugin.getLogger().info("event.jailLocation() = " + assertDoesNotThrow(event::jailLocation));
+    LOGGER.info("event = {}", event);
+    LOGGER.info("event.jailName() = {}", assertDoesNotThrow(event::jailName));
+    LOGGER.info("event.jailLocation() = {}", assertDoesNotThrow(event::jailLocation));
   }
 
   private static void playerImprison(final PlayerImprisonEvent event) {
-    plugin.getLogger().info("event = " + event);
-    plugin.getLogger().info("event.prisoner() = " + assertDoesNotThrow(event::prisoner));
+    LOGGER.info("event = {}", event);
+    LOGGER.info("event.prisoner() = {}", assertDoesNotThrow(event::prisoner));
   }
 
   private static void prisonerRelease(final PrisonerReleaseEvent event) {
-    plugin.getLogger().info("event = " + event);
-    plugin.getLogger().info("event.prisoner() = " + assertDoesNotThrow(event::prisoner));
+    LOGGER.info("event = {}", event);
+    LOGGER.info("event.prisoner() = {}", assertDoesNotThrow(event::prisoner));
   }
 
   @Test

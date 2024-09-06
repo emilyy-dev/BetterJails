@@ -41,6 +41,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,13 +52,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 import static io.github.emilyydev.betterjails.util.Util.color;
 import static io.github.emilyydev.betterjails.util.Util.uuidOrNil;
 
 public final class CommandHandler implements CommandExecutor, Listener {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
   private static final Pattern DURATION_PATTERN = Pattern.compile("^(\\d{1,10}(\\.\\d{1,2})?)[yMwdhms]$");
   private static final String[] DUMMY_STRING_ARRAY = new String[0];
@@ -150,8 +153,8 @@ public final class CommandHandler implements CommandExecutor, Listener {
         this.plugin.reload();
         this.plugin.eventBus().post(PluginReloadEvent.class, sender);
         sender.sendMessage(this.configuration.messages().reloadData(sender.getName()));
-      } catch (final IOException exception) {
-        this.plugin.getLogger().log(Level.SEVERE, null, exception);
+      } catch (final IOException ex) {
+        LOGGER.error("An error occurred reloading plugin data", ex);
         sender.sendMessage(color(
             "&cThere was an internal error while trying to reload the data files.\n" +
                 "Please check console for more information."
@@ -376,7 +379,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
       if (ex == null) {
         sender.sendMessage(this.configuration.messages().createJailSuccess(sender.getName(), jail));
       } else {
-        this.plugin.getLogger().log(Level.SEVERE, null, ex);
+        LOGGER.error("An error occurred saving data for jail {}", jail, ex);
         sender.sendMessage(color("&cThere was an error while trying to add the jail."));
       }
     }, this.plugin);
@@ -392,7 +395,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
       if (ex == null) {
         sender.sendMessage(this.configuration.messages().deleteJailSuccess(sender.getName(), jail));
       } else {
-        this.plugin.getLogger().log(Level.SEVERE, null, ex);
+        LOGGER.error("An error occurred deleting data for jail {}", jail, ex);
         sender.sendMessage(color("&cThere was an error while trying to remove the jail."));
       }
     }, this.plugin);

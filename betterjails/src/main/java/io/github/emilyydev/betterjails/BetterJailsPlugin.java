@@ -55,6 +55,8 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,11 +70,11 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @SuppressWarnings("DesignForExtension")
 public class BetterJailsPlugin extends JavaPlugin implements Executor {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
   static {
     ConfigurationSerialization.registerClass(ImmutableLocation.class);
@@ -155,24 +157,23 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
     final PluginManager pluginManager = server.getPluginManager();
     if (pluginManager.isPluginEnabled("Essentials")) {
       this.essentials = (IEssentials) pluginManager.getPlugin("Essentials");
-      getLogger().info("Hooked with Essentials successfully!");
+      LOGGER.info("Hooked with Essentials successfully!");
     }
 
     if (this.configuration.permissionHookEnabled()) {
       final Optional<String> maybePrisonerGroup = this.configuration.prisonerPermissionGroup();
-      final Logger logger = getLogger();
       if (maybePrisonerGroup.isPresent()) {
         this.permissionInterface = PermissionInterface.determinePermissionInterface(this, maybePrisonerGroup.get());
         if (this.permissionInterface != PermissionInterface.NULL) {
-          logger.info("Hooked with \"" + this.permissionInterface.name() + "\" successfully!");
+          LOGGER.info("Hooked with \"{}\" successfully!", this.permissionInterface.name());
         } else {
-          logger.warning("Hook with a permission interface failed!");
-          logger.warning("Option \"changeGroup\" in config.yml is set to true but no supported permission plugin (or Vault) is installed");
-          logger.warning("Group changing feature will not be used!");
+          LOGGER.warn("Hook with a permission interface failed!");
+          LOGGER.warn("Option \"changeGroup\" in config.yml is set to true but no supported permission plugin (or Vault) is installed");
+          LOGGER.warn("Group changing feature will not be used!");
         }
       } else {
-        logger.warning("Option \"changeGroup\" in config.yml is set to true but no prisoner permission group was configured");
-        logger.warning("Group changing feature will not be used!");
+        LOGGER.warn("Option \"changeGroup\" in config.yml is set to true but no prisoner permission group was configured");
+        LOGGER.warn("Group changing feature will not be used!");
       }
     }
 
@@ -185,8 +186,8 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
         // Jails must be loaded first, loading prisoners depends on jails already being loaded
         this.jailData.init();
         this.prisonerData.init();
-      } catch (final IOException | InvalidConfigurationException exception) {
-        getLogger().log(Level.SEVERE, "Error loading plugin data", exception);
+      } catch (final IOException | InvalidConfigurationException ex) {
+        LOGGER.error("Error loading plugin data", ex);
         pluginManager.disablePlugin(this);
       }
     });
@@ -224,8 +225,8 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
     try {
       this.prisonerData.save().get();
       this.jailData.save().get();
-    } catch (final InterruptedException | ExecutionException exception) {
-      getLogger().log(Level.SEVERE, "Could not save data files", exception);
+    } catch (final InterruptedException | ExecutionException ex) {
+      LOGGER.error("Could not save data files", ex);
     }
 
     try {
@@ -244,7 +245,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
     return this.jailData.save().thenCompose(v -> prisonerSaveFuture).whenCompleteAsync((v, error) -> {
       this.eventBus.post(PluginSaveDataEvent.class);
       if (error != null) {
-        getLogger().log(Level.SEVERE, "An error occurred while saving plugin data", error);
+        LOGGER.error("An error occurred while saving plugin data", error);
       }
     }, this);
   }
@@ -276,8 +277,8 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
     final FileConfiguration existingConfig = this.getConfig();
     if (!bundledConfig.getKeys(true).equals(existingConfig.getKeys(true))) {
-      this.getLogger().warning("New config.yml found!");
-      this.getLogger().warning("Make sure to make a backup of your settings before deleting your current config.yml!");
+      LOGGER.warn("New config.yml found!");
+      LOGGER.warn("Make sure to make a backup of your settings before deleting your current config.yml!");
     }
   }
 }
