@@ -27,6 +27,7 @@ package io.github.emilyydev.betterjails.commands;
 import com.github.fefo.betterjails.api.event.plugin.PluginReloadEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;
@@ -234,7 +235,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
     }
 
     final long seconds = (long) (scale * Double.parseDouble(time.substring(0, time.length() - 1)));
-    if (!this.plugin.dataHandler().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds)) {
+    if (!this.plugin.dataHandler().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds, true)) {
       sender.sendMessage(this.configuration.messages().jailPlayerFailedJailNotFound(
           prisoner, executioner, jail, time
       ));
@@ -247,32 +248,30 @@ public final class CommandHandler implements CommandExecutor, Listener {
     );
   }
 
-  private void prisonerInfo(final CommandSender sender, final String prisoner) {
+  private void prisonerInfo(final CommandSender sender, final String prisonerName) {
     final String executioner = sender.getName();
     final OfflinePlayer player = this.server.getOfflinePlayer(
-        this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), Util.NIL_UUID)
+        this.namesToUuid.getOrDefault(prisonerName.toLowerCase(Locale.ROOT), Util.NIL_UUID)
     );
 
     if (player.getUniqueId().equals(Util.NIL_UUID)) {
-      sender.sendMessage(this.configuration.messages().prisonerInfoFailedNeverJoined(prisoner, executioner));
+      sender.sendMessage(this.configuration.messages().prisonerInfoFailedNeverJoined(prisonerName, executioner));
       return;
     }
 
     final UUID uuid = player.getUniqueId();
-    if (!this.plugin.dataHandler().isPlayerJailed(prisoner)) {
-      sender.sendMessage(this.configuration.messages().prisonerInfoFailedNotJailed(prisoner, executioner));
+    final ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
+    if (prisoner == null) {
+      sender.sendMessage(this.configuration.messages().prisonerInfoFailedNotJailed(prisonerName, executioner));
       return;
     }
 
-    if (
-        this.plugin.dataHandler().isReleased(uuid, false)
-            || this.plugin.dataHandler().getSecondsLeft(uuid, 0) <= 0
-    ) {
-      sender.sendMessage(this.configuration.messages().prisonerInfoFailedNotJailed(prisoner, executioner));
+    if (prisoner.released() || prisoner.timeLeft().isZero() || prisoner.timeLeft().isNegative()) {
+      sender.sendMessage(this.configuration.messages().prisonerInfoFailedNotJailed(prisonerName, executioner));
       return;
     }
 
-    double secondsLeft = this.plugin.dataHandler().getSecondsLeft(uuid, 0);
+    double secondsLeft = prisoner.timeLeft().getSeconds();
     char timeUnit = 's';
     if (secondsLeft >= 3600 * 24 * 365.25) {
       secondsLeft /= 3600 * 24 * 365.25;
@@ -299,7 +298,7 @@ public final class CommandHandler implements CommandExecutor, Listener {
       timeUnit = 'm';
     }
 
-    final Location lastLocation = this.plugin.dataHandler().getLastLocation(uuid);
+    final Location lastLocation = prisoner.lastLocation().mutable();
     final String lastLocationString = color(
         "x:%,d y:%,d z%,d &7in &f%s",
         lastLocation.getBlockX(),
@@ -310,19 +309,20 @@ public final class CommandHandler implements CommandExecutor, Listener {
 
     final List<String> infoLines = new ArrayList<>(9);
     infoLines.add(color("&7Info for jailed player:"));
-    infoLines.add(color("  &7· Name: &f%s", this.plugin.dataHandler().getName(uuid, "&oundefined")));
+    infoLines.add(color("  &7· Name: &f%s", prisoner.name() == null ? "&oundefined" : prisoner.name()));
     infoLines.add(color("  &7· UUID: &f%s", uuid));
     infoLines.add(color("  &7· Time left: &f%,.2f%s", secondsLeft, timeUnit));
-    infoLines.add(color("  &7· Jailed in jail: &f%s", this.plugin.dataHandler().getJail(uuid, "&oundefined")));
-    infoLines.add(color("  &7· Jailed by: &f%s", this.plugin.dataHandler().getJailer(uuid, "&oundefined")));
+    infoLines.add(color("  &7· Jailed in jail: &f%s", prisoner.jail().name()));
+    infoLines.add(color("  &7· Jailed by: &f%s", prisoner.jailedBy() == null ? "&oundefined" : prisoner.jailedBy()));
     infoLines.add(color("  &7· Location before jailed: &f%s", lastLocationString));
-    infoLines.add(color("  &7· Primary group: &f%s", this.plugin.dataHandler().getPrimaryGroup(
-        uuid, this.configuration.permissionHookEnabled() ? "&oundefined" : "&oFeature not enabled"
-    )));
+    infoLines.add(color("  &7· Primary group: &f%s", prisoner.primaryGroup() == null
+        ? (this.configuration.permissionHookEnabled() ? "&oundefined" : "&oFeature not enabled")
+        : prisoner.primaryGroup()
+    ));
 
     final StringJoiner joiner = new StringJoiner(", ");
     joiner.setEmptyValue(this.configuration.permissionHookEnabled() ? "&oNone" : "&oFeature not enabled");
-    this.plugin.dataHandler().getAllParentGroups(uuid).forEach(joiner::add);
+    prisoner.parentGroups().forEach(joiner::add);
     infoLines.add(color("  &7· All parent groups: &f%s", joiner.toString()));
 
     sender.sendMessage(infoLines.toArray(DUMMY_STRING_ARRAY));

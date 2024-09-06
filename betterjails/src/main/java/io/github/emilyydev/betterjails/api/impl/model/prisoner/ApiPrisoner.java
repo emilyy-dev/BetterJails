@@ -46,9 +46,10 @@ public class ApiPrisoner implements Prisoner {
   private final Set<String> parentGroups;
   private final Jail jail;
   private final String jailedBy;
-  private final Instant jailedUntil;
+  private final SentenceExpiry expiry;
   private final Duration totalSentenceTime;
   private final ImmutableLocation lastLocation;
+  private final ImprisonmentState imprisonmentState;
 
   public ApiPrisoner(
       final UUID uuid,
@@ -57,9 +58,10 @@ public class ApiPrisoner implements Prisoner {
       final Collection<? extends String> parentGroups,
       final Jail jail,
       final String jailedBy,
-      final Instant jailedUntil,
+      final SentenceExpiry expiry,
       final Duration totalSentenceTime,
-      final ImmutableLocation lastLocation
+      final ImmutableLocation lastLocation,
+      final ImprisonmentState imprisonmentState
   ) {
     this.uuid = uuid;
     this.name = name;
@@ -67,9 +69,10 @@ public class ApiPrisoner implements Prisoner {
     this.parentGroups = ImmutableSet.copyOf(parentGroups);
     this.jail = jail;
     this.jailedBy = jailedBy;
-    this.jailedUntil = jailedUntil;
+    this.expiry = expiry;
     this.totalSentenceTime = totalSentenceTime;
     this.lastLocation = lastLocation;
+    this.imprisonmentState = imprisonmentState;
   }
 
   @Override
@@ -104,7 +107,7 @@ public class ApiPrisoner implements Prisoner {
 
   @Override
   public @NotNull Instant jailedUntil() {
-    return this.jailedUntil;
+    return released() ? Instant.MIN : this.expiry.expiryDate();
   }
 
   @Override
@@ -115,6 +118,46 @@ public class ApiPrisoner implements Prisoner {
   @Override
   public @NotNull ImmutableLocation lastLocation() {
     return this.lastLocation;
+  }
+
+  public boolean released() {
+    return this.imprisonmentState == ImprisonmentState.RELEASED;
+  }
+
+  public boolean incomplete() {
+    return this.imprisonmentState == ImprisonmentState.UNKNOWN_LOCATION;
+  }
+
+  public @NotNull Duration timeLeft() {
+    return released() ? Duration.ZERO : this.expiry.timeLeft();
+  }
+
+  public SentenceExpiry expiry() {
+    return this.expiry;
+  }
+
+  public @NotNull ApiPrisoner withReleased() {
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.expiry, this.totalSentenceTime, this.lastLocation, ImprisonmentState.RELEASED);
+  }
+
+  public @NotNull ApiPrisoner withLastLocation(final ImmutableLocation location) {
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.expiry, this.totalSentenceTime, location, ImprisonmentState.KNOWN_LOCATION);
+  }
+
+  /**
+   * Creates a copy of this prisoner, but with their sentence time running if it wasn't already.
+   * This method swaps out {@link #timeLeft} for {@link #jailedUntil}
+   */
+  public @NotNull ApiPrisoner withTimeRunning() {
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(jailedUntil()), this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
+  }
+
+  /**
+   * Creates a copy of this prisoner, but with their sentence time paused if it wasn't already.
+   * This method swaps out {@link #jailedUntil} for {@link #timeLeft}
+   */
+  public @NotNull ApiPrisoner withTimePaused() {
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(timeLeft()), this.totalSentenceTime, this.lastLocation, this.imprisonmentState);
   }
 
   @Override
@@ -138,8 +181,20 @@ public class ApiPrisoner implements Prisoner {
            ',' + this.parentGroups +
            ',' + this.jail +
            ',' + '"' + this.jailedBy + '"' +
-           ',' + this.jailedUntil +
+           ',' + this.expiry +
+           ',' + this.totalSentenceTime +
            ',' + this.lastLocation +
+           ',' + this.imprisonmentState +
            ')';
+  }
+
+  public enum ImprisonmentState {
+    // We don't actually know this prisoner's lastLocation, it will be filled in when they join the server.
+    // Ideally lastLocation would just be optional, but that would break API and stuff
+    UNKNOWN_LOCATION,
+    KNOWN_LOCATION,
+
+    // This prisoner isn't actually imprisoned any more and will be released when they join the server.
+    RELEASED
   }
 }

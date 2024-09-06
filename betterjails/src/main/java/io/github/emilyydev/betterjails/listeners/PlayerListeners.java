@@ -26,9 +26,10 @@ package io.github.emilyydev.betterjails.listeners;
 
 import com.earth2me.essentials.User;
 import com.github.fefo.betterjails.api.model.jail.Jail;
+import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.util.DataHandler;
-import io.github.emilyydev.betterjails.util.FileIO;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -40,7 +41,6 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.PluginManager;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
-import java.nio.file.Path;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -79,25 +79,27 @@ public final class PlayerListeners implements Listener {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
 
-    if (this.plugin.dataHandler().isPlayerJailed(uuid)) {
-      final YamlConfiguration jailedPlayer = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
+    ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
+    if (prisoner != null) {
       final Location backupLocation = this.plugin.configuration().backupLocation().mutable();
-      final Location lastLocation =
-          (Location) jailedPlayer.get(DataHandler.LAST_LOCATION_FIELD, backupLocation);
-      if (!jailedPlayer.getBoolean(DataHandler.IS_RELEASED_FIELD) && !player.hasPermission("betterjails.jail.exempt")) {
-        if (lastLocation.equals(backupLocation)) {
-          jailedPlayer.set(DataHandler.LAST_LOCATION_FIELD, player.getLocation());
-        }
-
-        this.plugin.dataHandler().loadJailedPlayer(uuid, jailedPlayer);
-        final Jail jail = getValidJail(jailedPlayer, player.getName(), uuid);
-        event.setSpawnLocation(jail.location().mutable());
-      } else {
+      final Location lastLocation = prisoner.lastLocation().mutable();
+      if (prisoner.released() || player.hasPermission("betterjails.jail.exempt")) {
+        // The player has been released, put them back where they were
+        // TODO(rymiel): backupLocation continues to be problematic
         if (!lastLocation.equals(backupLocation)) {
           event.setSpawnLocation(lastLocation);
         }
 
         this.plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, null, false);
+      } else {
+        if (prisoner.incomplete()) {
+          prisoner = prisoner.withLastLocation(ImmutableLocation.copyOf(player.getLocation()));
+          // TODO(rymiel): the "onJail" commands aren't run here. Is that intentional?
+        }
+
+        prisoner = prisoner.withTimeRunning();
+        this.plugin.dataHandler().savePrisoner(prisoner);
+        event.setSpawnLocation(prisoner.jail().location().mutable());
       }
     }
 
@@ -114,49 +116,30 @@ public final class PlayerListeners implements Listener {
   private void playerQuit(final PlayerQuitEvent event) {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
-    if (!this.plugin.dataHandler().isPlayerJailed(uuid)) {
+    ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
+    if (prisoner == null) {
       return;
     }
 
-    this.plugin.dataHandler().updateSecondsLeft(uuid);
-    final Path playerFile = this.plugin.dataHandler().playerDataFolder.resolve(uuid + ".yml");
-    final YamlConfiguration jailedPlayer = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
-    FileIO.writeString(playerFile, jailedPlayer.saveToString()).exceptionally(ex -> {
-      this.logger.log(Level.SEVERE, null, ex);
-      return null;
-    });
     if (!this.plugin.configuration().considerOfflineTime()) {
-      this.plugin.dataHandler().unloadJailedPlayer(uuid);
+      prisoner = prisoner.withTimePaused();
       if (this.plugin.essentials != null) {
         final User user = this.plugin.essentials.getUser(uuid);
         user.setJailTimeout(0L);
         user.setJailed(true);
       }
     }
+
+    this.plugin.dataHandler().savePrisoner(prisoner);
   }
 
   private void playerRespawn(final PlayerRespawnEvent event) {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
+    final ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
 
-    if (this.plugin.dataHandler().isPlayerJailed(uuid)) {
-      final YamlConfiguration jailedPlayer = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
-      final Jail jail = getValidJail(jailedPlayer, player.getName(), uuid);
-      event.setRespawnLocation(jail.location().mutable());
+    if (prisoner != null) {
+      event.setRespawnLocation(prisoner.jail().location().mutable());
     }
-  }
-
-  private Jail getValidJail(final YamlConfiguration prisonerData, final String playerName, final UUID uuid) {
-    final String jailName = prisonerData.getString(DataHandler.JAIL_FIELD);
-    Jail jail = this.plugin.dataHandler().getJail(jailName);
-    if (jail == null) {
-      jail = this.plugin.dataHandler().getJails().values().iterator().next();
-      prisonerData.set(DataHandler.JAIL_FIELD, jail.name());
-      this.logger.log(Level.WARNING, "Jail {0} does not exist", jailName);
-      this.logger.log(Level.WARNING, "Player {0}/{1} was attempted to relocate to {2}", new Object[]{playerName, uuid, jailName});
-      this.logger.log(Level.WARNING, "Teleporting player to jail {0} instead", jail.name());
-    }
-
-    return jail;
   }
 }

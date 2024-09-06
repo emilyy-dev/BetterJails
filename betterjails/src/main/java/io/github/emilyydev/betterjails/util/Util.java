@@ -103,7 +103,7 @@ public interface Util {
   static Metrics prepareMetrics(final BetterJailsPlugin plugin) {
     final Metrics metrics = new Metrics(plugin, BSTATS_ID);
     metrics.addCustomChart(new SingleLineChart("jail_count", () -> plugin.dataHandler().getJails().size()));
-    metrics.addCustomChart(new SingleLineChart("prisoner_count", () -> plugin.dataHandler().getPrisonerIds().size()));
+    metrics.addCustomChart(new SingleLineChart("prisoner_count", () -> plugin.dataHandler().getAllPrisoners().size()));
     metrics.addCustomChart(new SimplePie("permission_plugin_hook", () -> plugin.permissionInterface().name()));
     metrics.addCustomChart(new AdvancedPie("sentence_time", () -> {
       final Map<String, Integer> map = new LinkedHashMap<>();

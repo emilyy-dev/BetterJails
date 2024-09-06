@@ -27,14 +27,10 @@ package io.github.emilyydev.betterjails.api.impl.model.prisoner;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
-import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.base.Preconditions;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
-import io.github.emilyydev.betterjails.util.DataHandler;
 import io.github.emilyydev.betterjails.util.Util;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.configuration.Configuration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -42,7 +38,6 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -56,28 +51,7 @@ public final class ApiPrisonerManager implements PrisonerManager {
 
   @Override
   public @Nullable Prisoner getPrisoner(final @NotNull UUID uuid) {
-    Objects.requireNonNull(uuid, "uuid");
-    final Configuration config = this.plugin.dataHandler().retrieveJailedPlayer(uuid);
-    if (!config.contains(DataHandler.UUID_FIELD)) {
-      return null;
-    }
-
-    final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) config.get(DataHandler.LAST_LOCATION_FIELD));
-    final String name = config.getString(DataHandler.NAME_FIELD);
-    final String group = config.getString(DataHandler.GROUP_FIELD);
-    final List<String> parentGroups = config.getStringList(DataHandler.EXTRA_GROUPS_FIELD);
-    final Jail jail = this.plugin.dataHandler().getJail(config.getString(DataHandler.JAIL_FIELD));
-    final String jailedBy = config.getString(DataHandler.JAILED_BY_FIELD);
-    final Instant jailedUntil =
-        config.getBoolean(DataHandler.IS_RELEASED_FIELD)
-            ? Instant.MIN
-            : Instant.now().plusSeconds(this.plugin.dataHandler().getSecondsLeft(uuid, 0));
-    final Duration totalSentenceTime =
-        config.contains(DataHandler.TOTAL_SENTENCE_TIME)
-            ? Duration.ofSeconds(config.getInt(DataHandler.TOTAL_SENTENCE_TIME))
-            : Duration.ZERO;
-
-    return new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, jailedUntil, totalSentenceTime, lastLocation);
+    return this.plugin.dataHandler().getPrisoner(uuid);
   }
 
   @Override
@@ -93,7 +67,7 @@ public final class ApiPrisonerManager implements PrisonerManager {
     Preconditions.checkState(jailedUntil.isAfter(now), "duration must be positive");
 
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
-    this.plugin.dataHandler().addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds());
+    this.plugin.dataHandler().addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds(), true);
     return getPrisoner(uuid);
   }
 
@@ -112,9 +86,6 @@ public final class ApiPrisonerManager implements PrisonerManager {
 
   @Override
   public @NotNull @Unmodifiable Collection<@NotNull Prisoner> getAllPrisoners() {
-    return this.plugin.dataHandler().getPrisonerIds().stream()
-        .map(this::getPrisoner)
-        .filter(Objects::nonNull)
-        .collect(Util.toImmutableSet());
+    return this.plugin.dataHandler().getAllPrisoners();
   }
 }

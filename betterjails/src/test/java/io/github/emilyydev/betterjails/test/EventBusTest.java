@@ -90,7 +90,7 @@ public class EventBusTest {
     assertDoesNotThrow(() -> plugin.dataHandler().addJail("jail0", new Vector().toLocation(server.addSimpleWorld("world0"))));
 
     final PlayerMock player = server.addPlayer();
-    assertDoesNotThrow(() -> plugin.dataHandler().addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L, false, player.getLocation()));
+    assertDoesNotThrow(() -> plugin.dataHandler().addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L, false));
     assertDoesNotThrow(() -> plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, "test", false));
   }
 }
