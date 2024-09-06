@@ -81,8 +81,6 @@ public final class V1ToV2 implements DataUpgrader {
 
   @Override
   public boolean upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
-    plugin.getLogger().info(config.getKeys(false).toString());
-
     // NOTE: this accounts for if a jail named "version" exists.
     if (config.getInt("version", 1) >= 2) {
       return false;
