@@ -74,18 +74,16 @@ public final class PlayerListeners implements Listener {
 
     ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(uuid);
     if (prisoner != null) {
-      final Location backupLocation = this.plugin.configuration().backupLocation().mutable();
-      final Location lastLocation = prisoner.lastLocation().mutable();
+      final Location lastLocation = prisoner.lastLocationMutable();
       if (prisoner.released() || player.hasPermission("betterjails.jail.exempt")) {
         // The player has been released, put them back where they were
-        // TODO(rymiel): backupLocation continues to be problematic
-        if (!lastLocation.equals(backupLocation)) {
+        if (lastLocation != null) {
           event.setSpawnLocation(lastLocation);
         }
 
         this.plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, null, false);
       } else {
-        if (prisoner.incomplete()) {
+        if (prisoner.unknownLocation()) {
           prisoner = prisoner.withLastLocation(ImmutableLocation.copyOf(player.getLocation()));
           // TODO(rymiel): the "onJail" commands aren't run here. Is that intentional?
         }

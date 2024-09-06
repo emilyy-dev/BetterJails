@@ -296,14 +296,16 @@ public final class CommandHandler implements CommandExecutor, Listener {
       timeUnit = 'm';
     }
 
-    final Location lastLocation = prisoner.lastLocation().mutable();
-    final String lastLocationString = color(
-        "x:%,d y:%,d z%,d &7in &f%s",
-        lastLocation.getBlockX(),
-        lastLocation.getBlockY(),
-        lastLocation.getBlockZ(),
-        lastLocation.getWorld().getName()
-    );
+    final Location lastLocation = prisoner.lastLocationMutable();
+    final String lastLocationString = lastLocation == null
+        ? color("&cunknown")
+        : color(
+          "x:%,d y:%,d z%,d &7in &f%s",
+          lastLocation.getBlockX(),
+          lastLocation.getBlockY(),
+          lastLocation.getBlockZ(),
+          lastLocation.getWorld().getName()
+        );
 
     final List<String> infoLines = new ArrayList<>(9);
     infoLines.add(color("&7Info for jailed player:"));
