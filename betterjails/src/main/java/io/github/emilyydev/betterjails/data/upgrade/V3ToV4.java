@@ -30,7 +30,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 public final class V3ToV4 implements DataUpgrader {
   private static final String LAST_LOCATION_FIELD = "last-location";
-  private static final String V3_UNKNOWN_LOCATION_FIELD = "unknown-location";
+  private static final String V4_UNKNOWN_LOCATION_FIELD = "unknown-location";
 
   @Override
   public boolean upgrade(final YamlConfiguration config, final BetterJailsPlugin plugin) {
@@ -42,7 +42,7 @@ public final class V3ToV4 implements DataUpgrader {
 
     if (!config.contains(LAST_LOCATION_FIELD)) {
       // Location was corrupt, let code in PrisonerDataHandler deal with it.
-      config.set(V3_UNKNOWN_LOCATION_FIELD, true);
+      config.set(V4_UNKNOWN_LOCATION_FIELD, true);
       return true;
     }
 
@@ -50,9 +50,9 @@ public final class V3ToV4 implements DataUpgrader {
     final Location backup = plugin.configuration().backupLocation().mutable();
     if (location == null || backup.equals(location)) {
       config.set(LAST_LOCATION_FIELD, null);
-      config.set(V3_UNKNOWN_LOCATION_FIELD, true);
+      config.set(V4_UNKNOWN_LOCATION_FIELD, true);
     } else {
-      config.set(V3_UNKNOWN_LOCATION_FIELD, false);
+      config.set(V4_UNKNOWN_LOCATION_FIELD, false);
     }
 
     return true;
