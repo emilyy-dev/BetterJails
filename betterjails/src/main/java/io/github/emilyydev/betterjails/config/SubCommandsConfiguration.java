@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.nio.file.Path;
@@ -36,7 +35,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

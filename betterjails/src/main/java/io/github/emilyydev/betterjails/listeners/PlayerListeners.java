@@ -25,14 +25,11 @@
 package io.github.emilyydev.betterjails.listeners;
 
 import com.earth2me.essentials.User;
-import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
-import io.github.emilyydev.betterjails.util.DataHandler;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -42,8 +39,6 @@ import org.bukkit.plugin.PluginManager;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public final class PlayerListeners implements Listener {
 
@@ -52,11 +47,9 @@ public final class PlayerListeners implements Listener {
   }
 
   private final BetterJailsPlugin plugin;
-  private final Logger logger;
 
   private PlayerListeners(final BetterJailsPlugin plugin) {
     this.plugin = plugin;
-    this.logger = plugin.getLogger();
   }
 
   public void register() {
@@ -79,7 +72,7 @@ public final class PlayerListeners implements Listener {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
 
-    ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
+    ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(uuid);
     if (prisoner != null) {
       final Location backupLocation = this.plugin.configuration().backupLocation().mutable();
       final Location lastLocation = prisoner.lastLocation().mutable();
@@ -90,7 +83,7 @@ public final class PlayerListeners implements Listener {
           event.setSpawnLocation(lastLocation);
         }
 
-        this.plugin.dataHandler().releaseJailedPlayer(player, Util.NIL_UUID, null, false);
+        this.plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, null, false);
       } else {
         if (prisoner.incomplete()) {
           prisoner = prisoner.withLastLocation(ImmutableLocation.copyOf(player.getLocation()));
@@ -98,7 +91,7 @@ public final class PlayerListeners implements Listener {
         }
 
         prisoner = prisoner.withTimeRunning();
-        this.plugin.dataHandler().savePrisoner(prisoner);
+        this.plugin.prisonerData().savePrisoner(prisoner);
         event.setSpawnLocation(prisoner.jail().location().mutable());
       }
     }
@@ -116,7 +109,7 @@ public final class PlayerListeners implements Listener {
   private void playerQuit(final PlayerQuitEvent event) {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
-    ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
+    ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(uuid);
     if (prisoner == null) {
       return;
     }
@@ -130,13 +123,13 @@ public final class PlayerListeners implements Listener {
       }
     }
 
-    this.plugin.dataHandler().savePrisoner(prisoner);
+    this.plugin.prisonerData().savePrisoner(prisoner);
   }
 
   private void playerRespawn(final PlayerRespawnEvent event) {
     final Player player = event.getPlayer();
     final UUID uuid = player.getUniqueId();
-    final ApiPrisoner prisoner = this.plugin.dataHandler().getPrisoner(uuid);
+    final ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(uuid);
 
     if (prisoner != null) {
       event.setRespawnLocation(prisoner.jail().location().mutable());

@@ -26,8 +26,7 @@ package io.github.emilyydev.betterjails.api.impl.model.jail;
 
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.jail.JailManager;
-import io.github.emilyydev.betterjails.BetterJailsPlugin;
-import io.github.emilyydev.betterjails.util.DataHandler;
+import io.github.emilyydev.betterjails.data.JailDataHandler;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,10 +39,10 @@ import java.util.concurrent.ExecutionException;
 
 public class ApiJailManager implements JailManager {
 
-  private final BetterJailsPlugin plugin;
+  private final JailDataHandler jailData;
 
-  public ApiJailManager(final BetterJailsPlugin plugin) {
-    this.plugin = plugin;
+  public ApiJailManager(final JailDataHandler jailData) {
+    this.jailData = jailData;
   }
 
   @Override
@@ -53,26 +52,25 @@ public class ApiJailManager implements JailManager {
     Objects.requireNonNull(name, "name");
     Objects.requireNonNull(location, "location");
 
-    final DataHandler dataHandler = this.plugin.dataHandler();
-    if (dataHandler.getJail(name) != null) {
+    if (this.jailData.getJail(name) != null) {
       throw new IllegalArgumentException("name");
     }
 
     try {
-      dataHandler.addJail(name, location).get();
+      this.jailData.addJail(name, location).get();
     } catch (final InterruptedException exception) {
       // bleh
     } catch (final ExecutionException exception) {
       throw new RuntimeException(exception.getCause());
     }
 
-    return dataHandler.getJail(name);
+    return this.jailData.getJail(name);
   }
 
   @Override
   public @Nullable Jail getJail(final @NotNull String name) {
     Objects.requireNonNull(name, "name");
-    return this.plugin.dataHandler().getJail(name);
+    return this.jailData.getJail(name);
   }
 
   @Override
@@ -80,7 +78,7 @@ public class ApiJailManager implements JailManager {
     Objects.requireNonNull(jail, "jail");
 
     try {
-      this.plugin.dataHandler().removeJail(jail.name()).get();
+      this.jailData.removeJail(jail.name()).get();
     } catch (final InterruptedException exception) {
       // bleh
     } catch (final ExecutionException exception) {
@@ -90,6 +88,6 @@ public class ApiJailManager implements JailManager {
 
   @Override
   public @NotNull @UnmodifiableView Collection<@NotNull Jail> getAllJails() {
-    return Collections.unmodifiableCollection(this.plugin.dataHandler().getJails().values());
+    return Collections.unmodifiableCollection(this.jailData.getJails().values());
   }
 }

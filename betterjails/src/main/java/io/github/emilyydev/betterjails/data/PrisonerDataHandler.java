@@ -22,12 +22,9 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.util;
+package io.github.emilyydev.betterjails.data;
 
 import com.earth2me.essentials.User;
-import com.github.fefo.betterjails.api.event.jail.JailCreateEvent;
-import com.github.fefo.betterjails.api.event.jail.JailDeleteEvent;
-import com.github.fefo.betterjails.api.event.plugin.PluginSaveDataEvent;
 import com.github.fefo.betterjails.api.event.prisoner.PlayerImprisonEvent;
 import com.github.fefo.betterjails.api.event.prisoner.PrisonerReleaseEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
@@ -36,28 +33,25 @@ import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
-import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.SentenceExpiry;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
-import io.github.emilyydev.betterjails.dataupgrade.DataUpgrader;
-import io.github.emilyydev.betterjails.dataupgrade.V1ToV2;
+import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
+import io.github.emilyydev.betterjails.data.upgrade.V1ToV2;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
+import io.github.emilyydev.betterjails.util.FileIO;
+import io.github.emilyydev.betterjails.util.Teleport;
+import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -78,7 +72,7 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
-public final class DataHandler {
+public class PrisonerDataHandler {
 
   public static final String IS_RELEASED_FIELD = "released";
   public static final String LAST_LOCATION_FIELD = "last-location";
@@ -102,21 +96,17 @@ public final class DataHandler {
   private final BetterJailsConfiguration config;
   private final SubCommandsConfiguration subCommands;
   private final Server server;
-  private final Map<String, Jail> jails = new HashMap<>();
   private final Map<UUID, ApiPrisoner> prisoners = new HashMap<>();
 
-  private final Path jailsFile;
   private Location backupLocation;
-  private YamlConfiguration jailsYaml;
 
-  public DataHandler(final BetterJailsPlugin plugin) {
+  public PrisonerDataHandler(final BetterJailsPlugin plugin) {
     this.plugin = plugin;
     this.config = plugin.configuration();
     this.subCommands = plugin.subCommands();
     this.server = plugin.getServer();
 
     final Path pluginDir = plugin.getPluginDir();
-    this.jailsFile = pluginDir.resolve("jails.yml");
     this.playerDataFolder = pluginDir.resolve("playerdata");
   }
 
@@ -124,8 +114,6 @@ public final class DataHandler {
     this.backupLocation = this.config.backupLocation().mutable();
 
     Files.createDirectories(this.playerDataFolder);
-    loadJails();
-    alertNewConfigAvailable();
     loadPrisoners();
   }
 
@@ -147,11 +135,11 @@ public final class DataHandler {
         }
 
         final String jailName = yaml.getString(JAIL_FIELD);
-        Jail jail = getJail(jailName);
+        Jail jail = this.plugin.jailData().getJail(jailName);
         if (jail == null) {
           // If the jail has been removed, just fall back to the first jail in the config. If there are no jails, this
           // will throw an exception, but why would you have no jails?
-          jail = this.jails.values().iterator().next();
+          jail = this.plugin.jailData().getJails().values().iterator().next();
           this.plugin.getLogger().log(Level.WARNING, "Jail {0} does not exist", jailName);
           this.plugin.getLogger().log(Level.WARNING, "Player {0}/{1} was attempted to relocate to {2}", new Object[]{name, uuid, jail.name()});
         }
@@ -183,18 +171,6 @@ public final class DataHandler {
     }
   }
 
-  private void loadJails() throws IOException {
-    if (Files.notExists(this.jailsFile)) {
-      Files.createFile(this.jailsFile);
-    }
-
-    this.jailsYaml = YamlConfiguration.loadConfiguration(this.jailsFile.toFile());
-    for (final String key : this.jailsYaml.getKeys(false)) {
-      final String lowerCaseKey = key.toLowerCase(Locale.ROOT);
-      this.jails.put(lowerCaseKey, new ApiJail(lowerCaseKey, (Location) this.jailsYaml.get(key)));
-    }
-  }
-
   public Collection<Prisoner> getAllPrisoners() {
     return Collections.unmodifiableCollection(this.prisoners.values());
   }
@@ -207,32 +183,6 @@ public final class DataHandler {
     return this.prisoners.get(uuid);
   }
 
-  public Map<String, Jail> getJails() {
-    return this.jails;
-  }
-
-  public @Nullable Jail getJail(final String name) {
-    return this.jails.get(name.toLowerCase(Locale.ROOT));
-  }
-
-  public CompletableFuture<Void> addJail(final String name, final Location location) {
-    final String lowerCaseName = name.toLowerCase(Locale.ROOT);
-    this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, location))
-        .location(ImmutableLocation.copyOf(location));
-    this.jailsYaml.set(lowerCaseName, location);
-    this.plugin.eventBus().post(JailCreateEvent.class, name, ImmutableLocation.copyOf(location));
-    return FileIO.writeString(this.jailsFile, this.jailsYaml.saveToString());
-  }
-
-  public CompletableFuture<Void> removeJail(final String name) {
-    final String lowerCaseName = name.toLowerCase(Locale.ROOT);
-    final Jail jail = this.jails.remove(lowerCaseName);
-    this.jailsYaml.set(name, null); // just in case...
-    this.jailsYaml.set(lowerCaseName, null);
-    this.plugin.eventBus().post(JailDeleteEvent.class, jail);
-    return FileIO.writeString(this.jailsFile, this.jailsYaml.saveToString());
-  }
-
   public boolean addJailedPlayer(
       final OfflinePlayer player,
       final String jailName,
@@ -243,7 +193,7 @@ public final class DataHandler {
   ) {
     final UUID prisonerUuid = player.getUniqueId();
     final ApiPrisoner existingPrisoner = this.prisoners.get(prisonerUuid);
-    final Jail jail = getJail(jailName);
+    final Jail jail = this.plugin.jailData().getJail(jailName);
 
     if (jail == null) {
       return false;
@@ -434,9 +384,7 @@ public final class DataHandler {
   }
 
   public CompletableFuture<Void> save() {
-    // A Jail's location can be changed...
-    this.jails.forEach((name, jail) -> this.jailsYaml.set(name.toLowerCase(Locale.ROOT), jail.location().mutable()));
-    CompletableFuture<Void> cf = FileIO.writeString(this.jailsFile, this.jailsYaml.saveToString());
+    CompletableFuture<Void> cf = CompletableFuture.completedFuture(null);
 
     for (final ApiPrisoner prisoner : this.prisoners.values()) {
       cf = cf.thenCompose(v -> savePrisoner(prisoner).whenComplete((v1, ex) -> {
@@ -446,28 +394,14 @@ public final class DataHandler {
       }));
     }
 
-    this.plugin.eventBus().post(PluginSaveDataEvent.class);
     return cf;
   }
 
   public void reload() throws IOException {
     this.backupLocation = this.config.backupLocation().mutable();
 
-    this.jails.clear();
-    loadJails();
-
     this.prisoners.clear();
     loadPrisoners();
-
-    if (this.config.permissionHookEnabled()) {
-      this.config.prisonerPermissionGroup().ifPresent(prisonerGroup ->
-          this.plugin.resetPermissionInterface(
-              PermissionInterface.determinePermissionInterface(this.plugin, prisonerGroup)
-          )
-      );
-    } else {
-      this.plugin.resetPermissionInterface(PermissionInterface.NULL);
-    }
   }
 
   public void timer() {
@@ -490,23 +424,6 @@ public final class DataHandler {
       if (released || prisoner.timeLeft().isZero() || prisoner.timeLeft().isNegative()) {
         releaseJailedPlayer(this.server.getOfflinePlayer(key), Util.NIL_UUID, "timer", true);
       }
-    }
-  }
-
-  // TODO keep this or perform some kind of automatic migration?
-  private void alertNewConfigAvailable() throws IOException, InvalidConfigurationException {
-    final YamlConfiguration bundledConfig = new YamlConfiguration();
-    try (
-        final InputStream in = this.plugin.getResource("config.yml");
-        final Reader reader = new InputStreamReader(Objects.requireNonNull(in, "bundled config not present"), StandardCharsets.UTF_8)
-    ) {
-      bundledConfig.load(reader);
-    }
-
-    final FileConfiguration existingConfig = this.plugin.getConfig();
-    if (!bundledConfig.getKeys(true).equals(existingConfig.getKeys(true))) {
-      this.plugin.getLogger().warning("New config.yml found!");
-      this.plugin.getLogger().warning("Make sure to make a backup of your settings before deleting your current config.yml!");
     }
   }
 

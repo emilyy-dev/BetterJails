@@ -26,7 +26,6 @@ package io.github.emilyydev.betterjails.interfaces.permission;
 
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.Server;
 import org.bukkit.plugin.PluginManager;
 
 import java.util.Collection;
