@@ -77,7 +77,7 @@ public final class JailDataHandler {
     }
 
     final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(this.jailsFile.toFile());
-    migratePrisonerData(yaml, this.jailsFile);
+    migrateJailData(yaml, this.jailsFile);
     @SuppressWarnings("unchecked")
     final List<Map<String, Object>> jails = (List<Map<String, Object>>) yaml.get("jails");
     for (final Map<String, Object> jail : jails) {
@@ -139,7 +139,7 @@ public final class JailDataHandler {
     loadJails();
   }
 
-  private void migratePrisonerData(final YamlConfiguration config, final Path file) {
+  private void migrateJailData(final YamlConfiguration config, final Path file) {
     boolean changed = false;
     final int version = config.getInt("version", 1);
     if (version > DataUpgrader.JAIL_VERSION) {
