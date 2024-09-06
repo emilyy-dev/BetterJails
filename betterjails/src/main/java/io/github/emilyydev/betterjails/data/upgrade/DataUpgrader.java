@@ -25,13 +25,14 @@
 package io.github.emilyydev.betterjails.data.upgrade;
 
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
 
 @FunctionalInterface
 public interface DataUpgrader {
 
-  int VERSION = 4;
+  int PRISONER_VERSION = 4;
+  int JAIL_VERSION = 2;
   DataUpgrader TAIL = (config, plugin) -> false;
 
-  boolean upgrade(YamlConfiguration config, BetterJailsPlugin plugin);
+  boolean upgrade(ConfigurationSection config, BetterJailsPlugin plugin);
 }

@@ -38,9 +38,9 @@ import io.github.emilyydev.betterjails.api.impl.model.prisoner.SentenceExpiry;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
-import io.github.emilyydev.betterjails.data.upgrade.V1ToV2;
-import io.github.emilyydev.betterjails.data.upgrade.V2ToV3;
-import io.github.emilyydev.betterjails.data.upgrade.V3ToV4;
+import io.github.emilyydev.betterjails.data.upgrade.prisoner.V1ToV2;
+import io.github.emilyydev.betterjails.data.upgrade.prisoner.V2ToV3;
+import io.github.emilyydev.betterjails.data.upgrade.prisoner.V3ToV4;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
 import io.github.emilyydev.betterjails.util.FileIO;
 import io.github.emilyydev.betterjails.util.Teleport;
@@ -292,7 +292,7 @@ public class PrisonerDataHandler {
     this.prisoners.put(prisoner.uuid(), prisoner);
 
     final YamlConfiguration yaml = new YamlConfiguration();
-    yaml.set("version", DataUpgrader.VERSION);
+    yaml.set("version", DataUpgrader.PRISONER_VERSION);
     V1ToV2.setVersionWarning(yaml);
 
     yaml.set(UUID_FIELD, prisoner.uuid().toString());
@@ -430,7 +430,7 @@ public class PrisonerDataHandler {
   private void migratePrisonerData(final YamlConfiguration config, final Path file) {
     boolean changed = false;
     final int version = config.getInt("version", 1);
-    if (version > DataUpgrader.VERSION) {
+    if (version > DataUpgrader.PRISONER_VERSION) {
       this.plugin.getLogger().warning("Prisoner file " + file + " is from a newer version of BetterJails");
       this.plugin.getLogger().warning("The plugin will continue to load it, but it may not function properly, errors might show up and data could be lost");
       this.plugin.getLogger().warning("!!! Consider updating BetterJails !!!");

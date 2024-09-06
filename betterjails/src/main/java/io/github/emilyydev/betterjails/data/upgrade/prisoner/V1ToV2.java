@@ -22,12 +22,12 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.data.upgrade;
+package io.github.emilyydev.betterjails.data.upgrade.prisoner;
 
 import com.google.common.collect.ImmutableMap;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.lang.invoke.MethodHandle;
 import java.util.Collections;
@@ -96,7 +96,7 @@ public final class V1ToV2 implements DataUpgrader {
   }
 
   @Override
-  public boolean upgrade(final YamlConfiguration config, final BetterJailsPlugin plugin) {
+  public boolean upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
     boolean changed = false;
     for (final Map.Entry<String, String> entry : FIELD_MIGRATION_MAP.entrySet()) {
       final String oldKey = entry.getKey();
