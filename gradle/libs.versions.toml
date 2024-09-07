@@ -17,6 +17,6 @@ vault = { module = "com.github.MilkBowl:VaultAPI", version.ref = "vault" }
 essentialsx = { module = "net.ess3:EssentialsX", version.ref = "essentialsx" }
 annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
-slf4j-impl = { module = "org.slf4j:slf4j-impl", version.ref = "slf4j" }
+slf4j-impl = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 mockbukkit = { module = "com.github.seeseemelk:MockBukkit-v1.20", version.ref = "mockbukkit" }
