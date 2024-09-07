@@ -30,77 +30,46 @@ import com.github.fefo.betterjails.api.event.prisoner.PrisonerReleaseEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.SentenceExpiry;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
-import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
-import io.github.emilyydev.betterjails.data.upgrade.prisoner.V1ToV2;
-import io.github.emilyydev.betterjails.data.upgrade.prisoner.V2ToV3;
-import io.github.emilyydev.betterjails.data.upgrade.prisoner.V3ToV4;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
-import io.github.emilyydev.betterjails.util.FileIO;
+import io.github.emilyydev.betterjails.interfaces.storage.StorageInterface;
 import io.github.emilyydev.betterjails.util.Teleport;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 public final class PrisonerDataHandler {
-
-  public static final String LAST_LOCATION_FIELD = "last-location";
-  public static final String UNKNOWN_LOCATION_FIELD = "unknown-location";
-  public static final String GROUP_FIELD = "group";
-  public static final String EXTRA_GROUPS_FIELD = "extra-groups";
-  public static final String UUID_FIELD = "uuid";
-  public static final String NAME_FIELD = "name";
-  public static final String JAIL_FIELD = "jail";
-  public static final String JAILED_BY_FIELD = "jailed-by";
-  public static final String SECONDS_LEFT_FIELD = "seconds-left";
-  public static final String TOTAL_SENTENCE_TIME = "total-sentence-time";
-
   private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
-  private static final List<DataUpgrader> DATA_UPGRADERS =
-      ImmutableList.of(
-          new V1ToV2(),
-          new V2ToV3(),
-          new V3ToV4()
-      );
-
-  public final Path playerDataFolder;
   private final BetterJailsPlugin plugin;
   private final BetterJailsConfiguration config;
   private final SubCommandsConfiguration subCommands;
+  private final StorageInterface storage;
   private final Server server;
   private final Map<UUID, ApiPrisoner> prisoners = new HashMap<>();
 
@@ -111,69 +80,23 @@ public final class PrisonerDataHandler {
     this.config = plugin.configuration();
     this.subCommands = plugin.subCommands();
     this.server = plugin.getServer();
-
-    final Path pluginDir = plugin.getPluginDir();
-    this.playerDataFolder = pluginDir.resolve("playerdata");
+    this.storage = plugin.storageInterface();
   }
 
-  public void init() throws IOException, InvalidConfigurationException {
+  public void init() {
     // TODO(v2): can't remove this yet
     this.backupLocation = this.config.backupLocation().mutable();
 
-    Files.createDirectories(this.playerDataFolder);
     loadPrisoners();
   }
 
-  private void loadPrisoners() throws IOException {
-    try (final Stream<Path> s = Files.list(this.playerDataFolder)) {
-      s.forEach(file -> {
-        final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file.toFile());
-        migratePrisonerData(yaml, file);
-        final UUID uuid = UUID.fromString(file.getFileName().toString().replace(".yml", ""));
-        final String name = yaml.getString(NAME_FIELD);
-
-        boolean unknownLocation = yaml.getBoolean(UNKNOWN_LOCATION_FIELD, false);
-
-        if (!unknownLocation && !yaml.contains(LAST_LOCATION_FIELD)) {
-          // TODO(rymiel): issue #11
-          LOGGER.error("Failed to load last known location of prisoner {} ({}). The world they were previously in might have been removed.", uuid, name);
-          unknownLocation = true;
-        }
-
-        final String jailName = yaml.getString(JAIL_FIELD);
-        Jail jail = this.plugin.jailData().getJail(jailName);
-        if (jail == null) {
-          // If the jail has been removed, just fall back to the first jail in the config. If there are no jails, this
-          // will throw an exception, but why would you have no jails?
-          jail = this.plugin.jailData().getJails().values().iterator().next();
-          LOGGER.warn("Jail {} does not exist", jailName);
-          LOGGER.warn("Player {}/{} was attempted to relocate to {}", name, uuid, jail.name());
-        }
-
-        // TODO(v2): We have to set some location here, due to @NotNull API contract in Prisoner. It should be made
-        //  nullable eventually, since backupLocation no longer carries any significance.
-        final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) yaml.get(LAST_LOCATION_FIELD, this.backupLocation));
-        final String group = yaml.getString(GROUP_FIELD);
-        final List<String> parentGroups = yaml.getStringList(EXTRA_GROUPS_FIELD);
-        final String jailedBy = yaml.getString(JAILED_BY_FIELD);
-        final Duration timeLeft = Duration.ofSeconds(yaml.getLong(SECONDS_LEFT_FIELD, 0L));
-        final Duration totalSentenceTime = Duration.ofSeconds(yaml.getInt(TOTAL_SENTENCE_TIME, 0));
-
-        final Player existingPlayer = this.server.getPlayer(uuid); // This is only relevant for reloading
-
-        final SentenceExpiry expiry;
-        if (this.config.considerOfflineTime() || existingPlayer != null) {
-          // If considering offline time, or if the player is online, the player will have a "deadline", jailedUntil,
-          // whereas timeLeft would be constantly changing.
-          expiry = SentenceExpiry.of(Instant.now().plus(timeLeft));
-        } else {
-          // If not considering offline time, all players currently have a remaining time, timeLeft, but when they'd
-          // be released, jailedUntil, will remain unknown until the player actually joins.
-          expiry = SentenceExpiry.of(timeLeft);
-        }
-        
-        this.prisoners.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, expiry, totalSentenceTime, lastLocation, unknownLocation));
-      });
+  private void loadPrisoners() {
+    try {
+      this.storage.loadPrisoners(this.prisoners).get();
+    } catch (final InterruptedException ex) {
+      // bleh
+    } catch (final ExecutionException ex) {
+      throw new RuntimeException(ex.getCause());
     }
   }
 
@@ -296,29 +219,14 @@ public final class PrisonerDataHandler {
   public CompletableFuture<Void> savePrisoner(final ApiPrisoner prisoner) {
     this.prisoners.put(prisoner.uuid(), prisoner);
 
-    final YamlConfiguration yaml = new YamlConfiguration();
-    DataUpgrader.markPrisonerVersion(yaml);
-
-    yaml.set(UUID_FIELD, prisoner.uuid().toString());
-    yaml.set(NAME_FIELD, prisoner.name());
-    yaml.set(JAIL_FIELD, prisoner.jail().name().toLowerCase(Locale.ROOT));
-    yaml.set(JAILED_BY_FIELD, prisoner.jailedBy());
-    yaml.set(SECONDS_LEFT_FIELD, prisoner.timeLeft().getSeconds());
-    yaml.set(TOTAL_SENTENCE_TIME, prisoner.totalSentenceTime().getSeconds());
-    yaml.set(LAST_LOCATION_FIELD, prisoner.lastLocationMutable());
-    yaml.set(UNKNOWN_LOCATION_FIELD, prisoner.unknownLocation());
-    yaml.set(GROUP_FIELD, prisoner.primaryGroup());
-    yaml.set(EXTRA_GROUPS_FIELD, ImmutableList.copyOf(prisoner.parentGroups()));
-
-    return FileIO.writeString(this.playerDataFolder.resolve(prisoner.uuid() + ".yml"), yaml.saveToString());
+    return storage.savePrisoner(prisoner);
   }
 
-  public void deletePrisonerFile(final Prisoner prisoner) {
-    final Path playerFile = this.playerDataFolder.resolve(prisoner.uuid() + ".yml");
+  public void deletePrisonerFile(final ApiPrisoner prisoner) {
     try {
-      Files.deleteIfExists(playerFile);
-    } catch (final IOException ex) {
-      LOGGER.warn("Could not delete prisoner file {}", playerFile, ex);
+      this.storage.deletePrisoner(prisoner).get();
+    } catch (final InterruptedException | ExecutionException ex) {
+      LOGGER.error("Could not delete prisoner {}/{}", prisoner.uuid(), prisoner.name(), ex);
     }
   }
 
@@ -398,7 +306,7 @@ public final class PrisonerDataHandler {
     return cf;
   }
 
-  public void reload() throws IOException {
+  public void reload() {
     this.backupLocation = this.config.backupLocation().mutable();
     this.prisoners.clear();
     loadPrisoners();
@@ -425,30 +333,6 @@ public final class PrisonerDataHandler {
       if (released) {
         releaseJailedPlayer(this.server.getOfflinePlayer(key), Util.NIL_UUID, "timer", true);
       }
-    }
-  }
-
-  private void migratePrisonerData(final YamlConfiguration config, final Path file) {
-    boolean changed = false;
-    final int version = config.getInt("version", 1);
-    if (version > DataUpgrader.PRISONER_VERSION) {
-      LOGGER.warn("Prisoner file {} is from a newer version of BetterJails", file);
-      LOGGER.warn("The plugin will continue to load it, but it may not function properly, errors might show up and data could be lost");
-      LOGGER.warn("!!! Consider updating BetterJails !!!");
-      return;
-    }
-
-    for (final DataUpgrader upgrader : DATA_UPGRADERS.subList(version - 1, DATA_UPGRADERS.size())) {
-      upgrader.upgrade(config, this.plugin);
-      changed = true;
-    }
-
-    if (changed) {
-      DataUpgrader.markPrisonerVersion(config);
-      FileIO.writeString(file, config.saveToString()).exceptionally(ex -> {
-        LOGGER.warn("Could not save player data file {}", file, ex);
-        return null;
-      });
     }
   }
 }

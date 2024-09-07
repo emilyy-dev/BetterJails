@@ -28,17 +28,11 @@ import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
 import org.bukkit.configuration.ConfigurationSection;
 
-import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static java.lang.invoke.MethodHandles.Lookup;
-import static java.lang.invoke.MethodHandles.lookup;
-import static java.lang.invoke.MethodType.methodType;
 
 public final class V1ToV2 implements DataUpgrader {
 

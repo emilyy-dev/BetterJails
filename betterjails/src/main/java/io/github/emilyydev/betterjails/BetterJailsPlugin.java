@@ -38,6 +38,8 @@ import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.data.JailDataHandler;
 import io.github.emilyydev.betterjails.data.PrisonerDataHandler;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
+import io.github.emilyydev.betterjails.interfaces.storage.BukkitConfigurationStorage;
+import io.github.emilyydev.betterjails.interfaces.storage.StorageInterface;
 import io.github.emilyydev.betterjails.listeners.PlayerListeners;
 import io.github.emilyydev.betterjails.listeners.PluginDisableListener;
 import io.github.emilyydev.betterjails.util.FileIO;
@@ -85,6 +87,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   private final Path pluginDir = getDataFolder().toPath();
   private final BetterJailsConfiguration configuration = new BetterJailsConfiguration(this.pluginDir);
   private final SubCommandsConfiguration subCommands = new SubCommandsConfiguration(this.pluginDir);
+  private final StorageInterface storageInterface = new BukkitConfigurationStorage(this);
   private final PrisonerDataHandler prisonerData = new PrisonerDataHandler(this);
   private final JailDataHandler jailData = new JailDataHandler(this);
   private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this.jailData), new ApiPrisonerManager(this));
@@ -117,6 +120,10 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
   public PermissionInterface permissionInterface() {
     return this.permissionInterface;
+  }
+
+  public StorageInterface storageInterface() {
+    return this.storageInterface;
   }
 
   public void resetPermissionInterface(final PermissionInterface permissionInterface) {
