@@ -110,14 +110,17 @@ public class BukkitConfigurationStorage implements StorageInterface {
 
   @Override
   public CompletableFuture<Void> deletePrisoner(ApiPrisoner prisoner) {
+    CompletableFuture<Void> future = new CompletableFuture<>();
     final Path playerFile = this.playerDataFolder.resolve(prisoner.uuid() + ".yml");
     try {
       Files.deleteIfExists(playerFile);
+      future.complete(null);
     } catch (final IOException ex) {
       LOGGER.warn("Could not delete prisoner file {}", playerFile, ex);
+      future.completeExceptionally(ex);
     }
 
-    return CompletableFuture.completedFuture(null);
+    return future;
   }
 
   @Override
