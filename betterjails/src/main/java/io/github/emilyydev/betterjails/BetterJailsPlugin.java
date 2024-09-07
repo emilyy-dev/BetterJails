@@ -193,7 +193,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
         // Jails must be loaded first, loading prisoners depends on jails already being loaded
         this.jailData.init();
         this.prisonerData.init();
-      } catch (final IOException | InvalidConfigurationException ex) {
+      } catch (final IOException | InvalidConfigurationException | RuntimeException ex) {
         LOGGER.error("Error loading plugin data", ex);
         pluginManager.disablePlugin(this);
       }

@@ -56,7 +56,7 @@ public final class JailDataHandler {
 
   private void loadJails() {
     try {
-      this.storage.loadJails(this.jails).get();
+      this.jails.putAll(this.storage.loadJails().get());
     } catch (final InterruptedException ex) {
       // bleh
     } catch (final ExecutionException ex) {

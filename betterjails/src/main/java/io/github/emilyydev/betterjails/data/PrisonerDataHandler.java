@@ -92,7 +92,7 @@ public final class PrisonerDataHandler {
 
   private void loadPrisoners() {
     try {
-      this.storage.loadPrisoners(this.prisoners).get();
+      this.prisoners.putAll(this.storage.loadPrisoners().get());
     } catch (final InterruptedException ex) {
       // bleh
     } catch (final ExecutionException ex) {
@@ -296,14 +296,7 @@ public final class PrisonerDataHandler {
   }
 
   public CompletableFuture<Void> save() {
-    CompletableFuture<Void> cf = CompletableFuture.completedFuture(null);
-
-    for (final ApiPrisoner prisoner : this.prisoners.values()) {
-      final CompletableFuture<Void> savePrisonerFuture = savePrisoner(prisoner);
-      cf = cf.thenCompose(v -> savePrisonerFuture);
-    }
-
-    return cf;
+    return this.storage.savePrisoners(this.prisoners);
   }
 
   public void reload() {

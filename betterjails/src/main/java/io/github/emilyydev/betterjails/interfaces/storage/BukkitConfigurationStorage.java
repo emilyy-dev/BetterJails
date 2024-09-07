@@ -97,6 +97,18 @@ public class BukkitConfigurationStorage implements StorageInterface {
   }
 
   @Override
+  public CompletableFuture<Void> savePrisoners(Map<UUID, ApiPrisoner> prisoners) {
+    CompletableFuture<Void> cf = CompletableFuture.completedFuture(null);
+
+    for (final ApiPrisoner prisoner : prisoners.values()) {
+      final CompletableFuture<Void> savePrisonerFuture = savePrisoner(prisoner);
+      cf = cf.thenCompose(v -> savePrisonerFuture);
+    }
+
+    return cf;
+  }
+
+  @Override
   public CompletableFuture<Void> deletePrisoner(ApiPrisoner prisoner) {
     final Path playerFile = this.playerDataFolder.resolve(prisoner.uuid() + ".yml");
     try {
@@ -109,10 +121,12 @@ public class BukkitConfigurationStorage implements StorageInterface {
   }
 
   @Override
-  public CompletableFuture<Void> loadPrisoners(Map<UUID, ApiPrisoner> out) {
+  public CompletableFuture<Map<UUID, ApiPrisoner>> loadPrisoners() {
+    final Map<UUID, ApiPrisoner> out = new HashMap<>();
+    CompletableFuture<Map<UUID, ApiPrisoner>> future = new CompletableFuture<>();
+    final Location backupLocation = this.config.backupLocation().mutable();
     try {
       Files.createDirectories(this.playerDataFolder);
-      final Location backupLocation = this.config.backupLocation().mutable();
       try (final Stream<Path> s = Files.list(this.playerDataFolder)) {
         s.forEach(file -> {
           final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file.toFile());
@@ -162,15 +176,13 @@ public class BukkitConfigurationStorage implements StorageInterface {
 
           out.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, expiry, totalSentenceTime, lastLocation, unknownLocation));
         });
-
-        return CompletableFuture.completedFuture(null);
       }
+
+      future.complete(out);
     } catch (IOException e) {
-      // CompletableFuture.failedFuture is added in Java 9 :(
-      CompletableFuture<Void> future = new CompletableFuture<>();
       future.completeExceptionally(e);
-      return future;
     }
+    return future;
   }
 
   private Map<String, Object> serializeJail(final Jail jail) {
@@ -178,6 +190,14 @@ public class BukkitConfigurationStorage implements StorageInterface {
     map.put(NAME_FIELD, jail.name());
     map.put(LOCATION_FIELD, jail.location().mutable());
     return map;
+  }
+
+  @Override
+  public CompletableFuture<Void> saveJail(Jail jail) {
+    return this.loadJails().thenCompose(map -> {
+      map.put(jail.name(), jail);
+      return this.saveJails(map);
+    });
   }
 
   @Override
@@ -195,7 +215,17 @@ public class BukkitConfigurationStorage implements StorageInterface {
   }
 
   @Override
-  public CompletableFuture<Void> loadJails(Map<String, Jail> out) {
+  public CompletableFuture<Void> deleteJail(Jail jail) {
+    return this.loadJails().thenCompose(map -> {
+      map.remove(jail.name());
+      return this.saveJails(map);
+    });
+  }
+
+  @Override
+  public CompletableFuture<Map<String, Jail>> loadJails() {
+    final Map<String, Jail> out = new HashMap<>();
+    CompletableFuture<Map<String, Jail>> future = new CompletableFuture<>();
     try {
       if (Files.notExists(this.jailsFile)) {
         Files.createFile(this.jailsFile);
@@ -210,13 +240,11 @@ public class BukkitConfigurationStorage implements StorageInterface {
         out.put(name, new ApiJail(name, location));
       }
 
-      return CompletableFuture.completedFuture(null);
+      future.complete(out);
     } catch (IOException e) {
-      // CompletableFuture.failedFuture is added in Java 9 :(
-      CompletableFuture<Void> future = new CompletableFuture<>();
       future.completeExceptionally(e);
-      return future;
     }
+    return future;
   }
 
   private void migratePrisonerData(final YamlConfiguration config, final Path file) {
