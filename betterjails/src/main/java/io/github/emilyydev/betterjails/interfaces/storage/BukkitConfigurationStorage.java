@@ -126,7 +126,7 @@ public class BukkitConfigurationStorage implements StorageInterface {
   @Override
   public CompletableFuture<Map<UUID, ApiPrisoner>> loadPrisoners() {
     final Map<UUID, ApiPrisoner> out = new HashMap<>();
-    CompletableFuture<Map<UUID, ApiPrisoner>> future = new CompletableFuture<>();
+    final CompletableFuture<Map<UUID, ApiPrisoner>> future = new CompletableFuture<>();
     final Location backupLocation = this.config.backupLocation().mutable();
     try {
       Files.createDirectories(this.playerDataFolder);
@@ -228,7 +228,7 @@ public class BukkitConfigurationStorage implements StorageInterface {
   @Override
   public CompletableFuture<Map<String, Jail>> loadJails() {
     final Map<String, Jail> out = new HashMap<>();
-    CompletableFuture<Map<String, Jail>> future = new CompletableFuture<>();
+    final CompletableFuture<Map<String, Jail>> future = new CompletableFuture<>();
     try {
       if (Files.notExists(this.jailsFile)) {
         Files.createFile(this.jailsFile);
