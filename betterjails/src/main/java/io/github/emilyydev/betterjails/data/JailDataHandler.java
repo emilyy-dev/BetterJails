@@ -30,7 +30,7 @@ import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
-import io.github.emilyydev.betterjails.interfaces.storage.StorageInterface;
+import io.github.emilyydev.betterjails.interfaces.storage.StorageAccessor;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,12 +42,12 @@ import java.util.concurrent.ExecutionException;
 
 public final class JailDataHandler {
   private final BetterJailsPlugin plugin;
-  private final StorageInterface storage;
+  private final StorageAccessor storage;
   private final Map<String, Jail> jails = new HashMap<>();
 
   public JailDataHandler(final BetterJailsPlugin plugin) {
     this.plugin = plugin;
-    this.storage = plugin.storageInterface();
+    this.storage = plugin.storageAccessor();
   }
 
   public void init() {
@@ -65,7 +65,7 @@ public final class JailDataHandler {
   }
 
   public CompletableFuture<Void> save() {
-    return storage.saveJails(this.jails);
+    return this.storage.saveJails(this.jails);
   }
 
   public Map<String, Jail> getJails() {

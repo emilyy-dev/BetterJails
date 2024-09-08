@@ -37,6 +37,7 @@ import io.github.emilyydev.betterjails.api.impl.model.prisoner.SentenceExpiry;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
+import io.github.emilyydev.betterjails.interfaces.storage.StorageAccessor;
 import io.github.emilyydev.betterjails.interfaces.storage.StorageInterface;
 import io.github.emilyydev.betterjails.util.Teleport;
 import io.github.emilyydev.betterjails.util.Util;
@@ -64,12 +65,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 public final class PrisonerDataHandler {
+
   private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
   private final BetterJailsPlugin plugin;
   private final BetterJailsConfiguration config;
   private final SubCommandsConfiguration subCommands;
-  private final StorageInterface storage;
+  private final StorageAccessor storage;
   private final Server server;
   private final Map<UUID, ApiPrisoner> prisoners = new HashMap<>();
 
@@ -80,7 +82,7 @@ public final class PrisonerDataHandler {
     this.config = plugin.configuration();
     this.subCommands = plugin.subCommands();
     this.server = plugin.getServer();
-    this.storage = plugin.storageInterface();
+    this.storage = plugin.storageAccessor();
   }
 
   public void init() {
@@ -219,7 +221,7 @@ public final class PrisonerDataHandler {
   public CompletableFuture<Void> savePrisoner(final ApiPrisoner prisoner) {
     this.prisoners.put(prisoner.uuid(), prisoner);
 
-    return storage.savePrisoner(prisoner);
+    return this.storage.savePrisoner(prisoner);
   }
 
   public void deletePrisonerFile(final ApiPrisoner prisoner) {
