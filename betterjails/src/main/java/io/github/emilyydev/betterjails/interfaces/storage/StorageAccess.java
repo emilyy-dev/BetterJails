@@ -36,7 +36,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public final class StorageAccessor implements AutoCloseable {
+/**
+ * Gates access to the StorageInterface via a single-threaded executor service,
+ * given that all operations on StorageInterface are blocking and synchronous, accessing them exclusively on
+ * a single thread, every operation is queued and atomic with respect to each other.
+ * It also ensures that all collections passed (maps, lists, etc.) are cloned before passing them around.
+ */
+public final class StorageAccess implements AutoCloseable {
 
   private final StorageInterface storageInterface;
   private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor(task -> {
@@ -46,7 +52,7 @@ public final class StorageAccessor implements AutoCloseable {
     return t;
   });
 
-  public StorageAccessor(final StorageInterface storageInterface) {
+  public StorageAccess(final StorageInterface storageInterface) {
     this.storageInterface = storageInterface;
   }
 

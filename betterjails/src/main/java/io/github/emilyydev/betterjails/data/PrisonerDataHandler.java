@@ -37,7 +37,7 @@ import io.github.emilyydev.betterjails.api.impl.model.prisoner.SentenceExpiry;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
-import io.github.emilyydev.betterjails.interfaces.storage.StorageAccessor;
+import io.github.emilyydev.betterjails.interfaces.storage.StorageAccess;
 import io.github.emilyydev.betterjails.util.Teleport;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;
@@ -70,7 +70,7 @@ public final class PrisonerDataHandler {
   private final BetterJailsPlugin plugin;
   private final BetterJailsConfiguration config;
   private final SubCommandsConfiguration subCommands;
-  private final StorageAccessor storage;
+  private final StorageAccess storage;
   private final Server server;
   private final Map<UUID, ApiPrisoner> prisoners = new HashMap<>();
 
@@ -81,7 +81,7 @@ public final class PrisonerDataHandler {
     this.config = plugin.configuration();
     this.subCommands = plugin.subCommands();
     this.server = plugin.getServer();
-    this.storage = plugin.storageAccessor();
+    this.storage = plugin.storageAccess();
   }
 
   public void init() {
