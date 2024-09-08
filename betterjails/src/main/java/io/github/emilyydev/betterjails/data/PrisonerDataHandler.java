@@ -38,7 +38,6 @@ import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
 import io.github.emilyydev.betterjails.interfaces.storage.StorageAccessor;
-import io.github.emilyydev.betterjails.interfaces.storage.StorageInterface;
 import io.github.emilyydev.betterjails.util.Teleport;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;

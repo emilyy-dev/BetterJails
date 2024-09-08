@@ -29,7 +29,6 @@ import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public interface StorageInterface {
 
