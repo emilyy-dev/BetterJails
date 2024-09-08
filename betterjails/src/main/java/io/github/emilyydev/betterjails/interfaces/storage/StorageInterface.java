@@ -22,32 +22,26 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.data.upgrade.jail;
+package io.github.emilyydev.betterjails.interfaces.storage;
 
-import io.github.emilyydev.betterjails.BetterJailsPlugin;
-import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
-import org.bukkit.configuration.ConfigurationSection;
+import com.github.fefo.betterjails.api.model.jail.Jail;
+import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.UUID;
 
-public final class V1ToV2 implements DataUpgrader {
+public interface StorageInterface {
 
-  @Override
-  public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
-    final Set<String> keys = config.getKeys(false);
-    final List<Map<String, Object>> jails = new ArrayList<>();
-    for (final String key : keys) {
-      final Map<String, Object> jail = new HashMap<>();
-      jail.put("name", key);
-      jail.put("location", config.get(key));
-      config.set(key, null);
-      jails.add(jail);
-    }
+  void savePrisoner(ApiPrisoner prisoner) throws Exception;
+  void savePrisoners(Map<UUID, ApiPrisoner> prisoners) throws Exception;
+  void deletePrisoner(ApiPrisoner prisoner) throws Exception;
+  Map<UUID, ApiPrisoner> loadPrisoners() throws Exception;
 
-    config.set("jails", jails);
-  }
+  void saveJail(Jail jail) throws Exception;
+  void saveJails(Map<String, Jail> jails) throws Exception;
+  void deleteJail(Jail jail) throws Exception;
+  Map<String, Jail> loadJails() throws Exception;
+
+  // TODO(rymiel): There's asymmetry between these: ApiPrisoner vs Jail, this is because not all data needed here
+  //   is stored in Prisoner. Perhaps some stuff from ApiPrisoner should be exposed in Prisoner.
 }

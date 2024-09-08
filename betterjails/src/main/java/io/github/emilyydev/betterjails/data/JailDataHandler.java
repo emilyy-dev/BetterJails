@@ -28,85 +28,44 @@ import com.github.fefo.betterjails.api.event.jail.JailCreateEvent;
 import com.github.fefo.betterjails.api.event.jail.JailDeleteEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
-import com.google.common.collect.ImmutableList;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
-import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
-import io.github.emilyydev.betterjails.data.upgrade.jail.V1ToV2;
-import io.github.emilyydev.betterjails.util.FileIO;
+import io.github.emilyydev.betterjails.interfaces.storage.StorageAccess;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public final class JailDataHandler {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
-
   private final BetterJailsPlugin plugin;
+  private final StorageAccess storage;
   private final Map<String, Jail> jails = new HashMap<>();
-  private final Path jailsFile;
-
-  private static final List<DataUpgrader> DATA_UPGRADERS =
-      ImmutableList.of(
-          new V1ToV2()
-      );
 
   public JailDataHandler(final BetterJailsPlugin plugin) {
     this.plugin = plugin;
-
-    final Path pluginDir = plugin.getPluginDir();
-    this.jailsFile = pluginDir.resolve("jails.yml");
+    this.storage = plugin.storageAccess();
   }
 
-  public void init() throws IOException {
+  public void init() {
     loadJails();
   }
 
-  private void loadJails() throws IOException {
-    if (Files.notExists(this.jailsFile)) {
-      Files.createFile(this.jailsFile);
+  private void loadJails() {
+    try {
+      this.jails.putAll(this.storage.loadJails().get());
+    } catch (final InterruptedException ex) {
+      // bleh
+    } catch (final ExecutionException ex) {
+      throw new RuntimeException(ex.getCause());
     }
-
-    final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(this.jailsFile.toFile());
-    migrateJailData(yaml, this.jailsFile);
-    final List<Map<?, ?>> jails = yaml.getMapList("jails");
-    for (final Map<?, ?> jail : jails) {
-      final String name = ((String) jail.get("name")).toLowerCase(Locale.ROOT);
-      final Location location = (Location) jail.get("location");
-      this.jails.put(name, new ApiJail(name, location));
-    }
-  }
-
-  private Map<String, Object> serializeJail(final Jail jail) {
-    final Map<String, Object> map = new HashMap<>();
-    map.put("name", jail.name());
-    map.put("location", jail.location().mutable());
-    return map;
   }
 
   public CompletableFuture<Void> save() {
-    final YamlConfiguration yaml = new YamlConfiguration();
-    DataUpgrader.markJailVersion(yaml);
-
-    final List<Map<String, Object>> jails = new ArrayList<>();
-    for (final Jail jail : this.jails.values()) {
-      jails.add(serializeJail(jail));
-    }
-    yaml.set("jails", jails);
-
-    return FileIO.writeString(this.jailsFile, yaml.saveToString());
+    return this.storage.saveJails(this.jails);
   }
 
   public Map<String, Jail> getJails() {
@@ -132,32 +91,8 @@ public final class JailDataHandler {
     return save();
   }
 
-  public void reload() throws IOException {
+  public void reload() {
     this.jails.clear();
     loadJails();
-  }
-
-  private void migrateJailData(final YamlConfiguration config, final Path file) {
-    boolean changed = false;
-    final int version = config.getInt("version", 1);
-    if (version > DataUpgrader.JAIL_VERSION) {
-      LOGGER.warn("Jails file {} is from a newer version of BetterJails", file);
-      LOGGER.warn("The plugin will continue to load it, but it may not function properly, errors might show up and data could be lost");
-      LOGGER.warn("!!! Consider updating BetterJails !!!");
-      return;
-    }
-
-    for (final DataUpgrader upgrader : DATA_UPGRADERS.subList(version - 1, DATA_UPGRADERS.size())) {
-      upgrader.upgrade(config, this.plugin);
-      changed = true;
-    }
-
-    if (changed) {
-      DataUpgrader.markJailVersion(config);
-      FileIO.writeString(file, config.saveToString()).exceptionally(ex -> {
-        LOGGER.warn("Could not save jail file {}", file, ex);
-        return null;
-      });
-    }
   }
 }
