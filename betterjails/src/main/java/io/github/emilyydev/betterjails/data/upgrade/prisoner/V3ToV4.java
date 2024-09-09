@@ -38,7 +38,7 @@ public final class V3ToV4 implements DataUpgrader {
   public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
     if (!config.contains(LAST_LOCATION_FIELD)) {
       // Location was corrupt, let code in PrisonerDataHandler deal with it.
-      config.set(V4_UNKNOWN_LOCATION_FIELD, true);
+      config.set(V4_UNKNOWN_LOCATION_FIELD, false);
       return;
     }
 
