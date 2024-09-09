@@ -3,58 +3,42 @@ author: "emilyy-dev"
 version: "${version}"
 main: "io.github.emilyydev.betterjails.BetterJailsPlugin"
 api-version: "1.13"
-load: "POSTWORLD"
 softdepend: [ "Essentials", "Vault", "LuckPerms" ]
 
 commands:
   jail:
     permission: "betterjails.jail"
-    permission-message: "§cYou are not allowed to run this command"
     usage: "§cUsage: /jail <player> <jail> <time>\n§cUsage: /jail info <player>"
     description: "Sends a player to the provided jail, and won't be teleported back until they spend online the time provided."
   jails:
     permission: "betterjails.jails"
-    permission-message: "§cYou are not allowed to run this command"
     usage: "§cUsage: /jails"
     description: "Prints a list of available jails."
   unjail:
     permission: "betterjails.unjail"
-    permission-message: "§cYou are not allowed to run this command"
     usage: "§cUsage: /unjail <player>"
     description: "Teleports a jailed player back to where they were when jailed."
   setjail:
     permission: "betterjails.setjail"
-    permission-message: "§cYou are not allowed to run this command"
     usage: "§cUsage: /setjail <jailname>"
     description: "Adds a new jail location in where the command is executed."
   deljail:
     permission: "betterjails.deljail"
-    permission-message: "§cYou are not allowed to run this command"
     usage: "§cUsage: /deljail <jailname>"
     description: "Removes a jail location from the jails list."
   betterjails:
     permission: "betterjails.betterjails"
-    permission-message: "§cYou are not allowed to run this command"
     description: "Prints the version of the plugin."
 
 permissions:
-  betterjails.jail:
-    default: "op"
-  betterjails.jail.exempt:
-    default: "op"
-  betterjails.jails:
-    default: "op"
-  betterjails.unjail:
-    default: "op"
-  betterjails.setjail:
-    default: "op"
-  betterjails.deljail:
-    default: "op"
-  betterjails.receivebroadcast:
-    default: "op"
+  betterjails.jail: { }
+  betterjails.jail.exempt: { }
+  betterjails.jails: { }
+  betterjails.unjail: { }
+  betterjails.setjail: { }
+  betterjails.deljail: { }
+  betterjails.receivebroadcast: { }
   betterjails.betterjails:
     default: "true"
-  betterjails.betterjails.reload:
-    default: "op"
-  betterjails.betterjails.save:
-    default: "op"
+  betterjails.betterjails.reload: { }
+  betterjails.betterjails.save: { }
