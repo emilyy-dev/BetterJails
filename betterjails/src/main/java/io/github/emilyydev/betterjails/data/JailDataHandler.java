@@ -50,7 +50,7 @@ public final class JailDataHandler {
     this.storage = plugin.storageAccess();
   }
 
-  public void init() {
+  public void load() {
     this.jails.clear();
     loadJails();
   }

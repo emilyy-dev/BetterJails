@@ -84,7 +84,7 @@ public final class PrisonerDataHandler {
     this.storage = plugin.storageAccess();
   }
 
-  public void init() {
+  public void load() {
     // TODO(v2): can't remove this yet
     this.backupLocation = this.config.backupLocation().mutable();
     this.prisoners.clear();

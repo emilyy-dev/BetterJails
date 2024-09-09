@@ -190,8 +190,8 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
       try {
         alertNewConfigAvailable();
         // Jails must be loaded first, loading prisoners depends on jails already being loaded
-        this.jailData.init();
-        this.prisonerData.init();
+        this.jailData.load();
+        this.prisonerData.load();
       } catch (final IOException | InvalidConfigurationException | RuntimeException ex) {
         LOGGER.error("Error loading plugin data", ex);
         pluginManager.disablePlugin(this);
@@ -259,8 +259,8 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   public void reload() throws IOException {
     this.configuration.load();
     this.subCommands.load();
-    this.prisonerData.init();
-    this.jailData.init();
+    this.prisonerData.load();
+    this.jailData.load();
 
     if (this.configuration.permissionHookEnabled()) {
       this.configuration.prisonerPermissionGroup().ifPresent(prisonerGroup ->
