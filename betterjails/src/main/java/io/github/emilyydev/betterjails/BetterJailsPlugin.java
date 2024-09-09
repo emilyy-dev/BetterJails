@@ -259,8 +259,8 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   public void reload() throws IOException {
     this.configuration.load();
     this.subCommands.load();
-    this.prisonerData.reload();
-    this.jailData.reload();
+    this.prisonerData.init();
+    this.jailData.init();
 
     if (this.configuration.permissionHookEnabled()) {
       this.configuration.prisonerPermissionGroup().ifPresent(prisonerGroup ->

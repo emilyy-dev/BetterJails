@@ -51,6 +51,7 @@ public final class JailDataHandler {
   }
 
   public void init() {
+    this.jails.clear();
     loadJails();
   }
 
@@ -89,10 +90,5 @@ public final class JailDataHandler {
     final Jail jail = this.jails.remove(lowerCaseName);
     this.plugin.eventBus().post(JailDeleteEvent.class, jail);
     return save();
-  }
-
-  public void reload() {
-    this.jails.clear();
-    loadJails();
   }
 }

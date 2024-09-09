@@ -87,7 +87,7 @@ public final class PrisonerDataHandler {
   public void init() {
     // TODO(v2): can't remove this yet
     this.backupLocation = this.config.backupLocation().mutable();
-
+    this.prisoners.clear();
     loadPrisoners();
   }
 
@@ -298,12 +298,6 @@ public final class PrisonerDataHandler {
 
   public CompletableFuture<Void> save() {
     return this.storage.savePrisoners(this.prisoners);
-  }
-
-  public void reload() {
-    this.backupLocation = this.config.backupLocation().mutable();
-    this.prisoners.clear();
-    loadPrisoners();
   }
 
   public void timer() {
