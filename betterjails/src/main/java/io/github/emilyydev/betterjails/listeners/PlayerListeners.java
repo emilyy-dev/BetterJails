@@ -28,6 +28,7 @@ import com.earth2me.essentials.User;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
+import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -89,7 +90,14 @@ public final class PlayerListeners implements Listener {
       } else {
         if (prisoner.unknownLocation()) {
           prisoner = prisoner.withLastLocation(ImmutableLocation.copyOf(player.getLocation()));
-          // TODO(rymiel): the "onJail" commands aren't run here. Is that intentional?
+
+          // Must be delayed by 1 tick, otherwise player.isOnline() is false and stuff explodes
+          final String jailedBy = prisoner.jailedBy() == null ? "" : prisoner.jailedBy();
+          this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
+            final SubCommandsConfiguration.SubCommands subCommands = this.plugin.subCommands().onJail();
+            subCommands.executeAsPrisoner(this.plugin.getServer(), player, jailedBy);
+            subCommands.executeAsConsole(this.plugin.getServer(), player, jailedBy);
+          }, 1);
         }
 
         prisoner = prisoner.withTimeRunning();
