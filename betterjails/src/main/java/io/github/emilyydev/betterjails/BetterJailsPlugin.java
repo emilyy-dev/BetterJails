@@ -32,7 +32,6 @@ import io.github.emilyydev.betterjails.api.impl.event.ApiEventBus;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJailManager;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisonerManager;
 import io.github.emilyydev.betterjails.commands.CommandHandler;
-import io.github.emilyydev.betterjails.commands.CommandTabCompleter;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.data.JailDataHandler;
@@ -42,11 +41,12 @@ import io.github.emilyydev.betterjails.interfaces.storage.BukkitConfigurationSto
 import io.github.emilyydev.betterjails.interfaces.storage.StorageAccess;
 import io.github.emilyydev.betterjails.listeners.PlayerListeners;
 import io.github.emilyydev.betterjails.listeners.PluginDisableListener;
+import io.github.emilyydev.betterjails.listeners.UniqueIdCache;
 import io.github.emilyydev.betterjails.util.Util;
 import net.ess3.api.IEssentials;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Server;
-import org.bukkit.command.PluginCommand;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -55,6 +55,10 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.incendo.cloud.annotations.AnnotationParser;
+import org.incendo.cloud.bukkit.CloudBukkitCapabilities;
+import org.incendo.cloud.execution.ExecutionCoordinator;
+import org.incendo.cloud.paper.LegacyPaperCommandManager;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +72,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -91,6 +96,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   private final JailDataHandler jailData = new JailDataHandler(this);
   private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this.jailData), new ApiPrisonerManager(this));
   private final ApiEventBus eventBus = this.api.getEventBus();
+  private final UniqueIdCache uniqueIdCache = new UniqueIdCache(this);
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
   private Metrics metrics = null;
 
@@ -99,6 +105,10 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   }
 
   public BetterJailsPlugin(final String str) { // for mockbukkit, just a dummy ctor to not enable bstats
+  }
+
+  public UUID findUniqueId(final String name) {
+    return this.uniqueIdCache.findUniqueId(name);
   }
 
   public PrisonerDataHandler prisonerData() {
@@ -200,15 +210,14 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
     PlayerListeners.create(this).register();
 
-    final CommandHandler commandHandler = new CommandHandler(this);
-    final CommandTabCompleter tabCompleter = new CommandTabCompleter(this);
-    for (final String commandName : getDescription().getCommands().keySet()) {
-      final PluginCommand command = getCommand(commandName);
-      if (command != null) {
-        command.setExecutor(commandHandler);
-        command.setTabCompleter(tabCompleter);
-      }
+    final LegacyPaperCommandManager<CommandSender> commandManager =
+        LegacyPaperCommandManager.createNative(this, ExecutionCoordinator.simpleCoordinator());
+    if (commandManager.hasCapability(CloudBukkitCapabilities.NATIVE_BRIGADIER)) {
+      commandManager.registerBrigadier();
     }
+
+    final AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class);
+    annotationParser.parse(new CommandHandler(this));
 
     scheduler.runTaskTimer(this, this.prisonerData::timer, 0L, 20L);
 

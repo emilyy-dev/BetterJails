@@ -113,25 +113,19 @@ public final class PrisonerDataHandler {
     return this.prisoners.get(uuid);
   }
 
-  public boolean addJailedPlayer(
+  public void addJailedPlayer(
       final OfflinePlayer player,
-      final String jailName,
+      final Jail jail,
       final UUID jailer,
       final @Nullable String jailerName,
-      final long secondsLeft,
+      final Duration sentenceDuration,
       final boolean teleport
   ) {
     final UUID prisonerUuid = player.getUniqueId();
     final ApiPrisoner existingPrisoner = this.prisoners.get(prisonerUuid);
-    final Jail jail = this.plugin.jailData().getJail(jailName);
-
-    if (jail == null) {
-      return false;
-    }
 
     final boolean isPlayerOnline = player.isOnline();
     final boolean isPlayerJailed = existingPrisoner != null;
-    final Duration sentence = Duration.ofSeconds(secondsLeft);
     final SentenceExpiry expiry;
     Location knownLastLocation = null;
 
@@ -164,10 +158,10 @@ public final class PrisonerDataHandler {
     if (isPlayerOnline || this.config.considerOfflineTime()) {
       // If the player is online or offline time is enabled, their remaining time will start ticking down immediately,
       // so we store the deadline of their release.
-      expiry = SentenceExpiry.of(Instant.now().plus(sentence));
+      expiry = SentenceExpiry.of(Instant.now().plus(sentenceDuration));
     } else {
       // Otherwise, the time doesn't start ticking until the player joins.
-      expiry = SentenceExpiry.of(sentence);
+      expiry = SentenceExpiry.of(sentenceDuration);
     }
 
     if (this.plugin.essentials != null) {
@@ -196,7 +190,7 @@ public final class PrisonerDataHandler {
         : CompletableFuture.completedFuture(existingPrisoner.parentGroups());
 
     primaryGroupFuture.thenCombineAsync(parentGroupsFuture, (primaryGroup, parentGroups) -> {
-      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, expiry, sentence, lastLocation, unknownLocation);
+      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, expiry, sentenceDuration, lastLocation, unknownLocation);
 
       this.plugin.eventBus().post(PlayerImprisonEvent.class, prisoner);
       final CompletionStage<?> setGroupFuture = groupsUnknown
@@ -213,8 +207,6 @@ public final class PrisonerDataHandler {
         return null;
       });
     }, this.plugin);
-
-    return true;
   }
 
   public CompletableFuture<Void> savePrisoner(final ApiPrisoner prisoner) {
@@ -233,11 +225,23 @@ public final class PrisonerDataHandler {
 
   public boolean releaseJailedPlayer(final OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
     final UUID prisonerUuid = player.getUniqueId();
-    ApiPrisoner prisoner = this.prisoners.get(prisonerUuid);
-
+    final ApiPrisoner prisoner = this.prisoners.get(prisonerUuid);
     if (prisoner == null) {
       return false;
+    } else {
+      releasePrisoner(prisoner, player, source, sourceName, teleport);
+      return true;
     }
+  }
+
+  public void releasePrisoner(
+      ApiPrisoner prisoner,
+      final OfflinePlayer player,
+      final UUID source,
+      final @Nullable String sourceName,
+      final boolean teleport
+  ) {
+    final UUID prisonerUuid = player.getUniqueId();
 
     final PermissionInterface permissionInterface = this.plugin.permissionInterface();
     final Set<String> parentGroups = prisoner.parentGroups();
@@ -267,7 +271,7 @@ public final class PrisonerDataHandler {
     } else {
       if (prisoner.released()) {
         // This player has already been released, don't need to do anything
-        return true;
+        return;
       }
 
       if (prisoner.unknownLocation()) {
@@ -293,7 +297,6 @@ public final class PrisonerDataHandler {
     }
 
     this.plugin.eventBus().post(PrisonerReleaseEvent.class, prisoner);
-    return true;
   }
 
   public CompletableFuture<Void> save() {

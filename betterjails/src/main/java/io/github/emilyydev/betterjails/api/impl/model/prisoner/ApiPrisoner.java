@@ -27,6 +27,7 @@ package io.github.emilyydev.betterjails.api.impl.model.prisoner;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
@@ -84,6 +85,10 @@ public class ApiPrisoner implements Prisoner {
   @Override
   public @Nullable String name() {
     return this.name;
+  }
+
+  public @NotNull String nameOr(final String fallback) {
+    return MoreObjects.firstNonNull(this.name, fallback);
   }
 
   @Override

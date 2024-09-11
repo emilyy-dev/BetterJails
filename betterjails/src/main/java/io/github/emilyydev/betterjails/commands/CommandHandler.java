@@ -26,301 +26,160 @@ package io.github.emilyydev.betterjails.commands;
 
 import com.github.fefo.betterjails.api.event.plugin.PluginReloadEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
+import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
+import com.google.common.base.MoreObjects;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
-import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.jetbrains.annotations.NotNull;
+import org.incendo.cloud.annotations.Command;
+import org.incendo.cloud.annotations.CommandDescription;
+import org.incendo.cloud.annotations.Permission;
+import org.incendo.cloud.annotations.parser.Parser;
+import org.incendo.cloud.annotations.suggestion.Suggestions;
+import org.incendo.cloud.context.CommandContext;
+import org.incendo.cloud.context.CommandInput;
+import org.incendo.cloud.util.CompletableFutures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.StringJoiner;
-import java.util.UUID;
-import java.util.regex.Pattern;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static io.github.emilyydev.betterjails.util.Util.color;
 import static io.github.emilyydev.betterjails.util.Util.uuidOrNil;
 
-public final class CommandHandler implements CommandExecutor, Listener {
+public final class CommandHandler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
-  private static final Pattern DURATION_PATTERN = Pattern.compile("^(\\d{1,10}(\\.\\d{1,2})?)[yMwdhms]$");
-  private static final String[] DUMMY_STRING_ARRAY = new String[0];
+  private static String durationString(Duration duration) {
+    final StringBuilder timeLeftBuilder = new StringBuilder();
+    duration = appendAndTruncateIfApplicable(duration, ChronoUnit.DAYS, 'd', timeLeftBuilder);
+    duration = appendAndTruncateIfApplicable(duration, ChronoUnit.HOURS, 'h', timeLeftBuilder);
+    duration = appendAndTruncateIfApplicable(duration, ChronoUnit.MINUTES, 'm', timeLeftBuilder);
+    appendAndTruncateIfApplicable(duration, ChronoUnit.SECONDS, 's', timeLeftBuilder);
+    return timeLeftBuilder.toString();
+  }
+
+  private static Duration appendAndTruncateIfApplicable(
+      final Duration timeLeft,
+      final ChronoUnit unit,
+      final char unitChar,
+      final StringBuilder timeLeftBuilder
+  ) {
+    if (timeLeft.compareTo(unit.getDuration()) <= -1) {
+      return timeLeft;
+    } else {
+      final long part = timeLeft.getSeconds() / unit.getDuration().getSeconds();
+      timeLeftBuilder.append(part).append(unitChar);
+      return timeLeft.minus(part, unit);
+    }
+  }
 
   private final Server server;
   private final BetterJailsPlugin plugin;
   private final BetterJailsConfiguration configuration;
-  private final Map<String, UUID> namesToUuid = new HashMap<>();
 
   public CommandHandler(final BetterJailsPlugin plugin) {
     this.plugin = plugin;
     this.server = plugin.getServer();
     this.configuration = plugin.configuration();
-
-    this.server.getPluginManager().registerEvent(
-        PlayerLoginEvent.class, this, EventPriority.HIGH,
-        (l, e) -> playerLogin((PlayerLoginEvent) e), this.plugin
-    );
-
-    for (final OfflinePlayer offlinePlayer : this.server.getOfflinePlayers()) {
-      final String name = offlinePlayer.getName();
-      if (name != null) {
-        this.namesToUuid.put(name.toLowerCase(Locale.ROOT), offlinePlayer.getUniqueId());
-      }
-    }
   }
 
-  @Override
-  public boolean onCommand(
-      final @NotNull CommandSender sender,
-      final @NotNull Command cmd,
-      final @NotNull String alias,
-      final @NotNull String @NotNull [] args
+  @Permission("betterjails.jail")
+  @Command("jail|imprison <target> <jail> <time>")
+  @CommandDescription("Imprisons the target player in the indicated jail for the given amount of time")
+  public void imprisonPlayer(
+      final CommandContext<CommandSender> ctx,
+      final CommandSender sender,
+      final OfflinePlayer target,
+      final Jail jail,
+      final Duration time
   ) {
-    switch (cmd.getName()) {
-      case "betterjails":
-        if (args.length == 1) {
-          betterjails(sender, args[0]);
-        } else {
-          sender.sendMessage(color("&bBetterJails &3by &bemilyy-dev &3- v%s", this.plugin.getDescription().getVersion()));
-        }
-        return true;
+    final String timeInput = ctx.parsingContext("time").consumedInput();
+    final String executorName = sender.getName();
+    final String prisonerName = MoreObjects.firstNonNull(target.getName(), "(unknown)");
 
-      case "jail":
-        if (args.length == 2 && "info".equalsIgnoreCase(args[0])) {
-          prisonerInfo(sender, args[1]);
-          return true;
-        } else if (args.length == 3) {
-          jailPlayer(sender, args[0], args[1], args[2]);
-          return true;
-        } else {
-          return false;
-        }
-
-      case "jails":
-        listJails(sender);
-        return true;
-
-      case "unjail":
-        if (args.length != 1) {
-          return false;
-        } else {
-          releasePrisoner(sender, args[0]);
-          return true;
-        }
-
-      case "setjail":
-        if (args.length != 1) {
-          return false;
-        } else {
-          createOrRenameJail(sender, args[0]);
-          return true;
-        }
-
-      case "deljail":
-        if (args.length != 1) {
-          return false;
-        } else {
-          deleteJail(sender, args[0]);
-          return true;
-        }
-
-      default: // how did you get here?
-        return false;
-    }
-  }
-
-  private void betterjails(final CommandSender sender, final String argument) {
-    if (argument.equalsIgnoreCase("reload") && sender.hasPermission("betterjails.betterjails.reload")) {
-      try {
-        this.plugin.reload();
-        this.plugin.eventBus().post(PluginReloadEvent.class, sender);
-        sender.sendMessage(this.configuration.messages().reloadData(sender.getName()));
-      } catch (final IOException ex) {
-        LOGGER.error("An error occurred reloading plugin data", ex);
-        sender.sendMessage(color(
-            "&cThere was an internal error while trying to reload the data files.\n" +
-                "Please check console for more information."
-        ));
-      }
-    } else if (argument.equalsIgnoreCase("save") && sender.hasPermission("betterjails.betterjails.save")) {
-      this.plugin.saveAll().whenComplete((v, ex) -> {
-        if (ex == null) {
-          sender.sendMessage(this.configuration.messages().saveData(sender.getName()));
-        } else {
-          sender.sendMessage(color(
-              "&cThere was an internal error while trying to save the data files.\n" +
-                  "Please check console for more information."
-          ));
-        }
-      });
-    } else {
-      sender.sendMessage(color("&bBetterJails &3by &bemilyy-dev &3- v%s", this.plugin.getDescription().getVersion()));
-    }
-  }
-
-  private void jailPlayer(final CommandSender sender, final String prisoner, final String jail, final String time) {
-    final String executioner = sender.getName();
-    final OfflinePlayer player = this.server.getOfflinePlayer(
-        this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), Util.NIL_UUID)
-    );
-
-    if (player.getUniqueId().equals(Util.NIL_UUID)) {
-      sender.sendMessage(this.configuration.messages().jailPlayerFailedNeverJoined(
-          prisoner, executioner, jail, time
-      ));
-      return;
+    if (!target.hasPlayedBefore()) {
+      throw new CommandError(
+          ctx, CommandError.JAIL_FAILED_PLAYER_NEVER_JOINED,
+          CommandError.prisonerVariable(prisonerName),
+          CommandError.executorVariable(executorName),
+          CommandError.jailVariable(jail.name()),
+          CommandError.timeVariable(timeInput)
+      );
     }
 
-    if (player.isOnline() && player.getPlayer().hasPermission("betterjails.jail.exempt")) {
-      sender.sendMessage(this.configuration.messages().jailPlayerFailedExempt(
-          prisoner, executioner, jail, time
-      ));
-      return;
+    if (target.isOnline() && target.getPlayer().hasPermission("betterjails.jail.exempt")) {
+      throw new CommandError(
+          ctx, CommandError.JAIL_FAILED_PLAYER_EXEMPT,
+          CommandError.prisonerVariable(prisonerName),
+          CommandError.executorVariable(executorName),
+          CommandError.jailVariable(jail.name()),
+          CommandError.timeVariable(timeInput)
+      );
     }
 
-    if (!DURATION_PATTERN.matcher(time).matches()) {
-      sender.sendMessage(this.configuration.messages().jailPlayerFailedInvalidTimeInput(
-          prisoner, executioner, jail, time
-      ));
-      return;
-    }
-
-    final double scale;
-    switch (time.charAt(time.length() - 1)) {
-      case 's':
-        scale = 1;
-        break;
-
-      case 'm':
-      default:
-        scale = 60;
-        break;
-
-      case 'h':
-        scale = 3600;
-        break;
-
-      case 'd':
-        scale = 3600 * 24;
-        break;
-
-      case 'w':
-        scale = 3600 * 24 * 7;
-        break;
-
-      case 'M':
-        scale = 3600 * 24 * 30.4375;
-        break;
-
-      case 'y':
-        scale = 3600 * 24 * 365.25;
-        break;
-    }
-
-    final long seconds = (long) (scale * Double.parseDouble(time.substring(0, time.length() - 1)));
-    if (!this.plugin.prisonerData().addJailedPlayer(player, jail, uuidOrNil(sender), executioner, seconds, true)) {
-      sender.sendMessage(this.configuration.messages().jailPlayerFailedJailNotFound(
-          prisoner, executioner, jail, time
-      ));
-      return;
-    }
-
+    this.plugin.prisonerData().addJailedPlayer(target, jail, uuidOrNil(sender), executorName, time, true);
     this.server.broadcast(
-        this.configuration.messages().jailPlayerSuccess(prisoner, executioner, jail, time),
+        this.configuration.messages().jailPlayerSuccess(prisonerName, executorName, jail.name(), timeInput),
         "betterjails.receivebroadcast"
     );
   }
 
-  private void prisonerInfo(final CommandSender sender, final String prisonerName) {
-    final String executioner = sender.getName();
-    final OfflinePlayer player = this.server.getOfflinePlayer(
-        this.namesToUuid.getOrDefault(prisonerName.toLowerCase(Locale.ROOT), Util.NIL_UUID)
-    );
-
-    if (player.getUniqueId().equals(Util.NIL_UUID)) {
-      sender.sendMessage(this.configuration.messages().prisonerInfoFailedNeverJoined(prisonerName, executioner));
-      return;
-    }
-
-    final UUID uuid = player.getUniqueId();
-    final ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(uuid);
-    if (prisoner == null) {
-      sender.sendMessage(this.configuration.messages().prisonerInfoFailedNotJailed(prisonerName, executioner));
-      return;
-    }
-
+  @Permission("betterjails.jail")
+  @Command("jail info <prisoner>")
+  @CommandDescription("Prints information about the imprisoned player")
+  public void prisonerInfo(
+      final CommandContext<CommandSender> ctx,
+      final CommandSender sender,
+      final ApiPrisoner prisoner
+  ) {
+    final String executorName = sender.getName();
     if (prisoner.released()) {
-      sender.sendMessage(this.configuration.messages().prisonerInfoFailedNotJailed(prisonerName, executioner));
-      return;
-    }
-
-    double secondsLeft = prisoner.timeLeft().getSeconds();
-    char timeUnit = 's';
-    if (secondsLeft >= 3600 * 24 * 365.25) {
-      secondsLeft /= 3600 * 24 * 365.25;
-      timeUnit = 'y';
-
-    } else if (secondsLeft >= 3600 * 24 * 30.4375) {
-      secondsLeft /= 3600 * 24 * 30.4375;
-      timeUnit = 'M';
-
-    } else if (secondsLeft >= 3600 * 24 * 7) {
-      secondsLeft /= 3600 * 24 * 7;
-      timeUnit = 'w';
-
-    } else if (secondsLeft >= 3600 * 24) {
-      secondsLeft /= 3600 * 24;
-      timeUnit = 'd';
-
-    } else if (secondsLeft >= 3600) {
-      secondsLeft /= 3600;
-      timeUnit = 'h';
-
-    } else if (secondsLeft >= 60) {
-      secondsLeft /= 60;
-      timeUnit = 'm';
+      throw new CommandError(
+          ctx, CommandError.INFO_FAILED_PLAYER_NOT_JAILED,
+          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
+          CommandError.executorVariable(executorName)
+      );
     }
 
     final Location lastLocation = prisoner.lastLocationMutable();
     final String lastLocationString = lastLocation == null
         ? color("&cunknown")
         : color(
-          "x:%,d y:%,d z%,d &7in &f%s",
-          lastLocation.getBlockX(),
-          lastLocation.getBlockY(),
-          lastLocation.getBlockZ(),
-          lastLocation.getWorld().getName()
-        );
+        "x:%,d y:%,d z%,d &7in &f%s",
+        lastLocation.getBlockX(),
+        lastLocation.getBlockY(),
+        lastLocation.getBlockZ(),
+        lastLocation.getWorld().getName()
+    );
 
     final List<String> infoLines = new ArrayList<>(9);
     infoLines.add(color("&7Info for jailed player:"));
-    infoLines.add(color("  &7· Name: &f%s", prisoner.name() == null ? "&oundefined" : prisoner.name()));
-    infoLines.add(color("  &7· UUID: &f%s", uuid));
-    infoLines.add(color("  &7· Time left: &f%,.2f%s", secondsLeft, timeUnit));
+    infoLines.add(color("  &7· Name: &f%s", prisoner.nameOr("&oundefined")));
+    infoLines.add(color("  &7· UUID: &f%s", prisoner.uuid()));
+    infoLines.add(color("  &7· Time left: &f%s", durationString(prisoner.timeLeft())));
     infoLines.add(color("  &7· Jailed in jail: &f%s", prisoner.jail().name()));
-    infoLines.add(color("  &7· Jailed by: &f%s", prisoner.jailedBy() == null ? "&oundefined" : prisoner.jailedBy()));
+    infoLines.add(color("  &7· Jailed by: &f%s", MoreObjects.firstNonNull(prisoner.jailedBy(), "&oundefined")));
     infoLines.add(color("  &7· Location before jailed: &f%s", lastLocationString));
-    infoLines.add(color("  &7· Primary group: &f%s", prisoner.primaryGroup() == null
-        ? (this.configuration.permissionHookEnabled() ? "&oundefined" : "&oFeature not enabled")
-        : prisoner.primaryGroup()
+    infoLines.add(color(
+        "  &7· Primary group: &f%s",
+        MoreObjects.firstNonNull(prisoner.primaryGroup(), this.configuration.permissionHookEnabled() ? "&oundefined" : "&oFeature not enabled")
     ));
 
     final StringJoiner joiner = new StringJoiner(", ");
@@ -328,81 +187,156 @@ public final class CommandHandler implements CommandExecutor, Listener {
     prisoner.parentGroups().forEach(joiner::add);
     infoLines.add(color("  &7· All parent groups: &f%s", joiner.toString()));
 
-    sender.sendMessage(infoLines.toArray(DUMMY_STRING_ARRAY));
+    sender.sendMessage(String.join("\n", infoLines));
   }
 
-  private void listJails(final CommandSender sender) {
+  @Permission("betterjails.jails")
+  @Command("jails")
+  @CommandDescription("Prints a list of available jails")
+  public void printJails(final CommandSender sender) {
     final BetterJailsConfiguration.MessageHolder messages = this.configuration.messages();
     final Map<String, Jail> jails = this.plugin.jailData().getJails();
-    final List<String> jailListMessageThingu = new ArrayList<>();
+    final List<String> buffer = new ArrayList<>();
 
     if (jails.isEmpty()) {
-      jailListMessageThingu.add(messages.listJailsNoJails());
+      buffer.add(messages.listJailsNoJails());
     } else {
-      jailListMessageThingu.add(messages.listJailsFunnyMessage());
-      jailListMessageThingu.addAll(messages.jailListEntryFormatter().formatJailList(jails.values()));
+      buffer.add(messages.listJailsFunnyMessage());
+      buffer.addAll(messages.jailListEntryFormatter().formatJailList(jails.values()));
     }
 
-    sender.sendMessage(jailListMessageThingu.toArray(DUMMY_STRING_ARRAY));
+    sender.sendMessage(String.join("\n", buffer));
   }
 
-  private void releasePrisoner(final CommandSender sender, final String prisoner) {
-    final String executioner = sender.getName();
-    final OfflinePlayer player = this.server.getOfflinePlayer(
-        this.namesToUuid.getOrDefault(prisoner.toLowerCase(Locale.ROOT), Util.NIL_UUID)
-    );
-
-    if (player.getUniqueId().equals(Util.NIL_UUID)) {
-      sender.sendMessage(this.configuration.messages().releasePrisonerFailedNeverJoined(prisoner, executioner));
-      return;
-    }
-
-    final boolean wasReleased = this.plugin.prisonerData().releaseJailedPlayer(player, uuidOrNil(sender), executioner, true);
-    if (wasReleased) {
-      this.server.broadcast(
-          this.configuration.messages().releasePrisonerSuccess(prisoner, executioner),
-          "betterjails.receivebroadcast"
+  @Permission("betterjails.unjail")
+  @Command("unjail|release <prisoner>")
+  @CommandDescription("Releases an imprisoned player")
+  public void releasePrisoner(
+      final CommandContext<CommandSender> ctx,
+      final CommandSender sender,
+      final ApiPrisoner prisoner
+  ) {
+    final String executorName = sender.getName();
+    if (prisoner.released()) {
+      throw new CommandError(
+          ctx, CommandError.UNJAIL_FAILED_PLAYER_NOT_JAILED,
+          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
+          CommandError.executorVariable(sender.getName())
       );
-    } else {
-      sender.sendMessage(this.configuration.messages().releasePrisonerFailedNotJailed(prisoner, executioner));
     }
+
+    this.plugin.prisonerData().releasePrisoner(prisoner, this.server.getOfflinePlayer(prisoner.uuid()), uuidOrNil(sender), executorName, true);
+    this.server.broadcast(
+        this.configuration.messages().releasePrisonerSuccess(prisoner.nameOr("(unknown)"), executorName),
+        "betterjails.receivebroadcast"
+    );
   }
 
-  private void createOrRenameJail(final CommandSender sender, final String jail) {
-    if (!(sender instanceof Player)) {
-      sender.sendMessage(this.configuration.messages().createJailFromConsole(sender.getName(), jail));
-      return;
-    }
-
-    final Player player = (Player) sender;
-    this.plugin.jailData().addJail(jail, player.getLocation()).whenCompleteAsync((v, ex) -> {
+  @Permission("betterjails.setjail")
+  @Command(value = "setjail <name>", requiredSender = Player.class)
+  @CommandDescription("Creates a new jail or relocates an existing jail to where the command is executed")
+  public CompletableFuture<Void> createOrRelocateJail(final Player sender, final String name) {
+    return this.plugin.jailData().addJail(name, sender.getLocation()).handleAsync((v, ex) -> {
       if (ex == null) {
-        sender.sendMessage(this.configuration.messages().createJailSuccess(sender.getName(), jail));
+        sender.sendMessage(this.configuration.messages().createJailSuccess(sender.getName(), name));
       } else {
-        LOGGER.error("An error occurred saving data for jail {}", jail, ex);
+        LOGGER.error("An error occurred saving data for jail {}", name, ex);
         sender.sendMessage(color("&cThere was an error while trying to add the jail."));
       }
+
+      return null; // TODO(emilia): maybe add new Captions
     }, this.plugin);
   }
 
-  private void deleteJail(final CommandSender sender, final String jail) {
-    if (this.plugin.jailData().getJail(jail) == null) {
-      sender.sendMessage(this.configuration.messages().deleteJailFailed(sender.getName(), jail));
-      return;
-    }
-
-    this.plugin.jailData().removeJail(jail).whenCompleteAsync((v, ex) -> {
+  @Permission("betterjails.deljail")
+  @Command("deljail <jail>")
+  @CommandDescription("Deletes a jail location from the jails list")
+  public CompletableFuture<Void> deleteJail(final CommandSender sender, final Jail jail) {
+    final String name = jail.name();
+    return this.plugin.jailData().removeJail(name).handleAsync((v, ex) -> {
       if (ex == null) {
-        sender.sendMessage(this.configuration.messages().deleteJailSuccess(sender.getName(), jail));
+        sender.sendMessage(this.configuration.messages().deleteJailSuccess(sender.getName(), name));
       } else {
-        LOGGER.error("An error occurred deleting data for jail {}", jail, ex);
+        LOGGER.error("An error occurred deleting data for jail {}", name, ex);
         sender.sendMessage(color("&cThere was an error while trying to remove the jail."));
       }
+
+      return null; // TODO(emilia): maybe add new Captions
     }, this.plugin);
   }
 
-  private void playerLogin(final PlayerLoginEvent event) {
-    final Player player = event.getPlayer();
-    this.namesToUuid.put(player.getName().toLowerCase(Locale.ROOT), player.getUniqueId());
+  @Permission("betterjails.betterjails")
+  @Command("betterjails")
+  @CommandDescription("Prints the version of the plugin")
+  public void printInfo(final CommandSender sender) {
+    sender.sendMessage(color("&bBetterJails &3by &bemilyy-dev &3- v%s", this.plugin.getDescription().getVersion()));
+  }
+
+  @Permission("betterjails.betterjails.reload")
+  @Command("betterjails reload")
+  @CommandDescription("Reloads the configuration file, prisoner data and jail data")
+  public void reloadData(final CommandContext<CommandSender> ctx, final CommandSender sender) {
+    try {
+      this.plugin.reload();
+      this.plugin.eventBus().post(PluginReloadEvent.class, sender);
+      sender.sendMessage(this.configuration.messages().reloadData(sender.getName()));
+    } catch (final IOException ex) {
+      LOGGER.error("An error occurred reloading plugin data", ex);
+      throw new CommandError(ctx, CommandError.RELOAD_FAILED, CommandError.executorVariable(sender.getName()));
+    }
+  }
+
+  @Permission("betterjails.betterjails.save")
+  @Command("betterjails save")
+  @CommandDescription("Saves jail and prisoner data on the spot")
+  public CompletableFuture<Void> saveData(final CommandContext<CommandSender> ctx, final CommandSender sender) {
+    return this.plugin.saveAll().<CompletableFuture<Void>>handle((v, ex) -> {
+      if (ex == null) {
+        sender.sendMessage(this.configuration.messages().saveData(sender.getName()));
+        return CompletableFuture.completedFuture(null);
+      } else {
+        // exception is logged in BJP#saveAll()
+        return CompletableFutures.failedFuture(
+            new CommandError(ctx, CommandError.SAVE_ALL_FAILED, CommandError.executorVariable(sender.getName()))
+        );
+      }
+    }).thenCompose(Function.identity());
+  }
+
+  @Parser
+  public Jail resolveJail(final CommandContext<CommandSender> ctx, final CommandInput input) {
+    final String name = input.readInput();
+    final Jail jail = this.plugin.jailData().getJail(name);
+    if (jail != null) {
+      return jail;
+    } else {
+      throw new CommandError(ctx, CommandError.RESOLVE_JAIL_FAILED, CommandError.jailVariable(name));
+    }
+  }
+
+  @Suggestions("jail")
+  public Stream<String> suggestJails(final CommandInput input) {
+    final String prefix = input.readString();
+    return this.plugin.jailData().getJails().keySet().stream().filter(name -> name.startsWith(prefix));
+  }
+
+  @Parser
+  public ApiPrisoner parsePrisoner(final CommandContext<CommandSender> ctx, final CommandInput input) {
+    final String name = input.readString();
+    final ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(this.plugin.findUniqueId(name));
+    if (prisoner != null) {
+      return prisoner;
+    } else {
+      throw new CommandError(ctx, CommandError.RESOLVE_PRISONER_FAILED, CommandError.prisonerVariable(name));
+    }
+  }
+
+  @Suggestions("prisoner")
+  public Stream<String> suggestPrisoners(final CommandInput input) {
+    final String prefix = input.readString();
+    return this.plugin.prisonerData().getAllPrisoners().stream()
+        .map(Prisoner::name)
+        .filter(Objects::nonNull)
+        .filter(name -> name.startsWith(prefix));
   }
 }

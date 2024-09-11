@@ -16,6 +16,9 @@ repositories {
 
 dependencies {
   implementation(project(":betterjails-api"))
+  implementation(libs.cloud.paper)
+  implementation(libs.cloud.annotations)
+  annotationProcessor(libs.cloud.annotations)
 
   compileOnly(libs.spigot)
   implementation(libs.bstats)
@@ -39,6 +42,11 @@ tasks {
   shadowJar {
     archiveClassifier = null
     relocate("org.bstats", "io.github.emilyydev.betterjails.bstats")
+    relocate("org.incendo.cloud", "io.github.emilyydev.betterjails.cloud")
+  }
+
+  compileJava {
+    options.compilerArgs = listOf("-parameters")
   }
 
   processResources {

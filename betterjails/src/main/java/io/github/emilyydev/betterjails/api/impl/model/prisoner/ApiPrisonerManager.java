@@ -67,7 +67,7 @@ public final class ApiPrisonerManager implements PrisonerManager {
     Preconditions.checkState(jailedUntil.isAfter(now), "duration must be positive");
 
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
-    this.plugin.prisonerData().addJailedPlayer(player, jail.name(), Util.NIL_UUID, "api", duration.getSeconds(), true);
+    this.plugin.prisonerData().addJailedPlayer(player, jail, Util.NIL_UUID, "api", duration, true);
     return getPrisoner(uuid);
   }
 
