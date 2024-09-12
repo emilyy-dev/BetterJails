@@ -174,8 +174,6 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
   @Override
   public void onEnable() {
-    long start = System.currentTimeMillis();
-
     PluginDisableListener.create(this.eventBus).register(this);
     this.uniqueIdCache.register(this);
 
