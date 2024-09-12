@@ -97,14 +97,17 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this.jailData), new ApiPrisonerManager(this));
   private final ApiEventBus eventBus = this.api.getEventBus();
   private final UniqueIdCache uniqueIdCache = new UniqueIdCache(this);
+  private final boolean isTesting;
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
   private Metrics metrics = null;
 
   public BetterJailsPlugin() {
+    this.isTesting = false;
     this.metrics = Util.prepareMetrics(this);
   }
 
-  public BetterJailsPlugin(final String str) { // for mockbukkit, just a dummy ctor to not enable bstats
+  public BetterJailsPlugin(final String str) { // for mockbukkit, dummy ctor to not enable bstats and cloud
+    this.isTesting = true;
   }
 
   public UUID findUniqueId(final String name) {
@@ -211,7 +214,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
     PlayerListeners.create(this).register();
 
-    if (this.metrics != null) { // metrics is null in unit tests, cloud shits the bed because of brig issues
+    if (!this.isTesting) { // cloud shits the bed because of brig issues
       final LegacyPaperCommandManager<CommandSender> commandManager =
           LegacyPaperCommandManager.createNative(this, ExecutionCoordinator.simpleCoordinator());
       if (commandManager.hasCapability(CloudBukkitCapabilities.NATIVE_BRIGADIER)) {

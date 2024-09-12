@@ -1,7 +1,7 @@
 plugins {
   id("buildlogic.java-conventions")
-  id("com.github.johnrengelman.shadow") version "8.1.1"
-  id("xyz.jpenilla.run-paper") version "2.2.3"
+  id("com.gradleup.shadow") version "8.3.1"
+  id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
 repositories {
@@ -45,6 +45,10 @@ tasks {
     relocate("org.incendo.cloud", "io.github.emilyydev.betterjails.cloud")
   }
 
+  withType<Jar> {
+    manifest.attributes["paperweight-mappings-namespace"] = "mojang"
+  }
+
   compileJava {
     options.compilerArgs = listOf("-parameters")
   }
@@ -65,7 +69,7 @@ tasks {
   }
 
   runServer {
-    minecraftVersion("1.20.4")
+    minecraftVersion("1.21.1")
   }
 }
 
