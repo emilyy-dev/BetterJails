@@ -30,28 +30,22 @@ messages:
   jailSuccess: "&c{prisoner} &6has been jailed by &c{player} &6for &c{time}&6."
   jailFailedPlayerNeverJoined: "&cPlayer &4{prisoner} &cnever joined this server."
   jailFailedPlayerExempt: "&4{prisoner} &ccannot be jailed."
-  jailFailedJailNotFound: "&cJail &4{jail} &cnot found."
-  jailFailedTimeIncorrect: "&cThe time provided is not valid."
   # Placeholders for /jail info:
   # · {prisoner}: player to retrieve the status and info.
   # · {player}: player that executes the command.
   infoFailedPlayerNotJailed: "&6The player you are requesting the information from is not currently serving a sentence."
-  infoFailedPlayerNeverJoined: "&6Player &c{prisoner} &6never joined this server."
 
   # Placeholders for /unjail:
   # · {prisoner}: player to be unjailed.
   # · {player}: player that executes the command.
   unjailSuccess: "&c{prisoner} &6has been unjailed by &c{player}&6."
   unjailFailedPlayerNotJailed: "&c{prisoner} &6could not be unjailed, player wasn't jailed."
-  unjailFailedPlayerNeverJoined: "&6Player &c{prisoner} &6never joined this server."
 
   # Placeholders for /setjail and /deljail:
   # · {player}: player that executes the command.
   # · {jail}: jail name to be added/removed.
-  setjailFromConsole: "&cOnly players can set jails!"
   setjailSuccess: "&6Jail added successfully!"
   deljailSuccess: "&6Jail removed successfully!"
-  deljailFailed: "&cThat jail does not exist!"
 
   # Placeholders for /betterjails reload and /betterjails save:
   # · {player}: player that executes the command.
@@ -78,3 +72,10 @@ messages:
   #     · jail3
   #   line:
   #     jail1, jail2, jail3.
+
+  non-existent-jail: "jail doesn't exist"
+  player-not-imprisoned: "player is not imprisoned"
+  reload-failed: "reloading failed"
+  save-all-failed: "saving data failed"
+  save-jail-failed: "saving jail failed"
+  delete-jail-failed: "deleting jail failed"

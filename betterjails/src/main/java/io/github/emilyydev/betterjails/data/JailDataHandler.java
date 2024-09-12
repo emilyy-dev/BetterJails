@@ -85,9 +85,8 @@ public final class JailDataHandler {
     return save();
   }
 
-  public CompletableFuture<Void> removeJail(final String name) {
-    final String lowerCaseName = name.toLowerCase(Locale.ROOT);
-    final Jail jail = this.jails.remove(lowerCaseName);
+  public CompletableFuture<Void> removeJail(final Jail jail) {
+    this.jails.remove(jail.name().toLowerCase(Locale.ROOT));
     this.plugin.eventBus().post(JailDeleteEvent.class, jail);
     return save();
   }

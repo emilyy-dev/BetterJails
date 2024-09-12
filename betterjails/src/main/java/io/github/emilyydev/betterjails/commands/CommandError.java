@@ -34,19 +34,15 @@ public class CommandError extends ParserException {
 
   public static final Caption JAIL_FAILED_PLAYER_NEVER_JOINED = Caption.of("jailFailedPlayerNeverJoined");
   public static final Caption JAIL_FAILED_PLAYER_EXEMPT = Caption.of("jailFailedPlayerExempt");
-  public static final Caption JAIL_FAILED_JAIL_NOT_FOUND = Caption.of("jailFailedJailNotFound");
-  public static final Caption JAIL_FAILED_TIME_INCORRECT = Caption.of("jailFailedTimeIncorrect");
   public static final Caption INFO_FAILED_PLAYER_NOT_JAILED = Caption.of("infoFailedPlayerNotJailed");
-  public static final Caption INFO_FAILED_PLAYER_NEVER_JOINED = Caption.of("infoFailedPlayerNeverJoined");
   public static final Caption UNJAIL_FAILED_PLAYER_NOT_JAILED = Caption.of("unjailFailedPlayerNotJailed");
-  public static final Caption UNJAIL_FAILED_PLAYER_NEVER_JOINED = Caption.of("unjailFailedPlayerNeverJoined");
-  public static final Caption SETJAIL_FROM_CONSOLE = Caption.of("setjailFromConsole");
-  public static final Caption DELJAIL_FAILED = Caption.of("deljailFailed");
 
   public static final Caption RESOLVE_JAIL_FAILED = Caption.of("non-existent-jail");
   public static final Caption RESOLVE_PRISONER_FAILED = Caption.of("player-not-imprisoned");
   public static final Caption RELOAD_FAILED = Caption.of("reload-failed");
   public static final Caption SAVE_ALL_FAILED = Caption.of("save-all-failed");
+  public static final Caption SAVE_JAIL_FAILED = Caption.of("save-jail-failed");
+  public static final Caption DELETE_JAIL_FAILED = Caption.of("delete-jail-failed");
 
   public static CaptionVariable prisonerVariable(final String name) {
     return CaptionVariable.of("prisoner", name);

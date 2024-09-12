@@ -36,15 +36,14 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.incendo.cloud.annotations.Argument;
 import org.incendo.cloud.annotations.Command;
 import org.incendo.cloud.annotations.CommandDescription;
 import org.incendo.cloud.annotations.Permission;
+import org.incendo.cloud.annotations.exception.ExceptionHandler;
 import org.incendo.cloud.annotations.parser.Parser;
 import org.incendo.cloud.annotations.suggestion.Suggestions;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.context.CommandInput;
-import org.incendo.cloud.util.CompletableFutures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +56,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static io.github.emilyydev.betterjails.util.Util.color;
@@ -108,7 +106,7 @@ public final class CommandHandler {
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
       final OfflinePlayer target,
-      @Argument(suggestions = "jail") final Jail jail,
+      final Jail jail,
       final Duration time
   ) {
     final String timeInput = ctx.parsingContext("time").consumedInput();
@@ -148,7 +146,7 @@ public final class CommandHandler {
   public void prisonerInfo(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
-      @Argument(suggestions = "prisoner") final ApiPrisoner prisoner
+      final ApiPrisoner prisoner
   ) {
     final String executorName = sender.getName();
     if (prisoner.released()) {
@@ -215,7 +213,7 @@ public final class CommandHandler {
   public void releasePrisoner(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
-      @Argument(suggestions = "prisoner") final ApiPrisoner prisoner
+      final ApiPrisoner prisoner
   ) {
     final String executorName = sender.getName();
     if (prisoner.released()) {
@@ -236,33 +234,47 @@ public final class CommandHandler {
   @Permission("betterjails.setjail")
   @Command(value = "setjail <name>", requiredSender = Player.class)
   @CommandDescription("Creates a new jail or relocates an existing jail to where the command is executed")
-  public CompletableFuture<Void> createOrRelocateJail(final Player sender, final String name) {
+  public CompletableFuture<Void> createOrRelocateJail(
+      final CommandContext<Player> ctx,
+      final Player sender,
+      final String name
+  ) {
     return this.plugin.jailData().addJail(name, sender.getLocation()).handleAsync((v, ex) -> {
       if (ex == null) {
         sender.sendMessage(this.configuration.messages().createJailSuccess(sender.getName(), name));
+        return null;
       } else {
         LOGGER.error("An error occurred saving data for jail {}", name, ex);
-        sender.sendMessage(color("&cThere was an error while trying to add the jail."));
+        throw new CommandError(
+            ctx, CommandError.SAVE_JAIL_FAILED,
+            CommandError.executorVariable(sender.getName()),
+            CommandError.jailVariable(name)
+        );
       }
-
-      return null; // TODO(emilia): maybe add new Captions
     }, this.plugin);
   }
 
   @Permission("betterjails.deljail")
   @Command("deljail <jail>")
   @CommandDescription("Deletes a jail location from the jails list")
-  public CompletableFuture<Void> deleteJail(final CommandSender sender, @Argument(suggestions = "jail") final Jail jail) {
+  public CompletableFuture<Void> deleteJail(
+      final CommandContext<CommandSender> ctx,
+      final CommandSender sender,
+      final Jail jail
+  ) {
     final String name = jail.name();
-    return this.plugin.jailData().removeJail(name).handleAsync((v, ex) -> {
+    return this.plugin.jailData().removeJail(jail).handleAsync((v, ex) -> {
       if (ex == null) {
         sender.sendMessage(this.configuration.messages().deleteJailSuccess(sender.getName(), name));
+        return null;
       } else {
         LOGGER.error("An error occurred deleting data for jail {}", name, ex);
-        sender.sendMessage(color("&cThere was an error while trying to remove the jail."));
+        throw new CommandError(
+            ctx, CommandError.DELETE_JAIL_FAILED,
+            CommandError.executorVariable(sender.getName()),
+            CommandError.jailVariable(name)
+        );
       }
-
-      return null; // TODO(emilia): maybe add new Captions
     }, this.plugin);
   }
 
@@ -291,20 +303,18 @@ public final class CommandHandler {
   @Command("betterjails save")
   @CommandDescription("Saves jail and prisoner data on the spot")
   public CompletableFuture<Void> saveData(final CommandContext<CommandSender> ctx, final CommandSender sender) {
-    return this.plugin.saveAll().<CompletableFuture<Void>>handle((v, ex) -> {
+    return this.plugin.saveAll().handle((v, ex) -> {
       if (ex == null) {
         sender.sendMessage(this.configuration.messages().saveData(sender.getName()));
-        return CompletableFuture.completedFuture(null);
+        return null;
       } else {
         // exception is logged in BJP#saveAll()
-        return CompletableFutures.failedFuture(
-            new CommandError(ctx, CommandError.SAVE_ALL_FAILED, CommandError.executorVariable(sender.getName()))
-        );
+        throw new CommandError(ctx, CommandError.SAVE_ALL_FAILED, CommandError.executorVariable(sender.getName()));
       }
-    }).thenCompose(Function.identity());
+    });
   }
 
-  @Parser
+  @Parser(suggestions = "jail")
   public Jail resolveJail(final CommandContext<CommandSender> ctx, final CommandInput input) {
     final String name = input.readString();
     final Jail jail = this.plugin.jailData().getJail(name);
@@ -320,7 +330,7 @@ public final class CommandHandler {
     return this.plugin.jailData().getJails().keySet().stream().filter(name -> name.startsWith(input));
   }
 
-  @Parser
+  @Parser(suggestions = "prisoner")
   public ApiPrisoner resolvePrisoner(final CommandContext<CommandSender> ctx, final CommandInput input) {
     final String name = input.readString();
     final ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(this.plugin.findUniqueId(name));
@@ -337,5 +347,10 @@ public final class CommandHandler {
         .map(Prisoner::name)
         .filter(Objects::nonNull)
         .filter(name -> name.startsWith(input));
+  }
+
+  @ExceptionHandler(CommandError.class)
+  public void handleCommandError(final CommandSender sender, final CommandError error) {
+    sender.sendMessage(error.getMessage());
   }
 }

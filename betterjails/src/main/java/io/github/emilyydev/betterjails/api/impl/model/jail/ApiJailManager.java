@@ -78,7 +78,7 @@ public class ApiJailManager implements JailManager {
     Objects.requireNonNull(jail, "jail");
 
     try {
-      this.jailData.removeJail(jail.name()).get();
+      this.jailData.removeJail(jail).get();
     } catch (final InterruptedException ex) {
       // bleh
     } catch (final ExecutionException ex) {

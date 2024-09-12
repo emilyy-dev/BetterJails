@@ -87,7 +87,12 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
   }
 
   public MessageHolder messages() {
-    return setting(MESSAGES, key -> new MessageHolder(config().getConfigurationSection(key).getValues(false)));
+    return setting(MESSAGES, key -> {
+      final Map<String, Object> loadedMessages = config().getConfigurationSection(key).getValues(false);
+      final Map<String, Object> defaultMessages = config().getDefaults().getConfigurationSection(key).getValues(false);
+      defaultMessages.forEach(loadedMessages::putIfAbsent);
+      return new MessageHolder(loadedMessages);
+    });
   }
 
   public interface JailListFormatter {
@@ -113,26 +118,16 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
   public static final class MessageHolder {
 
     private static final String JAIL_SUCCESS = "jailSuccess";
-    private static final String JAIL_FAILED_PLAYER_NEVER_JOINED = "jailFailedPlayerNeverJoined";
-    private static final String JAIL_FAILED_PLAYER_EXEMPT = "jailFailedPlayerExempt";
-    private static final String JAIL_FAILED_JAIL_NOT_FOUND = "jailFailedJailNotFound";
-    private static final String JAIL_FAILED_TIME_INCORRECT = "jailFailedTimeIncorrect";
-    private static final String INFO_FAILED_PLAYER_NOT_JAILED = "infoFailedPlayerNotJailed";
-    private static final String INFO_FAILED_PLAYER_NEVER_JOINED = "infoFailedPlayerNeverJoined";
     private static final String UNJAIL_SUCCESS = "unjailSuccess";
-    private static final String UNJAIL_FAILED_PLAYER_NOT_JAILED = "unjailFailedPlayerNotJailed";
-    private static final String UNJAIL_FAILED_PLAYER_NEVER_JOINED = "unjailFailedPlayerNeverJoined";
-    private static final String SETJAIL_FROM_CONSOLE = "setjailFromConsole";
     private static final String SETJAIL_SUCCESS = "setjailSuccess";
     private static final String DELJAIL_SUCCESS = "deljailSuccess";
-    private static final String DELJAIL_FAILED = "deljailFailed";
     private static final String RELOAD = "reload";
     private static final String SAVE = "save";
     private static final String LIST_NO_JAILS = "listNoJails";
     private static final String LIST_JAILS_PREMESSAGE = "listJailsPremessage";
     private static final String JAILS_FORMAT = "jailsFormat";
 
-    private static final Pattern PLACEHOLDERS = Pattern.compile("\\{prisoner}|\\{player}|\\{jail}|\\{time}");
+    private static final Pattern PLACEHOLDERS = Pattern.compile("\\{(prisoner|player|jail|time)}");
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private static Function<? super MatchResult, ? extends String> replacer(
@@ -142,13 +137,12 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
         final Optional<String> duration
     ) {
       return matchResult -> {
-        final String matchedGroup = matchResult.group();
-        switch (Util.removeBracesFromMatchedPlaceholderPleaseAndThankYou(matchedGroup)) {
-          case "prisoner": return prisoner.orElse(matchedGroup);
-          case "player": return executorName.orElse(matchedGroup);
-          case "jail": return jail.orElse(matchedGroup);
-          case "time": return duration.orElse(matchedGroup);
-          default: return matchedGroup;
+        switch (matchResult.group(1)) {
+          case "prisoner": return prisoner.orElse(matchResult.group());
+          case "player": return executorName.orElse(matchResult.group());
+          case "jail": return jail.orElse(matchResult.group());
+          case "time": return duration.orElse(matchResult.group());
+          default: return matchResult.group();
         }
       };
     }
@@ -161,6 +155,10 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
       this.messageMap = builder.build();
     }
 
+    public String messageFormat(final String key) {
+      return this.messageMap.get(key);
+    }
+
     public String jailPlayerSuccess(
         final String prisoner,
         final String executorName,
@@ -170,76 +168,16 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
       return formatMessage(JAIL_SUCCESS, prisoner, executorName, jail, duration);
     }
 
-    public String jailPlayerFailedNeverJoined(
-        final String prisoner,
-        final String executorName,
-        final String jail,
-        final String duration
-    ) {
-      return formatMessage(JAIL_FAILED_PLAYER_NEVER_JOINED, prisoner, executorName, jail, duration);
-    }
-
-    public String jailPlayerFailedExempt(
-        final String prisoner,
-        final String executorName,
-        final String jail,
-        final String duration
-    ) {
-      return formatMessage(JAIL_FAILED_PLAYER_EXEMPT, prisoner, executorName, jail, duration);
-    }
-
-    public String jailPlayerFailedJailNotFound(
-        final String prisoner,
-        final String executorName,
-        final String jail,
-        final String duration
-    ) {
-      return formatMessage(JAIL_FAILED_JAIL_NOT_FOUND, prisoner, executorName, jail, duration);
-    }
-
-    public String jailPlayerFailedInvalidTimeInput(
-        final String prisoner,
-        final String executorName,
-        final String jail,
-        final String duration
-    ) {
-      return formatMessage(JAIL_FAILED_TIME_INCORRECT, prisoner, executorName, jail, duration);
-    }
-
-    public String prisonerInfoFailedNotJailed(final String prisoner, final String executorName) {
-      return formatMessage(INFO_FAILED_PLAYER_NOT_JAILED, prisoner, executorName, null, null);
-    }
-
-    public String prisonerInfoFailedNeverJoined(final String prisoner, final String executorName) {
-      return formatMessage(INFO_FAILED_PLAYER_NEVER_JOINED, prisoner, executorName, null, null);
-    }
-
     public String releasePrisonerSuccess(final String prisoner, final String executorName) {
       return formatMessage(UNJAIL_SUCCESS, prisoner, executorName, null, null);
-    }
-
-    public String releasePrisonerFailedNotJailed(final String prisoner, final String executorName) {
-      return formatMessage(UNJAIL_FAILED_PLAYER_NOT_JAILED, prisoner, executorName, null, null);
-    }
-
-    public String releasePrisonerFailedNeverJoined(final String prisoner, final String executorName) {
-      return formatMessage(UNJAIL_FAILED_PLAYER_NEVER_JOINED, prisoner, executorName, null, null);
     }
 
     public String createJailSuccess(final String executorName, final String jail) {
       return formatMessage(SETJAIL_SUCCESS, null, executorName, jail, null);
     }
 
-    public String createJailFromConsole(final String executorName, final String jail) {
-      return formatMessage(SETJAIL_FROM_CONSOLE, null, executorName, jail, null);
-    }
-
     public String deleteJailSuccess(final String executorName, final String jail) {
       return formatMessage(DELJAIL_SUCCESS, null, executorName, jail, null);
-    }
-
-    public String deleteJailFailed(final String executorName, final String jail) {
-      return formatMessage(DELJAIL_FAILED, null, executorName, jail, null);
     }
 
     public String reloadData(final String executorName) {
