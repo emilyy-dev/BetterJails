@@ -43,17 +43,19 @@ public class UniqueIdCache implements Listener {
   private final Map<String, UUID> cache = new HashMap<>();
 
   public UniqueIdCache(final BetterJailsPlugin plugin) {
-    plugin.getServer().getPluginManager().registerEvent(
-        PlayerLoginEvent.class, this, EventPriority.MONITOR,
-        (l, e) -> playerLogin((PlayerLoginEvent) e), plugin
-    );
-
     for (final OfflinePlayer offlinePlayer : plugin.getServer().getOfflinePlayers()) {
       final String name = offlinePlayer.getName();
       if (name != null) {
         this.cache.put(name.toLowerCase(Locale.ROOT), offlinePlayer.getUniqueId());
       }
     }
+  }
+
+  public void register(final BetterJailsPlugin plugin) {
+    plugin.getServer().getPluginManager().registerEvent(
+        PlayerLoginEvent.class, this, EventPriority.MONITOR,
+        (l, e) -> playerLogin((PlayerLoginEvent) e), plugin
+    );
   }
 
   public UUID findUniqueId(final String name) {

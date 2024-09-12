@@ -36,6 +36,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.incendo.cloud.annotations.Argument;
 import org.incendo.cloud.annotations.Command;
 import org.incendo.cloud.annotations.CommandDescription;
 import org.incendo.cloud.annotations.Permission;
@@ -107,7 +108,7 @@ public final class CommandHandler {
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
       final OfflinePlayer target,
-      final Jail jail,
+      @Argument(suggestions = "jail") final Jail jail,
       final Duration time
   ) {
     final String timeInput = ctx.parsingContext("time").consumedInput();
@@ -147,7 +148,7 @@ public final class CommandHandler {
   public void prisonerInfo(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
-      final ApiPrisoner prisoner
+      @Argument(suggestions = "prisoner") final ApiPrisoner prisoner
   ) {
     final String executorName = sender.getName();
     if (prisoner.released()) {
@@ -214,7 +215,7 @@ public final class CommandHandler {
   public void releasePrisoner(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
-      final ApiPrisoner prisoner
+      @Argument(suggestions = "prisoner") final ApiPrisoner prisoner
   ) {
     final String executorName = sender.getName();
     if (prisoner.released()) {
@@ -251,7 +252,7 @@ public final class CommandHandler {
   @Permission("betterjails.deljail")
   @Command("deljail <jail>")
   @CommandDescription("Deletes a jail location from the jails list")
-  public CompletableFuture<Void> deleteJail(final CommandSender sender, final Jail jail) {
+  public CompletableFuture<Void> deleteJail(final CommandSender sender, @Argument(suggestions = "jail") final Jail jail) {
     final String name = jail.name();
     return this.plugin.jailData().removeJail(name).handleAsync((v, ex) -> {
       if (ex == null) {
@@ -305,7 +306,7 @@ public final class CommandHandler {
 
   @Parser
   public Jail resolveJail(final CommandContext<CommandSender> ctx, final CommandInput input) {
-    final String name = input.readInput();
+    final String name = input.readString();
     final Jail jail = this.plugin.jailData().getJail(name);
     if (jail != null) {
       return jail;
@@ -315,13 +316,12 @@ public final class CommandHandler {
   }
 
   @Suggestions("jail")
-  public Stream<String> suggestJails(final CommandInput input) {
-    final String prefix = input.readString();
-    return this.plugin.jailData().getJails().keySet().stream().filter(name -> name.startsWith(prefix));
+  public Stream<String> suggestJails(final String input) {
+    return this.plugin.jailData().getJails().keySet().stream().filter(name -> name.startsWith(input));
   }
 
   @Parser
-  public ApiPrisoner parsePrisoner(final CommandContext<CommandSender> ctx, final CommandInput input) {
+  public ApiPrisoner resolvePrisoner(final CommandContext<CommandSender> ctx, final CommandInput input) {
     final String name = input.readString();
     final ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(this.plugin.findUniqueId(name));
     if (prisoner != null) {
@@ -332,11 +332,10 @@ public final class CommandHandler {
   }
 
   @Suggestions("prisoner")
-  public Stream<String> suggestPrisoners(final CommandInput input) {
-    final String prefix = input.readString();
+  public Stream<String> suggestPrisoners(final String input) {
     return this.plugin.prisonerData().getAllPrisoners().stream()
         .map(Prisoner::name)
         .filter(Objects::nonNull)
-        .filter(name -> name.startsWith(prefix));
+        .filter(name -> name.startsWith(input));
   }
 }

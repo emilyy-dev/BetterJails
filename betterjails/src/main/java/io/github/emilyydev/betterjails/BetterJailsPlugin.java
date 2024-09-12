@@ -165,6 +165,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   @Override
   public void onEnable() {
     PluginDisableListener.create(this.eventBus).register(this);
+    this.uniqueIdCache.register(this);
 
     this.configuration.load();
     this.subCommands.load();
@@ -210,14 +211,16 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
     PlayerListeners.create(this).register();
 
-    final LegacyPaperCommandManager<CommandSender> commandManager =
-        LegacyPaperCommandManager.createNative(this, ExecutionCoordinator.simpleCoordinator());
-    if (commandManager.hasCapability(CloudBukkitCapabilities.NATIVE_BRIGADIER)) {
-      commandManager.registerBrigadier();
-    }
+    if (this.metrics != null) { // metrics is null in unit tests, cloud shits the bed because of brig issues
+      final LegacyPaperCommandManager<CommandSender> commandManager =
+          LegacyPaperCommandManager.createNative(this, ExecutionCoordinator.simpleCoordinator());
+      if (commandManager.hasCapability(CloudBukkitCapabilities.NATIVE_BRIGADIER)) {
+        commandManager.registerBrigadier();
+      }
 
-    final AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class);
-    annotationParser.parse(new CommandHandler(this));
+      final AnnotationParser<CommandSender> annotationParser = new AnnotationParser<>(commandManager, CommandSender.class);
+      annotationParser.parse(new CommandHandler(this));
+    }
 
     scheduler.runTaskTimer(this, this.prisonerData::timer, 0L, 20L);
 
