@@ -124,5 +124,10 @@ public interface Prisoner {
    */
   @NotNull Duration totalSentenceTime();
 
+  /**
+   * Gets the reason under which the player was imprisoned.
+   *
+   * @return the imprisonment reason or {@code null} if not provided
+   */
   @Nullable String imprisonmentReason();
 }
