@@ -64,6 +64,7 @@ public class CommandError extends ParserException {
     super(CommandHandler.class, ctx, caption, variables);
   }
 
+  // such info is not needed and CommandErrors are created in specific, controlled locations
   @Override
   public Throwable fillInStackTrace() {
     return this;

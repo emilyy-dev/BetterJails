@@ -35,6 +35,13 @@ messages:
   # · {player}: player that executes the command.
   infoFailedPlayerNotJailed: "&6The player you are requesting the information from is not currently serving a sentence."
 
+  # Generic error messages when resolving a jail or prisoner for a command.
+  # Available placeholders:
+  # · {jail}: non-existent jail attempted to resolve.
+  non-existent-jail: "&cJail &4{jail} &cdoesn't exist"
+  # · {prisoner}: non-existent prisoner attempted to resolve.
+  player-not-imprisoned: "&4{prisoner} &cis not imprisoned"
+
   # Placeholders for /unjail:
   # · {prisoner}: player to be unjailed.
   # · {player}: player that executes the command.
@@ -45,12 +52,16 @@ messages:
   # · {player}: player that executes the command.
   # · {jail}: jail name to be added/removed.
   setjailSuccess: "&6Jail added successfully!"
+  save-jail-failed: "&cAn error occurred while saving data for jail &4{jail}&c. Check the console for errors."
   deljailSuccess: "&6Jail removed successfully!"
+  delete-jail-failed: "&cAn error occurred while deleting data for jail &4{jail}&c. Check the console for errors."
 
   # Placeholders for /betterjails reload and /betterjails save:
   # · {player}: player that executes the command.
   reload: "&6Files reloaded successfully!"
+  reload-failed: "&cAn error occurred while reloading plugin data. Check the console for errors."
   save: "&6Files saved successfully!"
+  save-all-failed: "&cAn error occurred while saving plugin data. Check the console for errors."
 
   # Placeholders for /jails premessages:
   # · None :(
@@ -72,10 +83,3 @@ messages:
   #     · jail3
   #   line:
   #     jail1, jail2, jail3.
-
-  non-existent-jail: "jail doesn't exist"
-  player-not-imprisoned: "player is not imprisoned"
-  reload-failed: "reloading failed"
-  save-all-failed: "saving data failed"
-  save-jail-failed: "saving jail failed"
-  delete-jail-failed: "deleting jail failed"
