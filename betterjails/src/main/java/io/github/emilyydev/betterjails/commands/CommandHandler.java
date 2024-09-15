@@ -271,6 +271,7 @@ public final class CommandHandler {
       final Player sender,
       final Jail jail
   ) {
+    // TODO(rymiel): neither of these modjail commands run any events. Should they?
     jail.releaseLocation(ImmutableLocation.copyOf(sender.getLocation()));
     return this.plugin.jailData().save().handleAsync((v, ex) -> {
       if (ex == null) {
