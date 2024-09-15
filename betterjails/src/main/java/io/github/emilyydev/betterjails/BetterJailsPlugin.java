@@ -31,8 +31,8 @@ import io.github.emilyydev.betterjails.api.impl.BetterJailsApi;
 import io.github.emilyydev.betterjails.api.impl.event.ApiEventBus;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJailManager;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisonerManager;
+import io.github.emilyydev.betterjails.commands.CommandError;
 import io.github.emilyydev.betterjails.commands.CommandHandler;
-import io.github.emilyydev.betterjails.commands.CommandTabCompleter;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.data.JailDataHandler;
@@ -42,11 +42,12 @@ import io.github.emilyydev.betterjails.interfaces.storage.BukkitConfigurationSto
 import io.github.emilyydev.betterjails.interfaces.storage.StorageAccess;
 import io.github.emilyydev.betterjails.listeners.PlayerListeners;
 import io.github.emilyydev.betterjails.listeners.PluginDisableListener;
+import io.github.emilyydev.betterjails.listeners.UniqueIdCache;
 import io.github.emilyydev.betterjails.util.Util;
 import net.ess3.api.IEssentials;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Server;
-import org.bukkit.command.PluginCommand;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -55,6 +56,15 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.incendo.cloud.annotations.AnnotationParser;
+import org.incendo.cloud.bukkit.CloudBukkitCapabilities;
+import org.incendo.cloud.caption.CaptionFormatter;
+import org.incendo.cloud.exception.ArgumentParseException;
+import org.incendo.cloud.exception.CommandExecutionException;
+import org.incendo.cloud.exception.handling.ExceptionController;
+import org.incendo.cloud.exception.handling.ExceptionHandler;
+import org.incendo.cloud.execution.ExecutionCoordinator;
+import org.incendo.cloud.paper.LegacyPaperCommandManager;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,9 +78,11 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("DesignForExtension")
 public class BetterJailsPlugin extends JavaPlugin implements Executor {
@@ -91,14 +103,22 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   private final JailDataHandler jailData = new JailDataHandler(this);
   private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this.jailData), new ApiPrisonerManager(this));
   private final ApiEventBus eventBus = this.api.getEventBus();
+  private final UniqueIdCache uniqueIdCache = new UniqueIdCache(this);
+  private final boolean isTesting;
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
   private Metrics metrics = null;
 
   public BetterJailsPlugin() {
+    this.isTesting = false;
     this.metrics = Util.prepareMetrics(this);
   }
 
-  public BetterJailsPlugin(final String str) { // for mockbukkit, just a dummy ctor to not enable bstats
+  public BetterJailsPlugin(final String str) { // for mockbukkit, dummy ctor to not enable bstats and cloud
+    this.isTesting = true;
+  }
+
+  public UUID findUniqueId(final String name) {
+    return this.uniqueIdCache.findUniqueId(name);
   }
 
   public PrisonerDataHandler prisonerData() {
@@ -155,8 +175,9 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   @Override
   public void onEnable() {
     PluginDisableListener.create(this.eventBus).register(this);
+    this.uniqueIdCache.register(this);
 
-    this.configuration.load();
+    this.configuration.loadWithDefaults();
     this.subCommands.load();
 
     final Server server = getServer();
@@ -200,14 +221,9 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
     PlayerListeners.create(this).register();
 
-    final CommandHandler commandHandler = new CommandHandler(this);
-    final CommandTabCompleter tabCompleter = new CommandTabCompleter(this);
-    for (final String commandName : getDescription().getCommands().keySet()) {
-      final PluginCommand command = getCommand(commandName);
-      if (command != null) {
-        command.setExecutor(commandHandler);
-        command.setTabCompleter(tabCompleter);
-      }
+    // cloud shits the bed because of brig issues
+    if (!this.isTesting) {
+      setupCommandHandler();
     }
 
     scheduler.runTaskTimer(this, this.prisonerData::timer, 0L, 20L);
@@ -257,7 +273,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   }
 
   public void reload() throws IOException {
-    this.configuration.load();
+    this.configuration.loadWithDefaults();
     this.subCommands.load();
     this.prisonerData.load();
     this.jailData.load();
@@ -286,5 +302,30 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
       LOGGER.warn("New config.yml found!");
       LOGGER.warn("Make sure to make a backup of your settings before deleting your current config.yml!");
     }
+  }
+
+  private void setupCommandHandler() {
+    final LegacyPaperCommandManager<CommandSender> commandManager =
+        LegacyPaperCommandManager.createNative(this, ExecutionCoordinator.simpleCoordinator());
+    if (commandManager.hasCapability(CloudBukkitCapabilities.NATIVE_BRIGADIER)) {
+      commandManager.registerBrigadier();
+    }
+
+    final ExceptionController<CommandSender> exceptionController = commandManager.exceptionController();
+    exceptionController.registerHandler(CommandExecutionException.class, ExceptionHandler.unwrappingHandler(CommandError.class));
+    exceptionController.registerHandler(ArgumentParseException.class, ExceptionHandler.unwrappingHandler(CommandError.class));
+
+    final CaptionFormatter<CommandSender, String> placeholderReplacingFormatter = CaptionFormatter.patternReplacing(Pattern.compile("[<{](\\S+)[}>]"));
+    // stinky
+    commandManager.captionFormatter((captionKey, recipient, caption, variables) ->
+        Util.color(placeholderReplacingFormatter.formatCaption(captionKey, recipient, caption, variables))
+    );
+
+    commandManager.captionRegistry().registerProvider(
+        (caption, recipient) -> this.configuration.messages().messageFormat(caption.key())
+    );
+
+    new AnnotationParser<>(commandManager, CommandSender.class)
+        .parse(new CommandHandler(this));
   }
 }

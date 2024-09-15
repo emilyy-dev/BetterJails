@@ -27,10 +27,7 @@ been online for the required time.
 * `/deljail <jail name>` / Removes a jail location from the jails list.
 * `/jails` / Prints a list of available jails.
 * `/jail <player> <jail> <time>` / Sends a player to the provided jail, and won't be teleported back
-  until the time provided has passed. Time format must match against this
-  rule: `^(\d{1,10}(\.\d{1,2})?)[yMwdhms]$`. If all that sounds like gibberish, you can
-  check [here](https://onlinetexttools.com/generate-text-from-regex?regex=%5E(%5Cd%7B1%2C5%7D(%5C.%5Cd%7B1%2C2%7D)%3F)%5ByMwdhms%5D%24&results=10)
-  for some random examples of valid times.
+  until the time provided has passed. Time format matches inputs in the format of `2d15h7m12s`.
 * `/jail info <player>` / Will print out in the chat some information about the jailed player stored
   in the player data file.
 * `/unjail <player>` / Teleports a jailed player back to where they were when jailed.

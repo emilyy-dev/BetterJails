@@ -30,6 +30,7 @@ import be.seeseemelk.mockbukkit.entity.PlayerMock;
 import com.github.fefo.betterjails.api.event.jail.JailCreateEvent;
 import com.github.fefo.betterjails.api.event.prisoner.PlayerImprisonEvent;
 import com.github.fefo.betterjails.api.event.prisoner.PrisonerReleaseEvent;
+import com.github.fefo.betterjails.api.model.jail.Jail;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.util.Vector;
@@ -41,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -93,8 +95,9 @@ public class EventBusTest {
   public void test() {
     assertDoesNotThrow(() -> plugin.jailData().addJail("jail0", new Vector().toLocation(server.addSimpleWorld("world0"))));
 
+    final Jail jail = plugin.jailData().getJail("jail0");
     final PlayerMock player = server.addPlayer();
-    assertDoesNotThrow(() -> plugin.prisonerData().addJailedPlayer(player, "jail0", Util.NIL_UUID, "test", 3600L, false));
+    assertDoesNotThrow(() -> plugin.prisonerData().addJailedPlayer(player, jail, Util.NIL_UUID, "test", Duration.ofHours(1L), false));
     assertDoesNotThrow(() -> plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, "test", false));
   }
 }

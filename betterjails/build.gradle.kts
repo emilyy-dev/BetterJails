@@ -1,7 +1,7 @@
 plugins {
   id("buildlogic.java-conventions")
-  id("com.github.johnrengelman.shadow") version "8.1.1"
-  id("xyz.jpenilla.run-paper") version "2.2.3"
+  id("com.gradleup.shadow") version "8.3.1"
+  id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
 repositories {
@@ -16,6 +16,9 @@ repositories {
 
 dependencies {
   implementation(project(":betterjails-api"))
+  implementation(libs.cloud.paper)
+  implementation(libs.cloud.annotations)
+  annotationProcessor(libs.cloud.annotations)
 
   compileOnly(libs.spigot)
   implementation(libs.bstats)
@@ -39,6 +42,15 @@ tasks {
   shadowJar {
     archiveClassifier = null
     relocate("org.bstats", "io.github.emilyydev.betterjails.bstats")
+    relocate("org.incendo.cloud", "io.github.emilyydev.betterjails.cloud")
+  }
+
+  withType<Jar> {
+    manifest.attributes["paperweight-mappings-namespace"] = "mojang"
+  }
+
+  compileJava {
+    options.compilerArgs = listOf("-parameters")
   }
 
   processResources {
@@ -57,7 +69,8 @@ tasks {
   }
 
   runServer {
-    minecraftVersion("1.20.4")
+    minecraftVersion("1.21.1")
+    systemProperty("disable.watchdog", true)
   }
 }
 

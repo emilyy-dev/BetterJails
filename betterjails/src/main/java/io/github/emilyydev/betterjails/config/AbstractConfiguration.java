@@ -32,7 +32,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -57,6 +60,11 @@ public class AbstractConfiguration {
     this.configurationMap = mapCreator.get();
   }
 
+  public final void loadWithDefaults() {
+    load();
+    loadDefaults();
+  }
+
   public final void load() {
     try {
       if (Files.notExists(this.configFile)) {
@@ -74,6 +82,24 @@ public class AbstractConfiguration {
 
       this.configuration = configuration;
       this.configurationMap.clear();
+    } catch (final IOException ex) {
+      throw new UncheckedIOException(ex);
+    } catch (final InvalidConfigurationException ex) {
+      throw new UncheckedIOException(new IOException(ex));
+    }
+  }
+
+  public final void loadDefaults() {
+    try {
+      final YamlConfiguration defaultConfig = new YamlConfiguration();
+      try (
+          final InputStream in = AbstractConfiguration.class.getResourceAsStream('/' + this.fileName);
+          final Reader reader = new InputStreamReader(Objects.requireNonNull(in, "Bundled " + this.fileName), StandardCharsets.UTF_8)
+      ) {
+        defaultConfig.load(reader);
+      }
+
+      this.configuration.setDefaults(defaultConfig);
     } catch (final IOException ex) {
       throw new UncheckedIOException(ex);
     } catch (final InvalidConfigurationException ex) {

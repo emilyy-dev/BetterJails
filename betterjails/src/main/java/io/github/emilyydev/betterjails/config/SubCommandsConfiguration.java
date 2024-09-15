@@ -65,13 +65,13 @@ public final class SubCommandsConfiguration extends AbstractConfiguration {
 
     private static Function<? super MatchResult, ? extends String> replacer(
         final String prisoner,
-        final String executioner
+        final String executorName
     ) {
       return matchResult -> {
         final String matchedGroup = matchResult.group();
         switch (Util.removeBracesFromMatchedPlaceholderPleaseAndThankYou(matchedGroup)) {
           case "prisoner": return prisoner;
-          case "player": return executioner;
+          case "player": return executorName;
           default: return matchedGroup;
         }
       };
@@ -90,23 +90,23 @@ public final class SubCommandsConfiguration extends AbstractConfiguration {
       this.asConsole = ImmutableList.copyOf(asConsole);
     }
 
-    public void executeAsPrisoner(final Server server, final CommandSender prisoner, final String executioner) {
+    public void executeAsPrisoner(final Server server, final CommandSender prisoner, final String executorName) {
       final String prisonerName = prisoner.getName();
       this.asPrisoner.stream()
-          .map(s -> replacePlaceholders(s, prisonerName, executioner))
+          .map(s -> replacePlaceholders(s, prisonerName, executorName))
           .forEach(s -> server.dispatchCommand(prisoner, s));
     }
 
-    public void executeAsConsole(final Server server, final CommandSender prisoner, final String executioner) {
+    public void executeAsConsole(final Server server, final CommandSender prisoner, final String executorName) {
       final String prisonerName = prisoner.getName();
       final CommandSender consoleSender = server.getConsoleSender();
       this.asConsole.stream()
-          .map(s -> replacePlaceholders(s, prisonerName, executioner))
+          .map(s -> replacePlaceholders(s, prisonerName, executorName))
           .forEach(s -> server.dispatchCommand(consoleSender, s));
     }
 
-    private String replacePlaceholders(final String command, final String prisoner, final String executioner) {
-      final Function<? super MatchResult, ? extends String> replacer = replacer(prisoner, executioner);
+    private String replacePlaceholders(final String command, final String prisoner, final String executorName) {
+      final Function<? super MatchResult, ? extends String> replacer = replacer(prisoner, executorName);
       final Matcher matcher = PLACEHOLDERS.matcher(command);
       final StringBuffer buffer = new StringBuffer();
       while (matcher.find()) {
