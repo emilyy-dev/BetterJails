@@ -36,6 +36,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.incendo.cloud.annotation.specifier.Greedy;
 import org.incendo.cloud.annotations.Command;
 import org.incendo.cloud.annotations.CommandDescription;
 import org.incendo.cloud.annotations.Permission;
@@ -109,7 +110,7 @@ public final class CommandHandler {
       final OfflinePlayer target,
       final Jail jail,
       final Duration time,
-      final @Nullable String reason
+      final @Nullable @Greedy String reason
   ) {
     final String timeInput = ctx.parsingContext("time").consumedInput();
     final String executorName = sender.getName();
