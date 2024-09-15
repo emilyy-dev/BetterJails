@@ -26,8 +26,9 @@ been online for the required time.
 * `/setjail <jail name>` / Adds a new jail location where the command is executed.
 * `/deljail <jail name>` / Removes a jail location from the jails list.
 * `/jails` / Prints a list of available jails.
-* `/jail <player> <jail> <time>` / Sends a player to the provided jail, and won't be teleported back
+* `/jail <player> <jail> <time> [reason]` / Sends a player to the provided jail, and won't be teleported back
   until the time provided has passed. Time format matches inputs in the format of `2d15h7m12s`.
+  The command optionally takes an imprisonment reason.
 * `/jail info <player>` / Will print out in the chat some information about the jailed player stored
   in the player data file.
 * `/unjail <player>` / Teleports a jailed player back to where they were when jailed.

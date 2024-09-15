@@ -44,6 +44,7 @@ import org.incendo.cloud.annotations.parser.Parser;
 import org.incendo.cloud.annotations.suggestion.Suggestions;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.context.CommandInput;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,14 +101,15 @@ public final class CommandHandler {
   }
 
   @Permission("betterjails.jail")
-  @Command("jail|imprison <target> <jail> <time>")
+  @Command("jail|imprison <target> <jail> <time> [reason]")
   @CommandDescription("Imprisons the target player in the indicated jail for the given amount of time")
   public void imprisonPlayer(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
       final OfflinePlayer target,
       final Jail jail,
-      final Duration time
+      final Duration time,
+      final @Nullable String reason
   ) {
     final String timeInput = ctx.parsingContext("time").consumedInput();
     final String executorName = sender.getName();
@@ -133,7 +135,7 @@ public final class CommandHandler {
       );
     }
 
-    this.plugin.prisonerData().addJailedPlayer(target, jail, uuidOrNil(sender), executorName, time, true);
+    this.plugin.prisonerData().addJailedPlayer(target, jail, uuidOrNil(sender), executorName, time, reason, true);
     this.server.broadcast(
         this.configuration.messages().jailPlayerSuccess(prisonerName, executorName, jail.name(), timeInput),
         "betterjails.receivebroadcast"
@@ -172,6 +174,10 @@ public final class CommandHandler {
     infoLines.add(color("&7Info for jailed player:"));
     infoLines.add(color("  &7· Name: &f%s", prisoner.nameOr("&oundefined")));
     infoLines.add(color("  &7· UUID: &f%s", prisoner.uuid()));
+    if (prisoner.imprisonmentReason() != null) {
+      infoLines.add(color("  &7· Reason: &f") + prisoner.imprisonmentReason());
+    }
+
     infoLines.add(color("  &7· Time left: &f%s", durationString(prisoner.timeLeft())));
     infoLines.add(color("  &7· Jailed in jail: &f%s", prisoner.jail().name()));
     infoLines.add(color("  &7· Jailed by: &f%s", MoreObjects.firstNonNull(prisoner.jailedBy(), "&oundefined")));

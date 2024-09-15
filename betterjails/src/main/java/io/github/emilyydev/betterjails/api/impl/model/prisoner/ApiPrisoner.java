@@ -50,6 +50,7 @@ public class ApiPrisoner implements Prisoner {
   private final String jailedBy;
   private final SentenceExpiry expiry;
   private final Duration totalSentenceTime;
+  private final String imprisonmentReason;
   private final ImmutableLocation lastLocation;
   private final boolean unknownLocation; // TODO(v2): lastLocation should just be nullable
 
@@ -62,6 +63,7 @@ public class ApiPrisoner implements Prisoner {
       final String jailedBy,
       final SentenceExpiry expiry,
       final Duration totalSentenceTime,
+      final String imprisonmentReason,
       final ImmutableLocation lastLocation,
       final boolean unknownLocation
   ) {
@@ -73,6 +75,7 @@ public class ApiPrisoner implements Prisoner {
     this.jailedBy = jailedBy;
     this.expiry = expiry;
     this.totalSentenceTime = totalSentenceTime;
+    this.imprisonmentReason = imprisonmentReason;
     this.lastLocation = lastLocation;
     this.unknownLocation = unknownLocation;
   }
@@ -121,6 +124,11 @@ public class ApiPrisoner implements Prisoner {
     return this.totalSentenceTime;
   }
 
+  @Override
+  public @Nullable String imprisonmentReason() {
+    return this.imprisonmentReason;
+  }
+
   // TODO(v2): make nullable, remove deprecation
   @Override @Deprecated
   public @NotNull ImmutableLocation lastLocation() {
@@ -154,11 +162,11 @@ public class ApiPrisoner implements Prisoner {
   }
 
   public @NotNull ApiPrisoner withReleased() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(Duration.ZERO), this.totalSentenceTime, this.lastLocation, this.unknownLocation);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(Duration.ZERO), this.totalSentenceTime, this.imprisonmentReason, this.lastLocation, this.unknownLocation);
   }
 
   public @NotNull ApiPrisoner withLastLocation(final ImmutableLocation location) {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.expiry, this.totalSentenceTime, location, false);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, this.expiry, this.totalSentenceTime, this.imprisonmentReason, location, false);
   }
 
   /**
@@ -166,7 +174,7 @@ public class ApiPrisoner implements Prisoner {
    * This method swaps out {@link #timeLeft} for {@link #jailedUntil}
    */
   public @NotNull ApiPrisoner withTimeRunning() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(jailedUntil()), this.totalSentenceTime, this.lastLocation, this.unknownLocation);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(jailedUntil()), this.totalSentenceTime, this.imprisonmentReason, this.lastLocation, this.unknownLocation);
   }
 
   /**
@@ -174,7 +182,7 @@ public class ApiPrisoner implements Prisoner {
    * This method swaps out {@link #jailedUntil} for {@link #timeLeft}
    */
   public @NotNull ApiPrisoner withTimePaused() {
-    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(timeLeft()), this.totalSentenceTime, this.lastLocation, this.unknownLocation);
+    return new ApiPrisoner(this.uuid, this.name, this.primaryGroup, this.parentGroups, this.jail, this.jailedBy, SentenceExpiry.of(timeLeft()), this.totalSentenceTime, this.imprisonmentReason, this.lastLocation, this.unknownLocation);
   }
 
   @Override

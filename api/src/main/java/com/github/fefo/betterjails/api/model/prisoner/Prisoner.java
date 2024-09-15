@@ -123,4 +123,6 @@ public interface Prisoner {
    * existing prisoner data was upgraded from an older version where this data did not exist)
    */
   @NotNull Duration totalSentenceTime();
+
+  @Nullable String imprisonmentReason();
 }

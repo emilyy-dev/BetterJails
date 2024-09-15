@@ -119,6 +119,7 @@ public final class PrisonerDataHandler {
       final UUID jailer,
       final @Nullable String jailerName,
       final Duration sentenceDuration,
+      final @Nullable String reason,
       final boolean teleport
   ) {
     final UUID prisonerUuid = player.getUniqueId();
@@ -190,7 +191,7 @@ public final class PrisonerDataHandler {
         : CompletableFuture.completedFuture(existingPrisoner.parentGroups());
 
     primaryGroupFuture.thenCombineAsync(parentGroupsFuture, (primaryGroup, parentGroups) -> {
-      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, expiry, sentenceDuration, lastLocation, unknownLocation);
+      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, expiry, sentenceDuration, reason, lastLocation, unknownLocation);
 
       this.plugin.eventBus().post(PlayerImprisonEvent.class, prisoner);
       final CompletionStage<?> setGroupFuture = groupsUnknown

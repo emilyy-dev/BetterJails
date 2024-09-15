@@ -97,7 +97,7 @@ public class EventBusTest {
 
     final Jail jail = plugin.jailData().getJail("jail0");
     final PlayerMock player = server.addPlayer();
-    assertDoesNotThrow(() -> plugin.prisonerData().addJailedPlayer(player, jail, Util.NIL_UUID, "test", Duration.ofHours(1L), false));
+    assertDoesNotThrow(() -> plugin.prisonerData().addJailedPlayer(player, jail, Util.NIL_UUID, "test", Duration.ofHours(1L), null, false));
     assertDoesNotThrow(() -> plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, "test", false));
   }
 }
