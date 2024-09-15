@@ -49,11 +49,13 @@ messages:
   unjailSuccess: "&c{prisoner} &6has been unjailed by &c{player}&6."
   unjailFailedPlayerNotJailed: "&c{prisoner} &6could not be unjailed, player wasn't jailed."
 
-  # Placeholders for /setjail and /deljail:
+  # Placeholders for /setjail, /modjail and /deljail:
   # · {player}: player that executes the command.
   # · {jail}: jail name to be added/removed.
   setjailSuccess: "&6Jail added successfully!"
   save-jail-failed: "&cAn error occurred while saving data for jail &4{jail}&c. Check the console for errors."
+  modify-jail-success: "&6Jail modified successfully!"
+  modify-jail-failed: "&cAn error occurred while modifying data for jail &4{jail}&c. Check the console for errors."
   deljailSuccess: "&6Jail removed successfully!"
   delete-jail-failed: "&cAn error occurred while deleting data for jail &4{jail}&c. Check the console for errors."
 

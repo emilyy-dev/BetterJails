@@ -2,6 +2,7 @@
 // This file is part of BetterJails, licensed under the MIT License.
 //
 // Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2024 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +28,7 @@ package io.github.emilyydev.betterjails.commands;
 import com.github.fefo.betterjails.api.event.plugin.PluginReloadEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
+import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.base.MoreObjects;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
@@ -256,6 +258,54 @@ public final class CommandHandler {
             ctx, CommandError.SAVE_JAIL_FAILED,
             CommandError.executorVariable(sender.getName()),
             CommandError.jailVariable(name)
+        );
+      }
+    }, this.plugin);
+  }
+
+  @Permission("betterjails.modjail")
+  @Command(value = "modjail <jail> releaselocation set", requiredSender = Player.class)
+  @CommandDescription("Sets the release location of a given jail")
+  public CompletableFuture<Void> modifyJailSetReleaseLocation(
+      final CommandContext<Player> ctx,
+      final Player sender,
+      final Jail jail
+  ) {
+    jail.releaseLocation(ImmutableLocation.copyOf(sender.getLocation()));
+    return this.plugin.jailData().save().handleAsync((v, ex) -> {
+      if (ex == null) {
+        sender.sendMessage(this.configuration.messages().modifyJailSuccess(sender.getName(), jail.name()));
+        return null;
+      } else {
+        LOGGER.error("An error occurred setting release location for jail {}", jail.name(), ex);
+        throw new CommandError(
+            ctx, CommandError.MODIFY_JAIL_FAILED,
+            CommandError.executorVariable(sender.getName()),
+            CommandError.jailVariable(jail.name())
+        );
+      }
+    }, this.plugin);
+  }
+
+  @Permission("betterjails.modjail")
+  @Command(value = "modjail <jail> releaselocation clear")
+  @CommandDescription("Clears the release location of a given jail")
+  public CompletableFuture<Void> modifyJailClearReleaseLocation(
+      final CommandContext<CommandSender> ctx,
+      final CommandSender sender,
+      final Jail jail
+  ) {
+    jail.releaseLocation(null);
+    return this.plugin.jailData().save().handleAsync((v, ex) -> {
+      if (ex == null) {
+        sender.sendMessage(this.configuration.messages().modifyJailSuccess(sender.getName(), jail.name()));
+        return null;
+      } else {
+        LOGGER.error("An error occurred setting release location for jail {}", jail.name(), ex);
+        throw new CommandError(
+            ctx, CommandError.MODIFY_JAIL_FAILED,
+            CommandError.executorVariable(sender.getName()),
+            CommandError.jailVariable(jail.name())
         );
       }
     }, this.plugin);

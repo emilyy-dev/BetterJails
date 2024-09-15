@@ -47,6 +47,7 @@ All permissions default to operators only unless otherwise noted.
 * `betterjails.jails` / Lets the user execute the `/jails` command.
 * `betterjails.unjail` / Lets the user execute the `/unjail` command.
 * `betterjails.setjail` / Lets the user execute the `/setjail` command.
+* `betterjails.modjail` / Lets the user execute the `/modjail` command.
 * `betterjails.deljail` / Lets the user execute the `/deljail` command.
 * `betterjails.receivebroadcast` / Prints in the user's chat when a player has been jailed/unjailed.
 * `betterjails.betterjails` / Lets the user execute the `/betterjails` command. Permission defaults

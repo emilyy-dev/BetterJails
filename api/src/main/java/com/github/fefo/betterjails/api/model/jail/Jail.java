@@ -2,6 +2,7 @@
 // This file is part of BetterJails, licensed under the MIT License.
 //
 // Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +27,9 @@ package com.github.fefo.betterjails.api.model.jail;
 
 import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -53,6 +56,22 @@ public interface Jail {
    * @param location the new location
    */
   void location(@NotNull ImmutableLocation location);
+
+
+  /**
+   * Gets the location players will be teleported to when released from jail, unless it is null,
+   * in which case players get teleported to the last location they were at before they were jailed.
+   *
+   * @return the release location
+   */
+  @Nullable ImmutableLocation releaseLocation();
+
+  /**
+   * Sets the new location players will be teleported to when released.
+   *
+   * @param location the new release location
+   */
+  void releaseLocation(@Nullable ImmutableLocation location);
 
   /**
    * The identifying name of this jail. This is a unique identifier.

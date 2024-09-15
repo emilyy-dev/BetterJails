@@ -79,7 +79,7 @@ public final class JailDataHandler {
 
   public CompletableFuture<Void> addJail(final String name, final Location location) {
     final String lowerCaseName = name.toLowerCase(Locale.ROOT);
-    this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, location))
+    this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, location, null))
         .location(ImmutableLocation.copyOf(location));
     this.plugin.eventBus().post(JailCreateEvent.class, name, ImmutableLocation.copyOf(location));
     return save();

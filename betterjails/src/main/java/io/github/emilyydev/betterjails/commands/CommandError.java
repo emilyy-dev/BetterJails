@@ -42,6 +42,7 @@ public class CommandError extends ParserException {
   public static final Caption RELOAD_FAILED = Caption.of("reload-failed");
   public static final Caption SAVE_ALL_FAILED = Caption.of("save-all-failed");
   public static final Caption SAVE_JAIL_FAILED = Caption.of("save-jail-failed");
+  public static final Caption MODIFY_JAIL_FAILED = Caption.of("modify-jail-failed");
   public static final Caption DELETE_JAIL_FAILED = Caption.of("delete-jail-failed");
 
   public static CaptionVariable prisonerVariable(final String name) {

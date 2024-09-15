@@ -2,6 +2,7 @@
 // This file is part of BetterJails, licensed under the MIT License.
 //
 // Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2024 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -73,6 +74,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
   private static final String TOTAL_SENTENCE_TIME = "total-sentence-time";
   private static final String REASON_FIELD = "reason";
   private static final String LOCATION_FIELD = "location";
+  private static final String RELEASE_LOCATION_FIELD = "release-location";
   private static final String JAILS_FIELD = "jails";
 
   private static final List<DataUpgrader> PRISONER_DATA_UPGRADERS =
@@ -239,6 +241,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
     final Map<String, Object> map = new HashMap<>();
     map.put(NAME_FIELD, jail.name());
     map.put(LOCATION_FIELD, jail.location().mutable());
+    map.put(RELEASE_LOCATION_FIELD, jail.releaseLocation() != null ? jail.releaseLocation().mutable() : null);
     return map;
   }
 
@@ -283,7 +286,8 @@ public final class BukkitConfigurationStorage implements StorageInterface {
     for (final Map<?, ?> jail : jails) {
       final String name = ((String) jail.get(NAME_FIELD)).toLowerCase(Locale.ROOT);
       final Location location = (Location) jail.get(LOCATION_FIELD);
-      out.put(name, new ApiJail(name, location));
+      final Location releaseLocation = (Location) jail.get(RELEASE_LOCATION_FIELD);
+      out.put(name, new ApiJail(name, location, releaseLocation));
     }
 
     return out;

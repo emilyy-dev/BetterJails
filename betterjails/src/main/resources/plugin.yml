@@ -11,6 +11,7 @@ permissions:
   betterjails.jails: { }
   betterjails.unjail: { }
   betterjails.setjail: { }
+  betterjails.modjail: { }
   betterjails.deljail: { }
   betterjails.receivebroadcast: { }
   betterjails.betterjails:

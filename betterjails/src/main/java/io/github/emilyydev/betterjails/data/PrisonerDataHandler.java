@@ -2,6 +2,7 @@
 // This file is part of BetterJails, licensed under the MIT License.
 //
 // Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2024 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -258,7 +259,10 @@ public final class PrisonerDataHandler {
       final Player online = Objects.requireNonNull(player.getPlayer());
       if (teleport) {
         final Location lastLocation = prisoner.lastLocationMutable();
-        if (lastLocation != null) {
+        final ImmutableLocation releaseLocation = prisoner.jail().releaseLocation();
+        if (releaseLocation != null) {
+          Teleport.teleportAsync(online, releaseLocation.mutable());
+        } else if (lastLocation != null) {
           Teleport.teleportAsync(online, lastLocation);
         }
       }
