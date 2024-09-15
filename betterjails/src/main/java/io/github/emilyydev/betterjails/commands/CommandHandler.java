@@ -138,7 +138,7 @@ public final class CommandHandler {
 
     this.plugin.prisonerData().addJailedPlayer(target, jail, uuidOrNil(sender), executorName, time, reason, true);
     this.server.broadcast(
-        this.configuration.messages().jailPlayerSuccess(prisonerName, executorName, jail.name(), timeInput),
+        this.configuration.messages().jailPlayerSuccess(prisonerName, executorName, jail.name(), timeInput, MoreObjects.firstNonNull(reason, "")),
         "betterjails.receivebroadcast"
     );
   }
