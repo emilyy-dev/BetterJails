@@ -27,6 +27,7 @@ messages:
   # · {player}: player that executes the command.
   # · {jail}: jail name to where the prisoner will be sent.
   # · {time}: time argument provided.
+  # · {reason}: imprisonment reason.
   jailSuccess: "&c{prisoner} &6has been jailed by &c{player} &6for &c{time}&6."
   jailFailedPlayerNeverJoined: "&cPlayer &4{prisoner} &cnever joined this server."
   jailFailedPlayerExempt: "&4{prisoner} &ccannot be jailed."

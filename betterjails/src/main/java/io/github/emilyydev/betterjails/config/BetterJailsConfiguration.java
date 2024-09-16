@@ -127,14 +127,15 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
     private static final String LIST_JAILS_PREMESSAGE = "listJailsPremessage";
     private static final String JAILS_FORMAT = "jailsFormat";
 
-    private static final Pattern PLACEHOLDERS = Pattern.compile("\\{(prisoner|player|jail|time)}");
+    private static final Pattern PLACEHOLDERS = Pattern.compile("\\{(prisoner|player|jail|time|reason)}");
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private static Function<? super MatchResult, ? extends String> replacer(
         final Optional<String> prisoner,
         final Optional<String> executorName,
         final Optional<String> jail,
-        final Optional<String> duration
+        final Optional<String> duration,
+        final Optional<String> reason
     ) {
       return matchResult -> {
         switch (matchResult.group(1)) {
@@ -142,6 +143,7 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
           case "player": return executorName.orElse(matchResult.group());
           case "jail": return jail.orElse(matchResult.group());
           case "time": return duration.orElse(matchResult.group());
+          case "reason": return reason.orElse(matchResult.group());
           default: return matchResult.group();
         }
       };
@@ -163,37 +165,38 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
         final String prisoner,
         final String executorName,
         final String jail,
-        final String duration
+        final String duration,
+        final String reason
     ) {
-      return formatMessage(JAIL_SUCCESS, prisoner, executorName, jail, duration);
+      return formatMessage(JAIL_SUCCESS, prisoner, executorName, jail, duration, reason);
     }
 
     public String releasePrisonerSuccess(final String prisoner, final String executorName) {
-      return formatMessage(UNJAIL_SUCCESS, prisoner, executorName, null, null);
+      return formatMessage(UNJAIL_SUCCESS, prisoner, executorName, null, null, null);
     }
 
     public String createJailSuccess(final String executorName, final String jail) {
-      return formatMessage(SETJAIL_SUCCESS, null, executorName, jail, null);
+      return formatMessage(SETJAIL_SUCCESS, null, executorName, jail, null, null);
     }
 
     public String deleteJailSuccess(final String executorName, final String jail) {
-      return formatMessage(DELJAIL_SUCCESS, null, executorName, jail, null);
+      return formatMessage(DELJAIL_SUCCESS, null, executorName, jail, null, null);
     }
 
     public String reloadData(final String executorName) {
-      return formatMessage(RELOAD, null, executorName, null, null);
+      return formatMessage(RELOAD, null, executorName, null, null, null);
     }
 
     public String saveData(final String executorName) {
-      return formatMessage(SAVE, null, executorName, null, null);
+      return formatMessage(SAVE, null, executorName, null, null, null);
     }
 
     public String listJailsNoJails() {
-      return formatMessage(LIST_NO_JAILS, null, null, null, null);
+      return formatMessage(LIST_NO_JAILS, null, null, null, null, null);
     }
 
     public String listJailsFunnyMessage() {
-      return formatMessage(LIST_JAILS_PREMESSAGE, null, null, null, null);
+      return formatMessage(LIST_JAILS_PREMESSAGE, null, null, null, null, null);
     }
 
     public JailListFormatter jailListEntryFormatter() {
@@ -212,14 +215,16 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
         final @Nullable String prisoner,
         final @Nullable String executorName,
         final @Nullable String jail,
-        final @Nullable String duration
+        final @Nullable String duration,
+        final @Nullable String reason
     ) {
       final Matcher matcher = PLACEHOLDERS.matcher(this.messageMap.get(key));
       final Function<? super MatchResult, ? extends String> replacer = replacer(
           Optional.ofNullable(prisoner),
           Optional.ofNullable(executorName),
           Optional.ofNullable(jail),
-          Optional.ofNullable(duration)
+          Optional.ofNullable(duration),
+          Optional.ofNullable(reason)
       );
 
       final StringBuffer buffer = new StringBuffer();
