@@ -182,7 +182,7 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
     }
 
     public String modifyJailSuccess(final String executorName, final String jail) {
-      return formatMessage(MODJAIL_SUCCESS, null, executorName, jail, null);
+      return formatMessage(MODJAIL_SUCCESS, null, executorName, jail, null, null);
     }
 
     public String deleteJailSuccess(final String executorName, final String jail) {
