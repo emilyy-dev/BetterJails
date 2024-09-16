@@ -38,7 +38,7 @@ import static java.lang.invoke.MethodType.methodType;
 @FunctionalInterface
 public interface DataUpgrader {
 
-  int PRISONER_VERSION = 4;
+  int PRISONER_VERSION = 5;
   int JAIL_VERSION = 2;
 
   static void markPrisonerVersion(final ConfigurationSection config) {

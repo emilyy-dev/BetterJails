@@ -123,4 +123,11 @@ public interface Prisoner {
    * existing prisoner data was upgraded from an older version where this data did not exist)
    */
   @NotNull Duration totalSentenceTime();
+
+  /**
+   * Gets the reason under which the player was imprisoned.
+   *
+   * @return the imprisonment reason or {@code null} if not provided
+   */
+  @Nullable String imprisonmentReason();
 }

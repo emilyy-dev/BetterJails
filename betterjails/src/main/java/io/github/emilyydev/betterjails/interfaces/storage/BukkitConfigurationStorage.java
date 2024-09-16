@@ -71,6 +71,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
   private static final String JAILED_BY_FIELD = "jailed-by";
   private static final String SECONDS_LEFT_FIELD = "seconds-left";
   private static final String TOTAL_SENTENCE_TIME = "total-sentence-time";
+  private static final String REASON_FIELD = "reason";
   private static final String LOCATION_FIELD = "location";
   private static final String JAILS_FIELD = "jails";
 
@@ -78,7 +79,10 @@ public final class BukkitConfigurationStorage implements StorageInterface {
       ImmutableList.of(
           new V1ToV2(),
           new V2ToV3(),
-          new V3ToV4()
+          new V3ToV4(),
+          // V4 -> V5 has no structural changes besides the addition of the reason field,
+          // it only exists for the version number to increase (as v5 prisoner data cannot be loaded on v4 data version)
+          (config, plugin) -> { }
       );
 
   private static final List<DataUpgrader> JAIL_DATA_UPGRADERS =
@@ -112,6 +116,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
     yaml.set(JAILED_BY_FIELD, prisoner.jailedBy());
     yaml.set(SECONDS_LEFT_FIELD, prisoner.timeLeft().getSeconds());
     yaml.set(TOTAL_SENTENCE_TIME, prisoner.totalSentenceTime().getSeconds());
+    yaml.set(REASON_FIELD, prisoner.imprisonmentReason());
     yaml.set(LAST_LOCATION_FIELD, prisoner.lastLocationMutable());
     yaml.set(UNKNOWN_LOCATION_FIELD, prisoner.unknownLocation());
     yaml.set(GROUP_FIELD, prisoner.primaryGroup());
@@ -198,6 +203,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
         final String jailedBy = yaml.getString(JAILED_BY_FIELD);
         final Duration timeLeft = Duration.ofSeconds(yaml.getLong(SECONDS_LEFT_FIELD, 0L));
         final Duration totalSentenceTime = Duration.ofSeconds(yaml.getInt(TOTAL_SENTENCE_TIME, 0));
+        final String reason = yaml.getString(REASON_FIELD);
 
         final Player existingPlayer = this.server.getPlayer(uuid); // This is only relevant for reloading
 
@@ -212,7 +218,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
           expiry = SentenceExpiry.of(timeLeft);
         }
 
-        out.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, expiry, totalSentenceTime, lastLocation, unknownLocation));
+        out.put(uuid, new ApiPrisoner(uuid, name, group, parentGroups, jail, jailedBy, expiry, totalSentenceTime, reason, lastLocation, unknownLocation));
       }
     } catch (final IOException ex) {
       if (migrationException != null) {

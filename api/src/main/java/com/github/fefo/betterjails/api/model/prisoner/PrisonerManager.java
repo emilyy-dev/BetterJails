@@ -65,7 +65,27 @@ public interface PrisonerManager {
    * @param duration duration of the jailing time
    * @return the prisoner representing the player
    */
-  @NotNull Prisoner jailPlayer(@NotNull UUID uuid, @NotNull Jail jail, @NotNull Duration duration);
+  default @NotNull Prisoner jailPlayer(final @NotNull UUID uuid, final @NotNull Jail jail, final @NotNull Duration duration) {
+    return jailPlayer(uuid, jail, duration, null);
+  }
+
+  /**
+   * Imprisons a player and teleports them to the corresponding jail if they are online or on join
+   * if offline.
+   * <p>
+   * The provided duration may or may not be constant in time, that is depending on the
+   * {@code offlineTime} setting in the configuration.
+   * <p>
+   * If the player is already jailed the prisoner will be re-jailed and the new prisoner object will
+   * be returned.
+   *
+   * @param uuid     the UUID of the player to imprison
+   * @param jail     the jail the player will be teleported to
+   * @param duration duration of the jailing time
+   * @param reason   imprisonment reason
+   * @return the prisoner representing the player
+   */
+  @NotNull Prisoner jailPlayer(@NotNull UUID uuid, @NotNull Jail jail, @NotNull Duration duration, @Nullable String reason);
 
   /**
    * Releases a prisoner immediately if online or schedules for releasing if offline.

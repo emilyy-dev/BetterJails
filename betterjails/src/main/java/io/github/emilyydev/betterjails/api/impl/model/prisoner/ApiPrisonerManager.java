@@ -56,8 +56,7 @@ public final class ApiPrisonerManager implements PrisonerManager {
 
   @Override
   @SuppressWarnings("ConstantConditions")
-  public @NotNull Prisoner jailPlayer(final @NotNull UUID uuid, final @NotNull Jail jail,
-      final @NotNull Duration duration) {
+  public @NotNull Prisoner jailPlayer(final @NotNull UUID uuid, final @NotNull Jail jail, final @NotNull Duration duration, final @Nullable String reason) {
     Objects.requireNonNull(uuid, "uuid");
     Objects.requireNonNull(jail, "jail");
     Objects.requireNonNull(duration, "duration");
@@ -67,7 +66,7 @@ public final class ApiPrisonerManager implements PrisonerManager {
     Preconditions.checkState(jailedUntil.isAfter(now), "duration must be positive");
 
     final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
-    this.plugin.prisonerData().addJailedPlayer(player, jail, Util.NIL_UUID, "api", duration, true);
+    this.plugin.prisonerData().addJailedPlayer(player, jail, Util.NIL_UUID, "api", duration, reason, true);
     return getPrisoner(uuid);
   }
 
