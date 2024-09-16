@@ -89,7 +89,9 @@ public final class BukkitConfigurationStorage implements StorageInterface {
 
   private static final List<DataUpgrader> JAIL_DATA_UPGRADERS =
       ImmutableList.of(
-          new io.github.emilyydev.betterjails.data.upgrade.jail.V1ToV2()
+          new io.github.emilyydev.betterjails.data.upgrade.jail.V1ToV2(),
+          // V2 -> V3 adds the release-location field
+          (config, plugin) -> { }
       );
 
   private final BetterJailsPlugin plugin;
