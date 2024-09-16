@@ -2,6 +2,7 @@
 // This file is part of BetterJails, licensed under the MIT License.
 //
 // Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2024 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -79,10 +80,14 @@ public final class PlayerListeners implements Listener {
 
     ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(uuid);
     if (prisoner != null) {
-      final Location lastLocation = prisoner.lastLocationMutable();
       if (prisoner.released() || player.hasPermission("betterjails.jail.exempt")) {
-        // The player has been released, put them back where they were
-        if (lastLocation != null) {
+        // The player has been released...
+        // put them back where they were if there is no release location, and at the release location otherwise
+        final Location lastLocation = prisoner.lastLocationMutable();
+        final ImmutableLocation releaseLocation = prisoner.jail().releaseLocation();
+        if (releaseLocation != null) {
+          event.setSpawnLocation(releaseLocation.mutable());
+        } else if (lastLocation != null) {
           event.setSpawnLocation(lastLocation);
         }
 

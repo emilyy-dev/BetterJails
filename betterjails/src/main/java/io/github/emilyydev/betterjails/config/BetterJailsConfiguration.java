@@ -2,6 +2,7 @@
 // This file is part of BetterJails, licensed under the MIT License.
 //
 // Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -120,6 +121,7 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
     private static final String JAIL_SUCCESS = "jailSuccess";
     private static final String UNJAIL_SUCCESS = "unjailSuccess";
     private static final String SETJAIL_SUCCESS = "setjailSuccess";
+    private static final String MODJAIL_SUCCESS = "modify-jail-success";
     private static final String DELJAIL_SUCCESS = "deljailSuccess";
     private static final String RELOAD = "reload";
     private static final String SAVE = "save";
@@ -177,6 +179,10 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
 
     public String createJailSuccess(final String executorName, final String jail) {
       return formatMessage(SETJAIL_SUCCESS, null, executorName, jail, null, null);
+    }
+
+    public String modifyJailSuccess(final String executorName, final String jail) {
+      return formatMessage(MODJAIL_SUCCESS, null, executorName, jail, null, null);
     }
 
     public String deleteJailSuccess(final String executorName, final String jail) {

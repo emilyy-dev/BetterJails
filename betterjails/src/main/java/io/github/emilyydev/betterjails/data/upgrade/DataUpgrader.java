@@ -39,7 +39,7 @@ import static java.lang.invoke.MethodType.methodType;
 public interface DataUpgrader {
 
   int PRISONER_VERSION = 5;
-  int JAIL_VERSION = 2;
+  int JAIL_VERSION = 3;
 
   static void markPrisonerVersion(final ConfigurationSection config) {
     config.set("version", PRISONER_VERSION);
