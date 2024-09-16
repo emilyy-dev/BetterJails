@@ -27,7 +27,6 @@ package com.github.fefo.betterjails.api.model.jail;
 
 import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
