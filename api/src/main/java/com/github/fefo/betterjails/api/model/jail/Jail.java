@@ -57,7 +57,6 @@ public interface Jail {
    */
   void location(@NotNull ImmutableLocation location);
 
-
   /**
    * Gets the location players will be teleported to when released from jail, unless it is null,
    * in which case players get teleported to the last location they were at before they were jailed.
