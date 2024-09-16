@@ -110,7 +110,7 @@ public final class CommandHandler {
       final OfflinePlayer target,
       final Jail jail,
       final Duration time,
-      final @Nullable @Greedy String reason
+      @Greedy final @Nullable String reason
   ) {
     final String timeInput = ctx.parsingContext("time").consumedInput();
     final String executorName = sender.getName();
