@@ -302,7 +302,7 @@ public final class CommandHandler {
         sender.sendMessage(this.configuration.messages().modifyJailSuccess(sender.getName(), jail.name()));
         return null;
       } else {
-        LOGGER.error("An error occurred setting release location for jail {}", jail.name(), ex);
+        LOGGER.error("An error occurred clearing release location for jail {}", jail.name(), ex);
         throw new CommandError(
             ctx, CommandError.MODIFY_JAIL_FAILED,
             CommandError.executorVariable(sender.getName()),
