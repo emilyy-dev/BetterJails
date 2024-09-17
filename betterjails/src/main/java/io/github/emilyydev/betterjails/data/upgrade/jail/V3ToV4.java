@@ -30,16 +30,26 @@ import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 public class V3ToV4 implements DataUpgrader {
 
   private static final String LOCATION_FIELD = "location";
   private static final String RELEASE_LOCATION_FIELD = "release-location";
 
   @Override
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
-    config.set(LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(LOCATION_FIELD)));
-    if (config.contains(RELEASE_LOCATION_FIELD)) {
-      config.set(RELEASE_LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(RELEASE_LOCATION_FIELD)));
+    final List<Map<String, Object>> jails = new ArrayList<>((List) config.getMapList("jails"));
+    for (final Map<String, Object> jail : jails) {
+      jail.put(LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(LOCATION_FIELD)));
+      if (jail.containsKey(RELEASE_LOCATION_FIELD)) {
+        jail.put(RELEASE_LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(RELEASE_LOCATION_FIELD)));
+      }
     }
+
+    config.set("jails", jails);
   }
 }

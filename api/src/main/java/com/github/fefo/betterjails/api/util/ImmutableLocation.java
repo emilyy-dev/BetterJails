@@ -25,11 +25,10 @@
 package com.github.fefo.betterjails.api.util;
 
 import com.google.common.collect.ImmutableMap;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -89,11 +88,11 @@ public final class ImmutableLocation implements ConfigurationSerializable {
   public static ImmutableLocation deserialize(final @NotNull Map<String, Object> serialized) {
     return new ImmutableLocation(
         (String) serialized.get("world"),
-        (double) serialized.get("x"),
-        (double) serialized.get("y"),
-        (double) serialized.get("z"),
-        (float) serialized.get("yaw"),
-        (float) serialized.get("pitch")
+        ((Number) serialized.get("x")).doubleValue(),
+        ((Number) serialized.get("y")).doubleValue(),
+        ((Number) serialized.get("z")).doubleValue(),
+        ((Number) serialized.get("yaw")).floatValue(),
+        ((Number) serialized.get("pitch")).floatValue()
     );
   }
 
@@ -102,7 +101,6 @@ public final class ImmutableLocation implements ConfigurationSerializable {
     return deserialize(serialized);
   }
 
-  private final Server server = JavaPlugin.getProvidingPlugin(ImmutableLocation.class).getServer();
   private final String worldName;
   private final double x, y, z;
   private final float pitch, yaw;
@@ -148,7 +146,7 @@ public final class ImmutableLocation implements ConfigurationSerializable {
   }
 
   private World resolveWorld() {
-    return requireNonNull(this.server.getWorld(this.worldName), "World " + this.worldName + " is not loaded or doesn't exist");
+    return requireNonNull(Bukkit.getWorld(this.worldName), "World " + this.worldName + " is not loaded or doesn't exist");
   }
 
   public double getX() {
