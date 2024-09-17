@@ -45,7 +45,7 @@ public class V3ToV4 implements DataUpgrader {
     final List<Map<String, Object>> jails = new ArrayList<>((List) config.getMapList("jails"));
     for (final Map<String, Object> jail : jails) {
       jail.put(LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(LOCATION_FIELD)));
-      if (jail.containsKey(RELEASE_LOCATION_FIELD)) {
+      if (jail.get(RELEASE_LOCATION_FIELD) != null) {
         jail.put(RELEASE_LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(RELEASE_LOCATION_FIELD)));
       }
     }
