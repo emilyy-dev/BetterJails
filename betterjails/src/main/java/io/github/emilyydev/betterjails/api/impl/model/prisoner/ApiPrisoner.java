@@ -128,7 +128,7 @@ public final class ApiPrisoner implements Prisoner {
     return this.imprisonmentReason;
   }
 
-  // TODO(v2): make nullable, remove deprecation
+  // TODO(v2): make nullable
   @Override
   public @NotNull ImmutableLocation lastLocation() {
     return this.lastLocation;
