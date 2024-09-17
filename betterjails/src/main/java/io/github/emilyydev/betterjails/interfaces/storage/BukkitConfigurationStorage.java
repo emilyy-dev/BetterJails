@@ -37,6 +37,7 @@ import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
 import io.github.emilyydev.betterjails.data.upgrade.prisoner.V1ToV2;
 import io.github.emilyydev.betterjails.data.upgrade.prisoner.V2ToV3;
 import io.github.emilyydev.betterjails.data.upgrade.prisoner.V3ToV4;
+import io.github.emilyydev.betterjails.data.upgrade.prisoner.V5ToV6;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -63,7 +64,6 @@ public final class BukkitConfigurationStorage implements StorageInterface {
   private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
   private static final String LAST_LOCATION_FIELD = "last-location";
-  private static final String UNKNOWN_LOCATION_FIELD = "unknown-location";
   private static final String GROUP_FIELD = "group";
   private static final String EXTRA_GROUPS_FIELD = "extra-groups";
   private static final String UUID_FIELD = "uuid";
@@ -84,14 +84,16 @@ public final class BukkitConfigurationStorage implements StorageInterface {
           new V3ToV4(),
           // V4 -> V5 has no structural changes besides the addition of the reason field,
           // it only exists for the version number to increase (as v5 prisoner data cannot be loaded on v4 data version)
-          (config, plugin) -> { }
+          (config, plugin) -> { },
+          new V5ToV6()
       );
 
   private static final List<DataUpgrader> JAIL_DATA_UPGRADERS =
       ImmutableList.of(
           new io.github.emilyydev.betterjails.data.upgrade.jail.V1ToV2(),
           // V2 -> V3 adds the release-location field
-          (config, plugin) -> { }
+          (config, plugin) -> { },
+          new io.github.emilyydev.betterjails.data.upgrade.jail.V3ToV4()
       );
 
   private final BetterJailsPlugin plugin;
@@ -121,8 +123,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
     yaml.set(SECONDS_LEFT_FIELD, prisoner.timeLeft().getSeconds());
     yaml.set(TOTAL_SENTENCE_TIME, prisoner.totalSentenceTime().getSeconds());
     yaml.set(REASON_FIELD, prisoner.imprisonmentReason());
-    yaml.set(LAST_LOCATION_FIELD, prisoner.lastLocationMutable());
-    yaml.set(UNKNOWN_LOCATION_FIELD, prisoner.unknownLocation());
+    yaml.set(LAST_LOCATION_FIELD, prisoner.lastLocationNullable());
     yaml.set(GROUP_FIELD, prisoner.primaryGroup());
     yaml.set(EXTRA_GROUPS_FIELD, ImmutableList.copyOf(prisoner.parentGroups()));
 
@@ -181,14 +182,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
         final UUID uuid = UUID.fromString(file.getFileName().toString().replace(".yml", ""));
         final String name = yaml.getString(NAME_FIELD);
 
-        boolean unknownLocation = yaml.getBoolean(UNKNOWN_LOCATION_FIELD, false);
-
-        if (!unknownLocation && !yaml.contains(LAST_LOCATION_FIELD)) {
-          // TODO(rymiel): issue #11
-          LOGGER.warn("Failed to load last known location of prisoner {} ({}). The world they were previously in might have been removed.", uuid, name);
-          unknownLocation = true;
-        }
-
+        final boolean unknownLocation = !yaml.contains(LAST_LOCATION_FIELD);
         final String jailName = yaml.getString(JAIL_FIELD);
         Jail jail = this.plugin.jailData().getJail(jailName);
         if (jail == null) {
@@ -201,7 +195,13 @@ public final class BukkitConfigurationStorage implements StorageInterface {
 
         // TODO(v2): We have to set some location here, due to @NotNull API contract in Prisoner. It should be made
         //  nullable eventually, since backupLocation no longer carries any significance.
-        final ImmutableLocation lastLocation = ImmutableLocation.copyOf((Location) yaml.get(LAST_LOCATION_FIELD, backupLocation));
+        final ImmutableLocation lastLocation;
+        if (yaml.contains(LAST_LOCATION_FIELD)) {
+          lastLocation = (ImmutableLocation) yaml.get(LAST_LOCATION_FIELD);
+        } else {
+          lastLocation = ImmutableLocation.copyOf(backupLocation);
+        }
+
         final String group = yaml.getString(GROUP_FIELD);
         final List<String> parentGroups = yaml.getStringList(EXTRA_GROUPS_FIELD);
         final String jailedBy = yaml.getString(JAILED_BY_FIELD);
@@ -242,8 +242,8 @@ public final class BukkitConfigurationStorage implements StorageInterface {
   private Map<String, Object> serializeJail(final Jail jail) {
     final Map<String, Object> map = new HashMap<>();
     map.put(NAME_FIELD, jail.name());
-    map.put(LOCATION_FIELD, jail.location().mutable());
-    map.put(RELEASE_LOCATION_FIELD, jail.releaseLocation() != null ? jail.releaseLocation().mutable() : null);
+    map.put(LOCATION_FIELD, jail.location());
+    map.put(RELEASE_LOCATION_FIELD, jail.releaseLocation());
     return map;
   }
 
@@ -287,8 +287,8 @@ public final class BukkitConfigurationStorage implements StorageInterface {
     final List<Map<?, ?>> jails = yaml.getMapList(JAILS_FIELD);
     for (final Map<?, ?> jail : jails) {
       final String name = ((String) jail.get(NAME_FIELD)).toLowerCase(Locale.ROOT);
-      final Location location = (Location) jail.get(LOCATION_FIELD);
-      final Location releaseLocation = (Location) jail.get(RELEASE_LOCATION_FIELD);
+      final ImmutableLocation location = (ImmutableLocation) jail.get(LOCATION_FIELD);
+      final ImmutableLocation releaseLocation = (ImmutableLocation) jail.get(RELEASE_LOCATION_FIELD);
       out.put(name, new ApiJail(name, location, releaseLocation));
     }
 

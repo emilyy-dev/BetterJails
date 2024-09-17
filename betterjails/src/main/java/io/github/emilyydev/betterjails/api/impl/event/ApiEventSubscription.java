@@ -31,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
-public class ApiEventSubscription<T extends BetterJailsEvent> implements EventSubscription<T> {
+public final class ApiEventSubscription<T extends BetterJailsEvent> implements EventSubscription<T> {
 
   private static final Consumer<?> ILLEGAL_HANDLER = t -> {
     throw new IllegalStateException("Inactive subscription");

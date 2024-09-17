@@ -26,6 +26,7 @@ package io.github.emilyydev.betterjails.api.impl.model.jail;
 
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.jail.JailManager;
+import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.data.JailDataHandler;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +38,7 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
-public class ApiJailManager implements JailManager {
+public final class ApiJailManager implements JailManager {
 
   private final JailDataHandler jailData;
 
@@ -57,7 +58,7 @@ public class ApiJailManager implements JailManager {
     }
 
     try {
-      this.jailData.addJail(name, location).get();
+      this.jailData.addJail(name, ImmutableLocation.copyOf(location)).get();
     } catch (final InterruptedException ex) {
       // bleh
     } catch (final ExecutionException ex) {

@@ -31,7 +31,6 @@ import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.util.Util;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -83,12 +82,12 @@ public final class PlayerListeners implements Listener {
       if (prisoner.released() || player.hasPermission("betterjails.jail.exempt")) {
         // The player has been released...
         // put them back where they were if there is no release location, and at the release location otherwise
-        final Location lastLocation = prisoner.lastLocationMutable();
+        final ImmutableLocation lastLocation = prisoner.lastLocationNullable();
         final ImmutableLocation releaseLocation = prisoner.jail().releaseLocation();
         if (releaseLocation != null) {
           event.setSpawnLocation(releaseLocation.mutable());
         } else if (lastLocation != null) {
-          event.setSpawnLocation(lastLocation);
+          event.setSpawnLocation(lastLocation.mutable());
         }
 
         this.plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, null, false);

@@ -31,9 +31,9 @@ import com.github.fefo.betterjails.api.event.jail.JailCreateEvent;
 import com.github.fefo.betterjails.api.event.prisoner.PlayerImprisonEvent;
 import com.github.fefo.betterjails.api.event.prisoner.PrisonerReleaseEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
+import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.util.Util;
-import org.bukkit.util.Vector;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -93,7 +93,7 @@ public class EventBusTest {
 
   @Test
   public void test() {
-    assertDoesNotThrow(() -> plugin.jailData().addJail("jail0", new Vector().toLocation(server.addSimpleWorld("world0"))));
+    assertDoesNotThrow(() -> plugin.jailData().addJail("jail0", ImmutableLocation.at(server.addSimpleWorld("world0"), 0, 0, 0)));
 
     final Jail jail = plugin.jailData().getJail("jail0");
     final PlayerMock player = server.addPlayer();

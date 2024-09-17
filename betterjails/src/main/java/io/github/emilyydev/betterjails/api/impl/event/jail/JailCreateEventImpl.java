@@ -31,7 +31,7 @@ import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
 import org.jetbrains.annotations.NotNull;
 
-public class JailCreateEventImpl extends SimpleBetterJailsEvent implements JailCreateEvent {
+public final class JailCreateEventImpl extends SimpleBetterJailsEvent implements JailCreateEvent {
 
   private final String jailName;
   private final ImmutableLocation jailLocation;

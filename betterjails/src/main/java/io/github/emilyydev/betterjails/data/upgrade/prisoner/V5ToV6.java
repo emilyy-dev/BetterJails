@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,27 +22,27 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.api.impl.event.jail;
+package io.github.emilyydev.betterjails.data.upgrade.prisoner;
 
-import com.github.fefo.betterjails.api.BetterJails;
-import com.github.fefo.betterjails.api.event.BetterJailsEvent;
-import com.github.fefo.betterjails.api.event.jail.JailDeleteEvent;
-import com.github.fefo.betterjails.api.model.jail.Jail;
-import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
-import org.jetbrains.annotations.NotNull;
+import com.github.fefo.betterjails.api.util.ImmutableLocation;
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
+import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
 
-public final class JailDeleteEventImpl extends SimpleBetterJailsEvent implements JailDeleteEvent {
+public class V5ToV6 implements DataUpgrader {
 
-  private final Jail jail;
-
-  public JailDeleteEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
-      final Jail jail) {
-    super(api, eventType);
-    this.jail = jail;
-  }
+  private static final String LAST_LOCATION_FIELD = "last-location";
+  private static final String V5_UNKNOWN_LOCATION_FIELD = "unknown-location";
 
   @Override
-  public @NotNull Jail jail() {
-    return this.jail;
+  public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
+    if (config.getBoolean(V5_UNKNOWN_LOCATION_FIELD, false)) {
+      config.set(LAST_LOCATION_FIELD, null);
+    } else {
+      config.set(LAST_LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(LAST_LOCATION_FIELD)));
+    }
+
+    config.set(V5_UNKNOWN_LOCATION_FIELD, null);
   }
 }

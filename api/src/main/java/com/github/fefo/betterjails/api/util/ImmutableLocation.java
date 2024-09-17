@@ -26,8 +26,10 @@ package com.github.fefo.betterjails.api.util;
 
 import com.google.common.collect.ImmutableMap;
 import org.bukkit.Location;
+import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -68,7 +70,7 @@ public final class ImmutableLocation implements ConfigurationSerializable {
       final double y,
       final double z
   ) {
-    return new ImmutableLocation(requireNonNull(world), x, y, z, 0.0f, 0.0f);
+    return new ImmutableLocation(requireNonNull(world).getName(), x, y, z, 0.0f, 0.0f);
   }
 
   @Contract("_, _, _, _, _, _ -> new")
@@ -80,12 +82,19 @@ public final class ImmutableLocation implements ConfigurationSerializable {
       final float yaw,
       final float pitch
   ) {
-    return new ImmutableLocation(requireNonNull(world), x, y, z, yaw, pitch);
+    return new ImmutableLocation(requireNonNull(world).getName(), x, y, z, yaw, pitch);
   }
 
   @Contract("_ -> new")
   public static ImmutableLocation deserialize(final @NotNull Map<String, Object> serialized) {
-    return copyOf(Location.deserialize(serialized));
+    return new ImmutableLocation(
+        (String) serialized.get("world"),
+        (double) serialized.get("x"),
+        (double) serialized.get("y"),
+        (double) serialized.get("z"),
+        (float) serialized.get("yaw"),
+        (float) serialized.get("pitch")
+    );
   }
 
   @Contract("_ -> new")
@@ -93,19 +102,20 @@ public final class ImmutableLocation implements ConfigurationSerializable {
     return deserialize(serialized);
   }
 
-  private final World world;
+  private final Server server = JavaPlugin.getProvidingPlugin(ImmutableLocation.class).getServer();
+  private final String worldName;
   private final double x, y, z;
   private final float pitch, yaw;
 
   private ImmutableLocation(
-      final World world,
+      final String worldName,
       final double x,
       final double y,
       final double z,
       final float yaw,
       final float pitch
   ) {
-    this.world = world;
+    this.worldName = worldName;
     this.x = x;
     this.y = y;
     this.z = z;
@@ -115,7 +125,7 @@ public final class ImmutableLocation implements ConfigurationSerializable {
 
   private ImmutableLocation(final Location location) {
     this(
-        requireNonNull(location.getWorld()),
+        requireNonNull(location.getWorld()).getName(),
         location.getX(),
         location.getY(),
         location.getZ(),
@@ -126,11 +136,19 @@ public final class ImmutableLocation implements ConfigurationSerializable {
 
   @Contract(value = " -> new", pure = true)
   public Location mutable() {
-    return new Location(this.world, this.x, this.y, this.z, this.yaw, this.pitch);
+    return new Location(resolveWorld(), this.x, this.y, this.z, this.yaw, this.pitch);
   }
 
   public @NotNull World getWorld() {
-    return this.world;
+    return resolveWorld();
+  }
+
+  public @NotNull String getWorldName() {
+    return this.worldName;
+  }
+
+  private World resolveWorld() {
+    return requireNonNull(this.server.getWorld(this.worldName), "World " + this.worldName + " is not loaded or doesn't exist");
   }
 
   public double getX() {
@@ -173,10 +191,11 @@ public final class ImmutableLocation implements ConfigurationSerializable {
     if (x == 0.0 && y == 0.0 && z == 0.0) {
       return this;
     }
+
     final double newX = this.x + x;
     final double newY = this.y + y;
     final double newZ = this.z + z;
-    return new ImmutableLocation(this.world, newX, newY, newZ, this.yaw, this.pitch);
+    return new ImmutableLocation(this.worldName, newX, newY, newZ, this.yaw, this.pitch);
   }
 
   @Contract(pure = true)
@@ -199,10 +218,11 @@ public final class ImmutableLocation implements ConfigurationSerializable {
     if (x == 0.0 && y == 0.0 && z == 0.0) {
       return this;
     }
+
     final double newX = this.x - x;
     final double newY = this.y - y;
     final double newZ = this.z - z;
-    return new ImmutableLocation(this.world, newX, newY, newZ, this.yaw, this.pitch);
+    return new ImmutableLocation(this.worldName, newX, newY, newZ, this.yaw, this.pitch);
   }
 
   @Contract(pure = true)
@@ -210,10 +230,11 @@ public final class ImmutableLocation implements ConfigurationSerializable {
     if (m == 1.0) {
       return this;
     }
+
     final double x = this.x * m;
     final double y = this.y * m;
     final double z = this.z * m;
-    return new ImmutableLocation(this.world, x, y, z, this.yaw, this.pitch);
+    return new ImmutableLocation(this.worldName, x, y, z, this.yaw, this.pitch);
   }
 
   @Contract(pure = true)
@@ -224,7 +245,7 @@ public final class ImmutableLocation implements ConfigurationSerializable {
   @Override
   public @NotNull Map<String, Object> serialize() {
     return ImmutableMap.<String, Object>builder()
-        .put("world", this.world.getName())
+        .put("world", this.worldName)
         .put("x", this.x)
         .put("y", this.y)
         .put("z", this.z)
@@ -235,14 +256,14 @@ public final class ImmutableLocation implements ConfigurationSerializable {
 
   @Override
   public String toString() {
-    return "ImmutableLocation(" +
-           this.world +
-           ',' + this.x +
-           ',' + this.y +
-           ',' + this.z +
-           ',' + this.yaw +
-           ',' + this.pitch +
-           ')';
+    return "ImmutableLocation["
+        + "worldName=" + this.worldName
+        + ",x=" + this.x
+        + ",y=" + this.y
+        + ",z=" + this.z
+        + ",yaw=" + this.yaw
+        + ",pitch=" + this.pitch
+        + ']';
   }
 
   @Override
@@ -252,15 +273,15 @@ public final class ImmutableLocation implements ConfigurationSerializable {
 
     final ImmutableLocation that = (ImmutableLocation) other;
     return Double.compare(that.x, this.x) == 0 &&
-           Double.compare(that.y, this.y) == 0 &&
-           Double.compare(that.z, this.z) == 0 &&
-           Float.compare(that.pitch, this.pitch) == 0 &&
-           Float.compare(that.yaw, this.yaw) == 0 &&
-           this.world.equals(that.world);
+        Double.compare(that.y, this.y) == 0 &&
+        Double.compare(that.z, this.z) == 0 &&
+        Float.compare(that.pitch, this.pitch) == 0 &&
+        Float.compare(that.yaw, this.yaw) == 0 &&
+        this.worldName.equals(that.worldName);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.world, this.x, this.y, this.z, this.pitch, this.yaw);
+    return Objects.hash(this.worldName, this.x, this.y, this.z, this.pitch, this.yaw);
   }
 }

@@ -30,7 +30,7 @@ import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.exception.parsing.ParserException;
 
 // ParserException doesn't seem to be specific to parsing...? And it's convenient with its whole caption system.
-public class CommandError extends ParserException {
+public final class CommandError extends ParserException {
 
   public static final Caption JAIL_FAILED_PLAYER_NEVER_JOINED = Caption.of("jailFailedPlayerNeverJoined");
   public static final Caption JAIL_FAILED_PLAYER_EXEMPT = Caption.of("jailFailedPlayerExempt");

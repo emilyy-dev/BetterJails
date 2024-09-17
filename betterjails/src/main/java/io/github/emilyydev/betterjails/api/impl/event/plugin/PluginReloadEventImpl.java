@@ -31,7 +31,7 @@ import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-public class PluginReloadEventImpl extends SimpleBetterJailsEvent implements PluginReloadEvent {
+public final class PluginReloadEventImpl extends SimpleBetterJailsEvent implements PluginReloadEvent {
 
   private final CommandSender sender;
 

@@ -30,7 +30,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.Plugin;
 
-public class PluginDisableListener implements Listener {
+public final class PluginDisableListener implements Listener {
 
   public static PluginDisableListener create(final ApiEventBus eventBus) {
     return new PluginDisableListener(eventBus);

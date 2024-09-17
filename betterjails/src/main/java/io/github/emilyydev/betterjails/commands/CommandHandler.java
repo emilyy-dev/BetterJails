@@ -33,7 +33,6 @@ import com.google.common.base.MoreObjects;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
@@ -162,15 +161,15 @@ public final class CommandHandler {
       );
     }
 
-    final Location lastLocation = prisoner.lastLocationMutable();
+    final ImmutableLocation lastLocation = prisoner.lastLocationNullable();
     final String lastLocationString = lastLocation == null
         ? color("&cunknown")
         : color(
         "x:%,d y:%,d z%,d &7in &f%s",
-        lastLocation.getBlockX(),
-        lastLocation.getBlockY(),
-        lastLocation.getBlockZ(),
-        lastLocation.getWorld().getName()
+        (int) Math.floor(lastLocation.getX()),
+        (int) Math.floor(lastLocation.getY()),
+        (int) Math.floor(lastLocation.getZ()),
+        lastLocation.getWorldName()
     );
 
     final List<String> infoLines = new ArrayList<>(9);
@@ -248,7 +247,7 @@ public final class CommandHandler {
       final Player sender,
       final String name
   ) {
-    return this.plugin.jailData().addJail(name, sender.getLocation()).handleAsync((v, ex) -> {
+    return this.plugin.jailData().addJail(name, ImmutableLocation.copyOf(sender.getLocation())).handleAsync((v, ex) -> {
       if (ex == null) {
         sender.sendMessage(this.configuration.messages().createJailSuccess(sender.getName(), name));
         return null;

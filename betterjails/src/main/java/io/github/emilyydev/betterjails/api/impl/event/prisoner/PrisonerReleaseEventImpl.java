@@ -31,7 +31,7 @@ import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
 import org.jetbrains.annotations.NotNull;
 
-public class PrisonerReleaseEventImpl extends SimpleBetterJailsEvent implements PrisonerReleaseEvent {
+public final class PrisonerReleaseEventImpl extends SimpleBetterJailsEvent implements PrisonerReleaseEvent {
 
   private final Prisoner prisoner;
 

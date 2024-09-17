@@ -36,7 +36,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-public class UniqueIdCache implements Listener {
+public final class UniqueIdCache implements Listener {
 
   private static final UUID NIL_UUID = new UUID(0L, 0L);
 
