@@ -29,18 +29,28 @@ import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class V5ToV6 implements DataUpgrader {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
+
   private static final String LAST_LOCATION_FIELD = "last-location";
   private static final String V5_UNKNOWN_LOCATION_FIELD = "unknown-location";
+  private static final String UUID_FIELD = "uuid";
+  private static final String NAME_FIELD = "name";
 
   @Override
   public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
     if (config.getBoolean(V5_UNKNOWN_LOCATION_FIELD, false)) {
       config.set(LAST_LOCATION_FIELD, null);
-    } else {
+    } else if (config.contains(LAST_LOCATION_FIELD)) {
       config.set(LAST_LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(LAST_LOCATION_FIELD)));
+    } else {
+      final String uuid = config.getString(UUID_FIELD);
+      final String name = config.getString(NAME_FIELD);
+      LOGGER.warn("Failed to load last known location of prisoner {} ({}). The world they were previously in might have been removed.", uuid, name);
     }
 
     config.set(V5_UNKNOWN_LOCATION_FIELD, null);
