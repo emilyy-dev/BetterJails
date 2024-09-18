@@ -30,7 +30,7 @@ import com.github.fefo.betterjails.api.model.prisoner.PrisonerManager;
 import io.github.emilyydev.betterjails.api.impl.event.ApiEventBus;
 import org.jetbrains.annotations.NotNull;
 
-public class BetterJailsApi implements BetterJails {
+public final class BetterJailsApi implements BetterJails {
 
   private final JailManager jailManager;
   private final PrisonerManager prisonerManager;

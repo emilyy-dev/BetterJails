@@ -62,7 +62,7 @@ import java.util.function.Consumer;
 
 import static java.lang.invoke.MethodType.methodType;
 
-public class ApiEventBus implements EventBus {
+public final class ApiEventBus implements EventBus {
 
   private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
   private static final Map<Class<? extends BetterJailsEvent>, MethodHandle> KNOWN_EVENT_TYPES;

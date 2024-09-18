@@ -31,7 +31,6 @@ import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
 import io.github.emilyydev.betterjails.interfaces.storage.StorageAccess;
-import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -77,11 +76,10 @@ public final class JailDataHandler {
     return this.jails.get(name.toLowerCase(Locale.ROOT));
   }
 
-  public CompletableFuture<Void> addJail(final String name, final Location location) {
+  public CompletableFuture<Void> addJail(final String name, final ImmutableLocation location) {
     final String lowerCaseName = name.toLowerCase(Locale.ROOT);
-    this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, location, null))
-        .location(ImmutableLocation.copyOf(location));
-    this.plugin.eventBus().post(JailCreateEvent.class, name, ImmutableLocation.copyOf(location));
+    this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, location, null)).location(location);
+    this.plugin.eventBus().post(JailCreateEvent.class, name, location);
     return save();
   }
 

@@ -27,7 +27,6 @@ package io.github.emilyydev.betterjails.api.impl.model.jail;
 
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
-import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,10 +38,10 @@ public final class ApiJail implements Jail {
   private volatile ImmutableLocation location;
   private volatile ImmutableLocation releaseLocation;
 
-  public ApiJail(final String name, final Location location, final Location releaseLocation) {
+  public ApiJail(final String name, final ImmutableLocation location, final ImmutableLocation releaseLocation) {
     this.name = name;
-    this.location = ImmutableLocation.copyOf(location);
-    this.releaseLocation = releaseLocation != null ? ImmutableLocation.copyOf(releaseLocation) : null;
+    this.location = location;
+    this.releaseLocation = releaseLocation;
   }
 
   @Override
@@ -62,7 +61,7 @@ public final class ApiJail implements Jail {
   }
 
   @Override
-  public void releaseLocation(@Nullable ImmutableLocation location) {
+  public void releaseLocation(final @Nullable ImmutableLocation location) {
     this.releaseLocation = location;
   }
 
@@ -86,6 +85,10 @@ public final class ApiJail implements Jail {
 
   @Override
   public String toString() {
-    return "Jail(" + '"' + this.name + '"' + ',' + this.location + ')';
+    return "Jail["
+        + "name=" + this.name
+        + ", location=" + this.location
+        + ", releaseLocation=" + this.releaseLocation
+        + ']';
   }
 }

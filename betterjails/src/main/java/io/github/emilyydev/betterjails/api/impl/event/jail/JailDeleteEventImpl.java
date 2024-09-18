@@ -31,7 +31,7 @@ import com.github.fefo.betterjails.api.model.jail.Jail;
 import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
 import org.jetbrains.annotations.NotNull;
 
-public class JailDeleteEventImpl extends SimpleBetterJailsEvent implements JailDeleteEvent {
+public final class JailDeleteEventImpl extends SimpleBetterJailsEvent implements JailDeleteEvent {
 
   private final Jail jail;
 

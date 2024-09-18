@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2022 emilyy-dev
+// Copyright (c) 2024 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,34 +22,34 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.api.impl.event.jail;
+package io.github.emilyydev.betterjails.data.upgrade.jail;
 
-import com.github.fefo.betterjails.api.BetterJails;
-import com.github.fefo.betterjails.api.event.BetterJailsEvent;
-import com.github.fefo.betterjails.api.event.jail.JailCreateEvent;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
-import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
-import org.jetbrains.annotations.NotNull;
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
+import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
 
-public final class JailCreateEventImpl extends SimpleBetterJailsEvent implements JailCreateEvent {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-  private final String jailName;
-  private final ImmutableLocation jailLocation;
+public class V3ToV4 implements DataUpgrader {
 
-  public JailCreateEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
-      final String jailName, final ImmutableLocation jailLocation) {
-    super(api, eventType);
-    this.jailName = jailName;
-    this.jailLocation = jailLocation;
-  }
-
-  @Override
-  public @NotNull String jailName() {
-    return this.jailName;
-  }
+  private static final String LOCATION_FIELD = "location";
+  private static final String RELEASE_LOCATION_FIELD = "release-location";
 
   @Override
-  public @NotNull ImmutableLocation jailLocation() {
-    return this.jailLocation;
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
+    final List<Map<String, Object>> jails = new ArrayList<>((List) config.getMapList("jails"));
+    for (final Map<String, Object> jail : jails) {
+      jail.put(LOCATION_FIELD, ImmutableLocation.copyOf((Location) jail.get(LOCATION_FIELD)));
+      if (jail.get(RELEASE_LOCATION_FIELD) != null) {
+        jail.put(RELEASE_LOCATION_FIELD, ImmutableLocation.copyOf((Location) jail.get(RELEASE_LOCATION_FIELD)));
+      }
+    }
+
+    config.set("jails", jails);
   }
 }

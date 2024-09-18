@@ -31,6 +31,7 @@ import com.github.fefo.betterjails.api.event.prisoner.PrisonerReleaseEvent;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
@@ -41,7 +42,6 @@ import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface
 import io.github.emilyydev.betterjails.interfaces.storage.StorageAccess;
 import io.github.emilyydev.betterjails.util.Teleport;
 import io.github.emilyydev.betterjails.util.Util;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -75,7 +75,7 @@ public final class PrisonerDataHandler {
   private final Server server;
   private final Map<UUID, ApiPrisoner> prisoners = new HashMap<>();
 
-  private @Deprecated Location backupLocation;
+  private @Deprecated ImmutableLocation backupLocation;
 
   public PrisonerDataHandler(final BetterJailsPlugin plugin) {
     this.plugin = plugin;
@@ -87,7 +87,7 @@ public final class PrisonerDataHandler {
 
   public void load() {
     // TODO(v2): can't remove this yet
-    this.backupLocation = this.config.backupLocation().mutable();
+    this.backupLocation = this.config.backupLocation();
     this.prisoners.clear();
     loadPrisoners();
   }
@@ -129,12 +129,12 @@ public final class PrisonerDataHandler {
     final boolean isPlayerOnline = player.isOnline();
     final boolean isPlayerJailed = existingPrisoner != null;
     final SentenceExpiry expiry;
-    Location knownLastLocation = null;
+    ImmutableLocation knownLastLocation = null;
 
     if (isPlayerJailed) {
       // The player is already jailed, and being put in a new jail. Since we don't want to put their last location
       // inside the previous jail, we use their existing last location.
-      knownLastLocation = existingPrisoner.lastLocationMutable();
+      knownLastLocation = existingPrisoner.lastLocationNullable();
     }
 
     if (isPlayerOnline) {
@@ -142,7 +142,7 @@ public final class PrisonerDataHandler {
       final Player onlinePlayer = player.getPlayer();
 
       if (knownLastLocation == null) {
-        knownLastLocation = onlinePlayer.getLocation();
+        knownLastLocation = ImmutableLocation.copyOf(onlinePlayer.getLocation());
       }
 
       if (teleport) {
@@ -179,7 +179,7 @@ public final class PrisonerDataHandler {
     // If we never got a last location for this player, it means we need to get it when they log in.
     final boolean unknownLocation = knownLastLocation == null;
     // TODO(v2): We have to set some location here
-    final ImmutableLocation lastLocation = ImmutableLocation.copyOf(knownLastLocation == null ? this.backupLocation : knownLastLocation);
+    final ImmutableLocation lastLocation = MoreObjects.firstNonNull(knownLastLocation, this.backupLocation);
     final PermissionInterface permissionInterface = this.plugin.permissionInterface();
 
     final boolean groupsUnknown = existingPrisoner == null || existingPrisoner.primaryGroup() == null || existingPrisoner.released();
@@ -258,12 +258,12 @@ public final class PrisonerDataHandler {
       // Player is online, we can teleport them out of jail right away and clear up all their data
       final Player online = Objects.requireNonNull(player.getPlayer());
       if (teleport) {
-        final Location lastLocation = prisoner.lastLocationMutable();
+        final ImmutableLocation lastLocation = prisoner.lastLocationNullable();
         final ImmutableLocation releaseLocation = prisoner.jail().releaseLocation();
         if (releaseLocation != null) {
           Teleport.teleportAsync(online, releaseLocation.mutable());
         } else if (lastLocation != null) {
-          Teleport.teleportAsync(online, lastLocation);
+          Teleport.teleportAsync(online, lastLocation.mutable());
         }
       }
 

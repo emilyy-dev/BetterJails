@@ -29,7 +29,6 @@ import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
-import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -40,7 +39,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
-public class ApiPrisoner implements Prisoner {
+public final class ApiPrisoner implements Prisoner {
 
   private final UUID uuid;
   private final String name;
@@ -129,17 +128,14 @@ public class ApiPrisoner implements Prisoner {
     return this.imprisonmentReason;
   }
 
-  // TODO(v2): make nullable, remove deprecation
-  @Override @Deprecated
+  // TODO(v2): make nullable
+  @Override
   public @NotNull ImmutableLocation lastLocation() {
     return this.lastLocation;
   }
 
-  // TODO(rymiel): I know this is an awkward method. It's here to avoid doing stuff like
-  //   prisoner.lastLocation() == null ? null : prisoner.lastLocation().mutable();
-  //   I mean, in theory, it could be an Optional or something, and then you could map it.
-  public @Nullable Location lastLocationMutable() {
-    return this.unknownLocation ? null : this.lastLocation.mutable();
+  public @Nullable ImmutableLocation lastLocationNullable() {
+    return this.unknownLocation ? null : this.lastLocation;
   }
 
   /**
