@@ -126,7 +126,7 @@ The [`BetterJails` interface](https://github.com/emilyy-dev/BetterJails/blob/v1/
 * A [`JailManager`](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/jail/JailManager.java) in which you can create and delete jails
 * An [`EventBus`](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/event/EventBus.java) where you can subscribe (or "listen") to certain events dispatched throughout the functioning of the plugin.
 
-You can get an instance of the `BetterJails` interface like so:
+You can get an instance of the `BetterJails` interface through the services manager as follows:
 
 ````java
 public class MyPlugin extends JavaPlugin {
@@ -139,32 +139,25 @@ public class MyPlugin extends JavaPlugin {
 
   @Override
   public void onEnable() {
-    this.betterJails = Bukkit.getServicesManager().load(BetterJails.class);
+    this.betterJails = getServer().getServicesManager().load(BetterJails.class);
   }
 }
 ````
 
 Don't forget to add `"BetterJails"` as `depend`/`softdepend` to your `plugin.yml` :)
 
-The API is published in OSS Sonatype as it is currently in a snapshot state (and will be for the
-rest of v1 lifecycle). Importing the BetterJails API to your project depends on how you build your
-plugin.
+The API is published in Maven Central Repository and snapshots are published to OSS Sonatype Snapshots repository.
+Importing the BetterJails API to your project depends on how you build your plugin.
 
 
 ### Maven
 
-If you are using Maven, you need to add the (new) Sonatype repository to your `pom.xml`
-```xml
-<repository>
-    <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
-</repository>
-```
-You also need to add the dependency itself that will be pulled from Sonatype
+If you are using Maven, all you have to do is add the dependency itself that will be pulled from Central
 ```xml
 <dependency>
     <groupId>io.github.emilyy-dev</groupId>
     <artifactId>betterjails-api</artifactId>
-    <version>1.5-SNAPSHOT</version>
+    <version>1.5</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -172,18 +165,18 @@ You also need to add the dependency itself that will be pulled from Sonatype
 
 ### Gradle
 
-Same principle applies if you are using Gradle to build your plugin:
+Same principle applies if you are using Gradle to build your plugin, but you need to specify the `mavenCentral()` repo:
 
 
 ##### Groovy DSL
 
 ```groovy
 repositories {
-    maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
+    mavenCentral()
 }
 
 dependencies {
-    compileOnly 'io.github.emilyy-dev:betterjails-api:1.5-SNAPSHOT'
+    compileOnly 'io.github.emilyy-dev:betterjails-api:1.5'
 }
 ```
 
@@ -192,21 +185,21 @@ dependencies {
 
 ```kotlin
 repositories {
-    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+    mavenCentral()
 }
 
 dependencies {
-    compileOnly("io.github.emilyy-dev:betterjails-api:1.5-SNAPSHOT")
+    compileOnly("io.github.emilyy-dev:betterjails-api:1.5")
 }
 ```
 
 
 ### Manually
 
-If you want to manually add the API dependency to your classpath, you can obtain the jar by [downloading it from here](https://s01.oss.sonatype.org/content/repositories/snapshots/io/github/emilyy-dev/betterjails-api/1.5-SNAPSHOT/).
+If you want to manually add the API dependency to your classpath, you can obtain the jar by [downloading it from here](https://repo1.maven.org/maven2/io/github/emilyy-dev/betterjails-api/1.5/).
 
 
 ## Compiling
 
 You can compile this plugin by cloning the repository and running `./gradlew build` in the root
-directory of the project, you can find the final jar in `./betterjails/build/libs/betterjails-1.5-SNAPSHOT.jar`.
+directory of the project, you can find the final jar in `./betterjails/build/libs/betterjails-1.5.jar`.
