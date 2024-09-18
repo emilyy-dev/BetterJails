@@ -136,7 +136,7 @@ public interface Prisoner {
    * Whether the player has been jailed while they were offline. This means their last location isn't known yet.
    * If true, {@link #lastLocation()} returns the "backup location".
    *
-   * @return true is no last location has been saved for this prisoner yet.
+   * @return true if no last location has been saved for this prisoner yet.
    */
   boolean unknownLastLocation();
 }
