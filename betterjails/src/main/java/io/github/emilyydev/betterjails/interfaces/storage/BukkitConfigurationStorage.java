@@ -34,10 +34,6 @@ import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.SentenceExpiry;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
-import io.github.emilyydev.betterjails.data.upgrade.prisoner.V1ToV2;
-import io.github.emilyydev.betterjails.data.upgrade.prisoner.V2ToV3;
-import io.github.emilyydev.betterjails.data.upgrade.prisoner.V3ToV4;
-import io.github.emilyydev.betterjails.data.upgrade.prisoner.V5ToV6;
 import org.bukkit.Server;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -75,25 +71,6 @@ public final class BukkitConfigurationStorage implements StorageInterface {
   private static final String LOCATION_FIELD = "location";
   private static final String RELEASE_LOCATION_FIELD = "release-location";
   private static final String JAILS_FIELD = "jails";
-
-  private static final List<DataUpgrader> PRISONER_DATA_UPGRADERS =
-      ImmutableList.of(
-          new V1ToV2(),
-          new V2ToV3(),
-          new V3ToV4(),
-          // V4 -> V5 has no structural changes besides the addition of the reason field,
-          // it only exists for the version number to increase (as v5 prisoner data cannot be loaded on v4 data version)
-          (config, plugin) -> { },
-          new V5ToV6()
-      );
-
-  private static final List<DataUpgrader> JAIL_DATA_UPGRADERS =
-      ImmutableList.of(
-          new io.github.emilyydev.betterjails.data.upgrade.jail.V1ToV2(),
-          // V2 -> V3 adds the release-location field
-          (config, plugin) -> { },
-          new io.github.emilyydev.betterjails.data.upgrade.jail.V3ToV4()
-      );
 
   private final BetterJailsPlugin plugin;
   private final Server server;
@@ -304,7 +281,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
       return;
     }
 
-    for (final DataUpgrader upgrader : PRISONER_DATA_UPGRADERS.subList(version - 1, PRISONER_DATA_UPGRADERS.size())) {
+    for (final DataUpgrader upgrader : DataUpgrader.PRISONER_DATA_UPGRADERS.subList(version - 1, DataUpgrader.PRISONER_DATA_UPGRADERS.size())) {
       upgrader.upgrade(config, this.plugin);
       changed = true;
     }
@@ -319,14 +296,14 @@ public final class BukkitConfigurationStorage implements StorageInterface {
   private void migrateJailData(final YamlConfiguration config, final Path file) throws IOException {
     boolean changed = false;
     final int version = config.getInt("version", 1);
-    if (version > DataUpgrader.JAIL_VERSION) {
+    if (version > DataUpgrader.JAILS_VERSION) {
       LOGGER.warn("Jails file {} is from a newer version of BetterJails", file);
       LOGGER.warn("The plugin will continue to load it, but it may not function properly, errors might show up and data could be lost");
       LOGGER.warn("!!! Consider updating BetterJails !!!");
       return;
     }
 
-    for (final DataUpgrader upgrader : JAIL_DATA_UPGRADERS.subList(version - 1, JAIL_DATA_UPGRADERS.size())) {
+    for (final DataUpgrader upgrader : DataUpgrader.JAILS_DATA_UPGRADERS.subList(version - 1, DataUpgrader.JAILS_DATA_UPGRADERS.size())) {
       upgrader.upgrade(config, this.plugin);
       changed = true;
     }
