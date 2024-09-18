@@ -280,7 +280,7 @@ public final class PrisonerDataHandler {
         return;
       }
 
-      if (prisoner.unknownLocation()) {
+      if (prisoner.unknownLastLocation()) {
         // This prisoner has never joined during the entire duration of their sentence, meaning they are already where
         // they need to be, so we can immediately forget they exist.
         this.prisoners.remove(prisonerUuid);
@@ -319,7 +319,7 @@ public final class PrisonerDataHandler {
 
       // This prisoner has no known location, but they're also released. This means they're exactly where they need to
       // be once they join, and so we can forget they exist.
-      if (prisoner.unknownLocation()) {
+      if (prisoner.unknownLastLocation()) {
         if (released) {
           iterator.remove();
           deletePrisonerFile(prisoner);

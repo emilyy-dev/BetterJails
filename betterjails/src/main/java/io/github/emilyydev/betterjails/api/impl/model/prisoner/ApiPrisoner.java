@@ -145,7 +145,8 @@ public final class ApiPrisoner implements Prisoner {
     return timeLeft().isZero() || timeLeft().isNegative();
   }
 
-  public boolean unknownLocation() {
+  @Override
+  public boolean unknownLastLocation() {
     return this.unknownLocation;
   }
 

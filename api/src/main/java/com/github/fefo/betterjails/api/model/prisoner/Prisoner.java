@@ -2,6 +2,7 @@
 // This file is part of BetterJails, licensed under the MIT License.
 //
 // Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2024 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -113,6 +114,7 @@ public interface Prisoner {
    *
    * @return the recorded location when this player was jailed or the "backup location" defined in
    * configuration if unknown (jailed while offline)
+   * @see #unknownLastLocation()
    */
   @NotNull ImmutableLocation lastLocation();
 
@@ -130,4 +132,12 @@ public interface Prisoner {
    * @return the imprisonment reason or {@code null} if not provided
    */
   @Nullable String imprisonmentReason();
+
+  /**
+   * Whether the player has been jailed while they were offline. This means their last location isn't known yet.
+   * If true, {@link #lastLocation()} returns the "backup location".
+   *
+   * @return true if no last location has been saved for this prisoner yet.
+   */
+  boolean unknownLastLocation();
 }
