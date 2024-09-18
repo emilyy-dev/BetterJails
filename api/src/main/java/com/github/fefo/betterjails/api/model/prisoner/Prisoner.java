@@ -111,6 +111,7 @@ public interface Prisoner {
 
   /**
    * Gets the location this player was at when jailed.
+   * @see #unknownLastLocation()
    *
    * @return the recorded location when this player was jailed or the "backup location" defined in
    * configuration if unknown (jailed while offline)
