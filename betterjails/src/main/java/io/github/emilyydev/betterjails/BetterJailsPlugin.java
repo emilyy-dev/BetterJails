@@ -277,6 +277,8 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
     } catch (final InterruptedException ignored) {
     }
 
+    this.permissionInterface.close();
+
     this.eventBus.unsubscribeAll();
     if (this.metrics != null) {
       this.metrics.shutdown();
