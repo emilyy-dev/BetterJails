@@ -24,7 +24,10 @@
 
 package io.github.emilyydev.betterjails.data.upgrade;
 
+import com.google.common.collect.ImmutableList;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.data.upgrade.jail.JailV1ToV2;
+import io.github.emilyydev.betterjails.data.upgrade.prisoner.PrisonerV1ToV2;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.lang.invoke.MethodHandle;
@@ -38,8 +41,11 @@ import static java.lang.invoke.MethodType.methodType;
 @FunctionalInterface
 public interface DataUpgrader {
 
-  int PRISONER_VERSION = 6;
-  int JAIL_VERSION = 4;
+  int PRISONER_VERSION = 2;
+  List<DataUpgrader> PRISONER_DATA_UPGRADERS = ImmutableList.of(new PrisonerV1ToV2());
+
+  int JAILS_VERSION = 2;
+  List<DataUpgrader> JAILS_DATA_UPGRADERS = ImmutableList.of(new JailV1ToV2());
 
   static void markPrisonerVersion(final ConfigurationSection config) {
     config.set("version", PRISONER_VERSION);
@@ -47,7 +53,7 @@ public interface DataUpgrader {
   }
 
   static void markJailVersion(final ConfigurationSection config) {
-    config.set("version", JAIL_VERSION);
+    config.set("version", JAILS_VERSION);
     SetInlineCommentsHelper.setVersionWarning(config);
   }
 

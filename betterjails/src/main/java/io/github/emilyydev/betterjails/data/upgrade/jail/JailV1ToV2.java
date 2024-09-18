@@ -24,8 +24,10 @@
 
 package io.github.emilyydev.betterjails.data.upgrade.jail;
 
+import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
+import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
@@ -34,20 +36,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public final class V1ToV2 implements DataUpgrader {
+public final class JailV1ToV2 implements DataUpgrader {
+
+  private static final String JAILS_FIELD = "jails";
+
+  private static final String NAME_FIELD = "name";
+  private static final String LOCATION_FIELD = "location";
 
   @Override
   public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
     final Set<String> keys = config.getKeys(false);
     final List<Map<String, Object>> jails = new ArrayList<>();
-    for (final String key : keys) {
+    for (final String name : keys) {
       final Map<String, Object> jail = new HashMap<>();
-      jail.put("name", key);
-      jail.put("location", config.get(key));
-      config.set(key, null);
+      jail.put(NAME_FIELD, name);
+      jail.put(LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(name)));
+      config.set(name, null);
       jails.add(jail);
     }
 
-    config.set("jails", jails);
+    config.set(JAILS_FIELD, jails);
   }
 }
