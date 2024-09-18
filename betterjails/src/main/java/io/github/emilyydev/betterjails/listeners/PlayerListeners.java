@@ -92,7 +92,7 @@ public final class PlayerListeners implements Listener {
 
         this.plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, null, false);
       } else {
-        if (prisoner.unknownLocation()) {
+        if (prisoner.unknownLastLocation()) {
           prisoner = prisoner.withLastLocation(ImmutableLocation.copyOf(player.getLocation()));
 
           // Must be delayed by 1 tick, otherwise player.isOnline() is false and stuff explodes
