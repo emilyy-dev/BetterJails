@@ -42,6 +42,8 @@ publishing {
       from(components["java"])
 
       pom {
+        name = "BetterJails API"
+        description = "API for the BetterJails plugin"
         url = "https://github.com/emilyy-dev/BetterJails"
 
         licenses {
@@ -74,17 +76,17 @@ publishing {
     val password = findProperty("ossrh.password") as? String ?: return@repositories
 
     val repo =
-        if (version.toString().endsWith("-SNAPSHOT")) {
-          maven {
-            name = "sonatype-staging"
-            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-          }
-        } else {
-          maven {
-            name = "sonatype-snapshots"
-            url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-          }
+      if (version.toString().endsWith("-SNAPSHOT")) {
+        maven {
+          name = "sonatypeSnapshots"
+          url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
         }
+      } else {
+        maven {
+          name = "sonatypeStaging"
+          url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+        }
+      }
 
     repo.credentials {
       this.username = username
