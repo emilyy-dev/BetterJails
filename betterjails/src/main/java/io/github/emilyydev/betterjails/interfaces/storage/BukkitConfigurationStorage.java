@@ -38,7 +38,6 @@ import io.github.emilyydev.betterjails.data.upgrade.prisoner.V1ToV2;
 import io.github.emilyydev.betterjails.data.upgrade.prisoner.V2ToV3;
 import io.github.emilyydev.betterjails.data.upgrade.prisoner.V3ToV4;
 import io.github.emilyydev.betterjails.data.upgrade.prisoner.V5ToV6;
-import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -161,7 +160,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
   @Override
   public Map<UUID, ApiPrisoner> loadPrisoners() throws IOException {
     final Map<UUID, ApiPrisoner> out = new HashMap<>();
-    final Location backupLocation = this.config.backupLocation().mutable();
+    final ImmutableLocation backupLocation = this.config.backupLocation();
     Files.createDirectories(this.playerDataFolder);
 
     IOException migrationException = null;
@@ -199,7 +198,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
         if (yaml.contains(LAST_LOCATION_FIELD)) {
           lastLocation = (ImmutableLocation) yaml.get(LAST_LOCATION_FIELD);
         } else {
-          lastLocation = ImmutableLocation.copyOf(backupLocation);
+          lastLocation = backupLocation;
         }
 
         final String group = yaml.getString(GROUP_FIELD);
