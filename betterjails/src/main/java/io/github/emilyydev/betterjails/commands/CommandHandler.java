@@ -36,6 +36,7 @@ import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.entity.Player;
 import org.incendo.cloud.annotation.specifier.Greedy;
 import org.incendo.cloud.annotations.Command;
@@ -350,7 +351,7 @@ public final class CommandHandler {
       this.plugin.reload();
       this.plugin.eventBus().post(PluginReloadEvent.class, sender);
       sender.sendMessage(this.configuration.messages().reloadData(sender.getName()));
-    } catch (final IOException ex) {
+    } catch (final IOException | InvalidConfigurationException ex) {
       LOGGER.error("An error occurred reloading plugin data", ex);
       throw new CommandError(ctx, CommandError.RELOAD_FAILED, CommandError.executorVariable(sender.getName()));
     }

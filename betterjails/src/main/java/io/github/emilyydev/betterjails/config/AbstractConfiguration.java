@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,51 +59,39 @@ public class AbstractConfiguration {
     this.configurationMap = mapCreator.get();
   }
 
-  public final void loadWithDefaults() {
+  public final void loadWithDefaults() throws IOException, InvalidConfigurationException {
     load();
     loadDefaults();
   }
 
-  public final void load() {
-    try {
-      if (Files.notExists(this.configFile)) {
-        Files.createDirectories(this.configFile.getParent());
-        try (final InputStream in = AbstractConfiguration.class.getResourceAsStream('/' + this.fileName)) {
-          Objects.requireNonNull(in, "Bundled " + this.fileName);
-          Files.copy(in, this.configFile);
-        }
+  public final void load() throws IOException, InvalidConfigurationException {
+    if (Files.notExists(this.configFile)) {
+      Files.createDirectories(this.configFile.getParent());
+      try (final InputStream in = AbstractConfiguration.class.getResourceAsStream('/' + this.fileName)) {
+        Objects.requireNonNull(in, "Bundled " + this.fileName);
+        Files.copy(in, this.configFile);
       }
-
-      final YamlConfiguration configuration = new YamlConfiguration();
-      try (final BufferedReader reader = Files.newBufferedReader(this.configFile)) {
-        configuration.load(reader);
-      }
-
-      this.configuration = configuration;
-      this.configurationMap.clear();
-    } catch (final IOException ex) {
-      throw new UncheckedIOException(ex);
-    } catch (final InvalidConfigurationException ex) {
-      throw new UncheckedIOException(new IOException(ex));
     }
+
+    final YamlConfiguration configuration = new YamlConfiguration();
+    try (final BufferedReader reader = Files.newBufferedReader(this.configFile)) {
+      configuration.load(reader);
+    }
+
+    this.configuration = configuration;
+    this.configurationMap.clear();
   }
 
-  public final void loadDefaults() {
-    try {
-      final YamlConfiguration defaultConfig = new YamlConfiguration();
-      try (
-          final InputStream in = AbstractConfiguration.class.getResourceAsStream('/' + this.fileName);
-          final Reader reader = new InputStreamReader(Objects.requireNonNull(in, "Bundled " + this.fileName), StandardCharsets.UTF_8)
-      ) {
-        defaultConfig.load(reader);
-      }
-
-      this.configuration.setDefaults(defaultConfig);
-    } catch (final IOException ex) {
-      throw new UncheckedIOException(ex);
-    } catch (final InvalidConfigurationException ex) {
-      throw new UncheckedIOException(new IOException(ex));
+  public final void loadDefaults() throws IOException, InvalidConfigurationException {
+    final YamlConfiguration defaultConfig = new YamlConfiguration();
+    try (
+        final InputStream in = AbstractConfiguration.class.getResourceAsStream('/' + this.fileName);
+        final Reader reader = new InputStreamReader(Objects.requireNonNull(in, "Bundled " + this.fileName), StandardCharsets.UTF_8)
+    ) {
+      defaultConfig.load(reader);
     }
+
+    this.configuration.setDefaults(defaultConfig);
   }
 
   @SuppressWarnings("unchecked")

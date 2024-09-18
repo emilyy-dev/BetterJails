@@ -107,6 +107,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   private final boolean isTesting;
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
   private Metrics metrics = null;
+  private boolean failedToLoad = false;
 
   public BetterJailsPlugin() {
     this.isTesting = false;
@@ -169,16 +170,28 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
   @Override
   public void onLoad() {
+    try {
+      this.configuration.loadWithDefaults();
+      this.subCommands.load();
+
+      alertNewConfigAvailable();
+    } catch (final IOException | InvalidConfigurationException ex) {
+      this.failedToLoad = true;
+      LOGGER.error("The configuration failed to load, the plugin will not load", ex);
+      return;
+    }
+
     getServer().getServicesManager().register(BetterJails.class, this.api, this, ServicePriority.Normal);
   }
 
   @Override
   public void onEnable() {
+    if (this.failedToLoad) {
+      return;
+    }
+
     PluginDisableListener.create(this.eventBus).register(this);
     this.uniqueIdCache.register(this);
-
-    this.configuration.loadWithDefaults();
-    this.subCommands.load();
 
     final Server server = getServer();
     final PluginManager pluginManager = server.getPluginManager();
@@ -209,12 +222,11 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
     // delay data loading to allow plugins to load additional worlds that might have jails in them
     scheduler.runTask(this, () -> {
       try {
-        alertNewConfigAvailable();
         // Jails must be loaded first, loading prisoners depends on jails already being loaded
         this.jailData.load();
         this.prisonerData.load();
-      } catch (final IOException | InvalidConfigurationException | RuntimeException ex) {
-        LOGGER.error("Error loading plugin data", ex);
+      } catch (final IOException | RuntimeException ex) {
+        LOGGER.error("Error loading plugin data, the plugin will disable", ex);
         pluginManager.disablePlugin(this);
       }
     });
@@ -244,11 +256,20 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
   @Override
   public void onDisable() {
+    if (this.failedToLoad) {
+      return;
+    }
+
     try {
       this.prisonerData.save().get();
+    } catch (final InterruptedException | ExecutionException ex) {
+      LOGGER.error("Could not save prisoner data files", ex);
+    }
+
+    try {
       this.jailData.save().get();
     } catch (final InterruptedException | ExecutionException ex) {
-      LOGGER.error("Could not save data files", ex);
+      LOGGER.error("Could not save jails data file", ex);
     }
 
     try {
@@ -272,11 +293,13 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
     }, this);
   }
 
-  public void reload() throws IOException {
+  public void reload() throws IOException, InvalidConfigurationException {
     this.configuration.loadWithDefaults();
     this.subCommands.load();
-    this.prisonerData.load();
+
+    // Jails must be loaded first, loading prisoners depends on jails already being loaded
     this.jailData.load();
+    this.prisonerData.load();
 
     if (this.configuration.permissionHookEnabled()) {
       this.configuration.prisonerPermissionGroup().ifPresent(prisonerGroup ->

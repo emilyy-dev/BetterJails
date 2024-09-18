@@ -49,6 +49,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
@@ -85,20 +86,20 @@ public final class PrisonerDataHandler {
     this.storage = plugin.storageAccess();
   }
 
-  public void load() {
+  public void load() throws IOException {
     // TODO(v2): can't remove this yet
     this.backupLocation = this.config.backupLocation();
     this.prisoners.clear();
     loadPrisoners();
   }
 
-  private void loadPrisoners() {
+  private void loadPrisoners() throws IOException {
     try {
       this.prisoners.putAll(this.storage.loadPrisoners().get());
     } catch (final InterruptedException ex) {
       // bleh
     } catch (final ExecutionException ex) {
-      throw new RuntimeException(ex.getCause());
+      throw new IOException(ex.getCause());
     }
   }
 

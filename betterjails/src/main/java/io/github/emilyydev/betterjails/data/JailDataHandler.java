@@ -33,6 +33,7 @@ import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
 import io.github.emilyydev.betterjails.interfaces.storage.StorageAccess;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -49,18 +50,18 @@ public final class JailDataHandler {
     this.storage = plugin.storageAccess();
   }
 
-  public void load() {
+  public void load() throws IOException {
     this.jails.clear();
     loadJails();
   }
 
-  private void loadJails() {
+  private void loadJails() throws IOException {
     try {
       this.jails.putAll(this.storage.loadJails().get());
     } catch (final InterruptedException ex) {
       // bleh
     } catch (final ExecutionException ex) {
-      throw new RuntimeException(ex.getCause());
+      throw new IOException(ex.getCause());
     }
   }
 
