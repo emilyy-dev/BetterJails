@@ -43,6 +43,7 @@ tasks {
     archiveClassifier = null
     relocate("org.bstats", "io.github.emilyydev.betterjails.bstats")
     relocate("org.incendo.cloud", "io.github.emilyydev.betterjails.cloud")
+    relocate("org.slf4j", "io.github.emilyydev.betterjails.slf4j")
   }
 
   withType<Jar> {
