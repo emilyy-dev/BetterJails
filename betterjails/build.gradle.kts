@@ -38,11 +38,17 @@ tasks {
     dependsOn(shadowJar)
   }
 
-  jar { archiveClassifier = "noshadow" }
+  jar {
+    archiveClassifier = "noshadow"
+  }
+
   shadowJar {
     archiveClassifier = null
+
+    mergeServiceFiles()
     relocate("org.bstats", "io.github.emilyydev.betterjails.bstats")
     relocate("org.incendo.cloud", "io.github.emilyydev.betterjails.cloud")
+    relocate("io.leangen.geantyref", "io.github.emilyydev.betterjails.geantyref")
     relocate("org.slf4j", "io.github.emilyydev.betterjails.slf4j")
   }
 
