@@ -108,21 +108,21 @@ public interface Util {
     metrics.addCustomChart(new AdvancedPie("sentence_time", () -> {
       final Map<String, Integer> map = new LinkedHashMap<>();
       for (final Prisoner prisoner : plugin.api().getPrisonerManager().getAllPrisoners()) {
-        final Duration remainingTime = prisoner.totalSentenceTime();
-        if (remainingTime.isZero()) {
+        final Duration sentenceTime = prisoner.totalSentenceTime();
+        if (sentenceTime.isZero()) {
           continue;
         }
 
         final String key;
-        if (remainingTime.compareTo(Duration.ofMinutes(1L)) <= 0) {
+        if (sentenceTime.compareTo(Duration.ofMinutes(1L)) <= 0) {
           key = "<= 1m";
-        } else if (remainingTime.compareTo(Duration.ofMinutes(10L)) <= 0) {
+        } else if (sentenceTime.compareTo(Duration.ofMinutes(10L)) <= 0) {
           key = "<= 10m";
-        } else if (remainingTime.compareTo(Duration.ofHours(1L)) <= 0) {
+        } else if (sentenceTime.compareTo(Duration.ofHours(1L)) <= 0) {
           key = "<= 1h";
-        } else if (remainingTime.compareTo(Duration.ofHours(10L)) <= 0) {
+        } else if (sentenceTime.compareTo(Duration.ofHours(10L)) <= 0) {
           key = "<= 10h";
-        } else if (remainingTime.compareTo(Duration.ofDays(1L)) <= 0) {
+        } else if (sentenceTime.compareTo(Duration.ofDays(1L)) <= 0) {
           key = "<= 1d";
         } else {
           key = "> 1d";
