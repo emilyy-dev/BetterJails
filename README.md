@@ -25,6 +25,11 @@ been online for the required time.
 
 * `/setjail <jail name>` / Adds a new jail location where the command is executed.
 * `/deljail <jail name>` / Removes a jail location from the jails list.
+* `/modjail <jail name> releaselocation set` / Sets the location where the command is executed to be the
+  "release location" of the jail. This is where players will be put when they are released from that
+  specific jail. This is optional. If not provided, the player will be released to wherever they were
+  before imprisonment.
+* `/modjail <jail name> releaselocation clear` / Clears the "release location" of the jail.
 * `/jails` / Prints a list of available jails.
 * `/jail <player> <jail> <time> [reason]` / Sends a player to the provided jail, and won't be teleported back
   until the time provided has passed. Time format matches inputs in the format of `2d15h7m12s`.
