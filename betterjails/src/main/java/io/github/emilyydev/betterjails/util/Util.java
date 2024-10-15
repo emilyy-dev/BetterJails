@@ -24,37 +24,16 @@
 
 package io.github.emilyydev.betterjails.util;
 
-import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import net.md_5.bungee.api.ChatColor;
-import org.bstats.bukkit.Metrics;
-import org.bstats.charts.AdvancedPie;
-import org.bstats.charts.SimplePie;
-import org.bstats.charts.SingleLineChart;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
-import org.bukkit.plugin.Plugin;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.logging.Level;
 import java.util.stream.Collector;
 
 public interface Util {
-
-  int SPIGOTMC_RESOURCE_ID = 76001;
-  int BSTATS_ID = 9015;
 
   Collector<Object, ImmutableSet.Builder<Object>, ImmutableSet<Object>> IMMUTABLE_SET_COLLECTOR =
       Collector.of(
@@ -84,57 +63,6 @@ public interface Util {
 
   static String color(final String text, final Object... args) {
     return ChatColor.translateAlternateColorCodes('&', String.format(text, args));
-  }
-
-  static void checkVersion(final Plugin plugin, final Consumer<? super String> consumer) {
-    plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-      try (
-          final InputStream stream = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + SPIGOTMC_RESOURCE_ID).openStream();
-          final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))
-      ) {
-        final String version = reader.readLine();
-        plugin.getServer().getScheduler().runTask(plugin, () -> consumer.accept(version));
-      } catch (final IOException ex) {
-        plugin.getLogger().log(Level.WARNING, "An error occurred looking for plugin updates", ex);
-      }
-    });
-  }
-
-  static Metrics prepareMetrics(final BetterJailsPlugin plugin) {
-    final Metrics metrics = new Metrics(plugin, BSTATS_ID);
-    metrics.addCustomChart(new SingleLineChart("jail_count", () -> plugin.jailData().getJails().size()));
-    metrics.addCustomChart(new SingleLineChart("prisoner_count", () -> plugin.prisonerData().getAllPrisoners().size()));
-    metrics.addCustomChart(new SimplePie("permission_plugin_hook", () -> plugin.permissionInterface().name()));
-    metrics.addCustomChart(new AdvancedPie("sentence_time", () -> {
-      final Map<String, Integer> map = new LinkedHashMap<>();
-      for (final Prisoner prisoner : plugin.api().getPrisonerManager().getAllPrisoners()) {
-        final Duration sentenceTime = prisoner.totalSentenceTime();
-        if (sentenceTime.isZero()) {
-          continue;
-        }
-
-        final String key;
-        if (sentenceTime.compareTo(Duration.ofMinutes(1L)) <= 0) {
-          key = "<= 1m";
-        } else if (sentenceTime.compareTo(Duration.ofMinutes(10L)) <= 0) {
-          key = "<= 10m";
-        } else if (sentenceTime.compareTo(Duration.ofHours(1L)) <= 0) {
-          key = "<= 1h";
-        } else if (sentenceTime.compareTo(Duration.ofHours(10L)) <= 0) {
-          key = "<= 10h";
-        } else if (sentenceTime.compareTo(Duration.ofDays(1L)) <= 0) {
-          key = "<= 1d";
-        } else {
-          key = "> 1d";
-        }
-
-        map.merge(key, 1, Integer::sum);
-      }
-
-      return map;
-    }));
-
-    return metrics;
   }
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
