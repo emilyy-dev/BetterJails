@@ -103,7 +103,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
   private final JailDataHandler jailData = new JailDataHandler(this);
   private final BetterJailsApi api = new BetterJailsApi(new ApiJailManager(this.jailData), new ApiPrisonerManager(this));
   private final ApiEventBus eventBus = this.api.getEventBus();
-  private final UniqueIdCache uniqueIdCache = new UniqueIdCache(this);
+  private final UniqueIdCache uniqueIdCache = new UniqueIdCache();
   private final boolean isTesting;
   private PermissionInterface permissionInterface = PermissionInterface.NULL;
   private Metrics metrics = null;
