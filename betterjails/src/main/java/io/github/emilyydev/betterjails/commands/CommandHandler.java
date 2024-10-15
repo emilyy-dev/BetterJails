@@ -118,7 +118,7 @@ public final class CommandHandler {
     final String executorName = sender.getName();
     final String prisonerName = MoreObjects.firstNonNull(target.getName(), "(unknown)");
 
-    if (!target.hasPlayedBefore()) {
+    if (!target.hasPlayedBefore() && !target.isOnline()) {
       throw new CommandError(
           ctx, CommandError.JAIL_FAILED_PLAYER_NEVER_JOINED,
           CommandError.prisonerVariable(prisonerName),
