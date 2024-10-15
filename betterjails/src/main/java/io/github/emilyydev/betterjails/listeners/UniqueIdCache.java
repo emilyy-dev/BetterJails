@@ -26,6 +26,7 @@ package io.github.emilyydev.betterjails.listeners;
 
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -42,17 +43,16 @@ public final class UniqueIdCache implements Listener {
 
   private final Map<String, UUID> cache = new HashMap<>();
 
-  public UniqueIdCache(final BetterJailsPlugin plugin) {
-    for (final OfflinePlayer offlinePlayer : plugin.getServer().getOfflinePlayers()) {
+  public void register(final BetterJailsPlugin plugin) {
+    final Server server = plugin.getServer();
+    for (final OfflinePlayer offlinePlayer : server.getOfflinePlayers()) {
       final String name = offlinePlayer.getName();
       if (name != null) {
         this.cache.put(name.toLowerCase(Locale.ROOT), offlinePlayer.getUniqueId());
       }
     }
-  }
 
-  public void register(final BetterJailsPlugin plugin) {
-    plugin.getServer().getPluginManager().registerEvent(
+    server.getPluginManager().registerEvent(
         PlayerLoginEvent.class, this, EventPriority.MONITOR,
         (l, e) -> playerLogin((PlayerLoginEvent) e), plugin
     );
