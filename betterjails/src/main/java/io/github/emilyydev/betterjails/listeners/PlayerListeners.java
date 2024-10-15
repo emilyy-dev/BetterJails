@@ -28,6 +28,7 @@ package io.github.emilyydev.betterjails.listeners;
 import com.earth2me.essentials.User;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.UpdateChecker;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
 import io.github.emilyydev.betterjails.util.Util;
@@ -113,9 +114,9 @@ public final class PlayerListeners implements Listener {
       }
     }
 
-    if (player.hasPermission("betterjails.receivebroadcast") && !this.plugin.getDescription().getVersion().endsWith("-SNAPSHOT")) {
+    if (player.hasPermission("betterjails.receivebroadcast")) {
       this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () ->
-          Util.checkVersion(this.plugin, version -> {
+          UpdateChecker.fetchRemoteVersion(this.plugin).thenAccept(version -> {
             if (!this.plugin.getDescription().getVersion().equals(version)) {
               player.sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
             }

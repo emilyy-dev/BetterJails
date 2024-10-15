@@ -111,7 +111,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
   public BetterJailsPlugin() {
     this.isTesting = false;
-    this.metrics = Util.prepareMetrics(this);
+    this.metrics = PluginMetrics.prepareMetrics(this);
   }
 
   public BetterJailsPlugin(final String str) { // for mockbukkit, dummy ctor to not enable bstats and cloud
@@ -245,13 +245,11 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
       scheduler.runTaskTimer(this, this::saveAll, autoSavePeriod.getSeconds() * 20L, autoSavePeriod.getSeconds() * 20L);
     }
 
-    if (!getDescription().getVersion().endsWith("-SNAPSHOT")) {
-      scheduler.runTaskLater(this, () -> Util.checkVersion(this, version -> {
-        if (!getDescription().getVersion().equals(version)) {
-          server.getConsoleSender().sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
-        }
-      }), 100L);
-    }
+    scheduler.runTaskLater(this, () -> UpdateChecker.fetchRemoteVersion(this).thenAccept(version -> {
+      if (!getDescription().getVersion().equals(version)) {
+        server.getConsoleSender().sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
+      }
+    }), 100L);
   }
 
   @Override
