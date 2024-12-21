@@ -140,11 +140,8 @@ public final class PrisonerDataHandler {
       knownLastLocation = existingPrisoner.lastLocationNullable();
     }
 
-    // this is ugly
-    final Runnable teleportAction;
-    if (!isPlayerOnline) {
-      teleportAction = () -> { };
-    } else {
+    Runnable teleportAction = () -> { };
+    if (isPlayerOnline) {
       // The player is online! We can get their last location, if needed, and put them in jail immediately.
       final Player onlinePlayer = player.getPlayer();
 
@@ -152,13 +149,11 @@ public final class PrisonerDataHandler {
         knownLastLocation = ImmutableLocation.copyOf(onlinePlayer.getLocation());
       }
 
-      // very ugly
+      // not pretty
       if (teleport) {
         teleportAction = () ->
             Teleport.teleportAsync(onlinePlayer, jail.location().mutable())
                 .thenRun(() -> WorldGuardFacade.resetState(onlinePlayer));
-      } else {
-        teleportAction = () -> { };
       }
 
       if (!isPlayerJailed) {
