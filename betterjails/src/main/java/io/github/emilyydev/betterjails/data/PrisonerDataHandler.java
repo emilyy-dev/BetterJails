@@ -38,10 +38,12 @@ import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.SentenceExpiry;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import io.github.emilyydev.betterjails.config.SubCommandsConfiguration;
+import io.github.emilyydev.betterjails.interfaces.WorldGuardFacade;
 import io.github.emilyydev.betterjails.interfaces.permission.PermissionInterface;
 import io.github.emilyydev.betterjails.interfaces.storage.StorageAccess;
 import io.github.emilyydev.betterjails.util.Teleport;
 import io.github.emilyydev.betterjails.util.Util;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -138,7 +140,11 @@ public final class PrisonerDataHandler {
       knownLastLocation = existingPrisoner.lastLocationNullable();
     }
 
-    if (isPlayerOnline) {
+    // this is ugly
+    final Runnable teleportAction;
+    if (!isPlayerOnline) {
+      teleportAction = () -> { };
+    } else {
       // The player is online! We can get their last location, if needed, and put them in jail immediately.
       final Player onlinePlayer = player.getPlayer();
 
@@ -146,8 +152,13 @@ public final class PrisonerDataHandler {
         knownLastLocation = ImmutableLocation.copyOf(onlinePlayer.getLocation());
       }
 
+      // very ugly
       if (teleport) {
-        Teleport.teleportAsync(onlinePlayer, jail.location().mutable());
+        teleportAction = () ->
+            Teleport.teleportAsync(onlinePlayer, jail.location().mutable())
+                .thenRun(() -> WorldGuardFacade.resetState(onlinePlayer));
+      } else {
+        teleportAction = () -> { };
       }
 
       if (!isPlayerJailed) {
@@ -209,7 +220,7 @@ public final class PrisonerDataHandler {
         LOGGER.error("An error occurred saving prisoner data for {}", prisonerUuid, error);
         return null;
       });
-    }, this.plugin);
+    }, this.plugin).thenRunAsync(teleportAction, this.plugin);
   }
 
   public CompletableFuture<Void> savePrisoner(final ApiPrisoner prisoner) {
@@ -248,11 +259,13 @@ public final class PrisonerDataHandler {
 
     final PermissionInterface permissionInterface = this.plugin.permissionInterface();
     final Set<String> parentGroups = prisoner.parentGroups();
-    permissionInterface.setParentGroups(player, parentGroups, source, sourceName)
-        .whenComplete((ignored, ex) -> {
+    final CompletionStage<?> settingParentGroups =
+        permissionInterface.setParentGroups(player, parentGroups, source, sourceName).handle((ignored, ex) -> {
           if (ex != null && permissionInterface != PermissionInterface.NULL) {
             LOGGER.error("An error occurred setting back prisoner's parent groups for {} {}", prisonerUuid, parentGroups, ex);
           }
+
+          return ignored;
         });
 
     if (player.isOnline()) {
@@ -261,11 +274,23 @@ public final class PrisonerDataHandler {
       if (teleport) {
         final ImmutableLocation lastLocation = prisoner.lastLocationNullable();
         final ImmutableLocation releaseLocation = prisoner.jail().releaseLocation();
+        final Location releaseLocationMutable;
         if (releaseLocation != null) {
-          Teleport.teleportAsync(online, releaseLocation.mutable());
+          releaseLocationMutable = releaseLocation.mutable();
         } else if (lastLocation != null) {
-          Teleport.teleportAsync(online, lastLocation.mutable());
+          releaseLocationMutable = lastLocation.mutable();
+        } else {
+          releaseLocationMutable = null;
         }
+
+        settingParentGroups.thenComposeAsync(ignored -> {
+          WorldGuardFacade.resetState(online);
+          if (releaseLocationMutable != null) {
+            return Teleport.teleportAsync(online, releaseLocationMutable);
+          } else {
+            return CompletableFuture.completedFuture(null);
+          }
+        }, this.plugin);
       }
 
       this.prisoners.remove(prisonerUuid);
