@@ -3,7 +3,7 @@ author: "emilyy-dev"
 version: "${version}"
 main: "io.github.emilyydev.betterjails.BetterJailsPlugin"
 api-version: "1.13"
-softdepend: [ "Essentials", "Vault", "LuckPerms" ]
+softdepend: [ "Essentials", "Vault", "LuckPerms", "WorldGuard" ]
 
 permissions:
   betterjails.jail: { }
