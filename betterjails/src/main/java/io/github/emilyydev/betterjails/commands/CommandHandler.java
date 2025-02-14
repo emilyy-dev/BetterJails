@@ -358,7 +358,7 @@ public final class CommandHandler {
 
     final Duration newDuration = prisoner.timeLeft().plus(time);
     final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
-    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), prisoner.jailedBy(), newDuration, prisoner.imprisonmentReason(), false);
+    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), sender.getName(), newDuration, prisoner.imprisonmentReason(), false);
     sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(newDuration)));
   }
 
@@ -381,7 +381,7 @@ public final class CommandHandler {
 
     final Duration newDuration = prisoner.timeLeft().minus(time);
     final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
-    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), prisoner.jailedBy(), newDuration, prisoner.imprisonmentReason(), false);
+    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), sender.getName(), newDuration, prisoner.imprisonmentReason(), false);
     sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(newDuration)));
   }
 
@@ -403,7 +403,7 @@ public final class CommandHandler {
     }
 
     final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
-    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), prisoner.jailedBy(), time, prisoner.imprisonmentReason(), false);
+    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), sender.getName(), time, prisoner.imprisonmentReason(), false);
     sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(time)));
   }
 
