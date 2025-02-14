@@ -70,6 +70,9 @@ public final class CommandHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
   private static String durationString(Duration duration) {
+    if (duration.isZero() || duration.isNegative()) {
+      return "0s";
+    }
     final StringBuilder timeLeftBuilder = new StringBuilder();
     duration = appendAndTruncateIfApplicable(duration, ChronoUnit.DAYS, 'd', timeLeftBuilder);
     duration = appendAndTruncateIfApplicable(duration, ChronoUnit.HOURS, 'h', timeLeftBuilder);
@@ -334,6 +337,74 @@ public final class CommandHandler {
         );
       }
     }, this.plugin);
+  }
+
+  @Permission("betterjails.jailtime")
+  @Command("jailtime <prisoner> add <time>")
+  @CommandDescription("Adds more sentence time to a prisoner")
+  public void jailTimeAdd(
+      final CommandContext<CommandSender> ctx,
+      final CommandSender sender,
+      final ApiPrisoner prisoner,
+      final Duration time
+  ) {
+    if (prisoner.released()) {
+      throw new CommandError(
+          ctx, CommandError.JAILTIME_FAILED_PLAYER_NOT_JAILED,
+          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
+          CommandError.executorVariable(sender.getName())
+      );
+    }
+
+    final Duration newDuration = prisoner.timeLeft().plus(time);
+    final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
+    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), prisoner.jailedBy(), newDuration, prisoner.imprisonmentReason(), false);
+    sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(newDuration)));
+  }
+
+  @Permission("betterjails.jailtime")
+  @Command("jailtime <prisoner> subtract <time>")
+  @CommandDescription("Subtracts sentence time from a prisoner")
+  public void jailTimeSubtract(
+      final CommandContext<CommandSender> ctx,
+      final CommandSender sender,
+      final ApiPrisoner prisoner,
+      final Duration time
+  ) {
+    if (prisoner.released()) {
+      throw new CommandError(
+          ctx, CommandError.JAILTIME_FAILED_PLAYER_NOT_JAILED,
+          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
+          CommandError.executorVariable(sender.getName())
+      );
+    }
+
+    final Duration newDuration = prisoner.timeLeft().minus(time);
+    final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
+    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), prisoner.jailedBy(), newDuration, prisoner.imprisonmentReason(), false);
+    sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(newDuration)));
+  }
+
+  @Permission("betterjails.jailtime")
+  @Command("jailtime <prisoner> set <time>")
+  @CommandDescription("Sets the sentence time of a prisoner")
+  public void jailTimeSet(
+      final CommandContext<CommandSender> ctx,
+      final CommandSender sender,
+      final ApiPrisoner prisoner,
+      final Duration time
+  ) {
+    if (prisoner.released()) {
+      throw new CommandError(
+          ctx, CommandError.JAILTIME_FAILED_PLAYER_NOT_JAILED,
+          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
+          CommandError.executorVariable(sender.getName())
+      );
+    }
+
+    final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
+    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), prisoner.jailedBy(), time, prisoner.imprisonmentReason(), false);
+    sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(time)));
   }
 
   @Permission("betterjails.betterjails")

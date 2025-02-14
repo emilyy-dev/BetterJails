@@ -36,6 +36,7 @@ public final class CommandError extends ParserException {
   public static final Caption JAIL_FAILED_PLAYER_EXEMPT = Caption.of("jailFailedPlayerExempt");
   public static final Caption INFO_FAILED_PLAYER_NOT_JAILED = Caption.of("infoFailedPlayerNotJailed");
   public static final Caption UNJAIL_FAILED_PLAYER_NOT_JAILED = Caption.of("unjailFailedPlayerNotJailed");
+  public static final Caption JAILTIME_FAILED_PLAYER_NOT_JAILED = Caption.of("jailtime-failed-player-not-jailed");
 
   public static final Caption RESOLVE_JAIL_FAILED = Caption.of("non-existent-jail");
   public static final Caption RESOLVE_PRISONER_FAILED = Caption.of("player-not-imprisoned");

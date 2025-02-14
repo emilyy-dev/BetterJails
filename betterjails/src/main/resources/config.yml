@@ -59,6 +59,13 @@ messages:
   deljailSuccess: "&6Jail removed successfully!"
   delete-jail-failed: "&cAn error occurred while deleting data for jail &4{jail}&c. Check the console for errors."
 
+  # Placeholders for /jailtime:
+  # · {prisoner}: player whose sentence time will be modified.
+  # · {player}: player that executes the command.
+  jailtime-failed-player-not-jailed: "&cCannot modify sentence time of {prisoner}, they are not currently serving a sentence."
+  # · {time}: new sentence time.
+  jailtime-success: "&6Sentence time of &c{prisoner} &6is now &c{time}&6."
+
   # Placeholders for /betterjails reload and /betterjails save:
   # · {player}: player that executes the command.
   reload: "&6Files reloaded successfully!"
