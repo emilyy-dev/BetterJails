@@ -31,10 +31,6 @@ messages:
   jailSuccess: "&c{prisoner} &6has been jailed by &c{player} &6for &c{time}&6."
   jailFailedPlayerNeverJoined: "&cPlayer &4{prisoner} &cnever joined this server."
   jailFailedPlayerExempt: "&4{prisoner} &ccannot be jailed."
-  # Placeholders for /jail info:
-  # · {prisoner}: player to retrieve the status and info.
-  # · {player}: player that executes the command.
-  infoFailedPlayerNotJailed: "&6The player you are requesting the information from is not currently serving a sentence."
 
   # Generic error messages when resolving a jail or prisoner for a command.
   # Available placeholders:
@@ -47,7 +43,6 @@ messages:
   # · {prisoner}: player to be unjailed.
   # · {player}: player that executes the command.
   unjailSuccess: "&c{prisoner} &6has been unjailed by &c{player}&6."
-  unjailFailedPlayerNotJailed: "&c{prisoner} &6could not be unjailed, player wasn't jailed."
 
   # Placeholders for /setjail, /modjail and /deljail:
   # · {player}: player that executes the command.
@@ -62,7 +57,6 @@ messages:
   # Placeholders for /jailtime:
   # · {prisoner}: player whose sentence time will be modified.
   # · {player}: player that executes the command.
-  jailtime-failed-player-not-jailed: "&cCannot modify sentence time of {prisoner}, they are not currently serving a sentence."
   # · {time}: new sentence time.
   jailtime-success: "&6Sentence time of &c{prisoner} &6is now &c{time}&6."
 

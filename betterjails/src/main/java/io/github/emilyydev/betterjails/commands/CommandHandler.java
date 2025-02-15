@@ -156,15 +156,6 @@ public final class CommandHandler {
       final CommandSender sender,
       final ApiPrisoner prisoner
   ) {
-    final String executorName = sender.getName();
-    if (prisoner.released()) {
-      throw new CommandError(
-          ctx, CommandError.INFO_FAILED_PLAYER_NOT_JAILED,
-          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
-          CommandError.executorVariable(executorName)
-      );
-    }
-
     final ImmutableLocation lastLocation = prisoner.lastLocationNullable();
     final String lastLocationString = lastLocation == null
         ? color("&cunknown")
@@ -228,14 +219,6 @@ public final class CommandHandler {
       final ApiPrisoner prisoner
   ) {
     final String executorName = sender.getName();
-    if (prisoner.released()) {
-      throw new CommandError(
-          ctx, CommandError.UNJAIL_FAILED_PLAYER_NOT_JAILED,
-          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
-          CommandError.executorVariable(sender.getName())
-      );
-    }
-
     this.plugin.prisonerData().releasePrisoner(prisoner, this.server.getOfflinePlayer(prisoner.uuid()), uuidOrNil(sender), executorName, true);
     this.server.broadcast(
         this.configuration.messages().releasePrisonerSuccess(prisoner.nameOr("(unknown)"), executorName),
@@ -348,14 +331,6 @@ public final class CommandHandler {
       final ApiPrisoner prisoner,
       final Duration time
   ) {
-    if (prisoner.released()) {
-      throw new CommandError(
-          ctx, CommandError.JAILTIME_FAILED_PLAYER_NOT_JAILED,
-          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
-          CommandError.executorVariable(sender.getName())
-      );
-    }
-
     final Duration newDuration = prisoner.timeLeft().plus(time);
     final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
     this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), sender.getName(), newDuration, prisoner.imprisonmentReason(), false);
@@ -371,14 +346,6 @@ public final class CommandHandler {
       final ApiPrisoner prisoner,
       final Duration time
   ) {
-    if (prisoner.released()) {
-      throw new CommandError(
-          ctx, CommandError.JAILTIME_FAILED_PLAYER_NOT_JAILED,
-          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
-          CommandError.executorVariable(sender.getName())
-      );
-    }
-
     final Duration newDuration = prisoner.timeLeft().minus(time);
     final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
     this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), sender.getName(), newDuration, prisoner.imprisonmentReason(), false);
@@ -394,14 +361,6 @@ public final class CommandHandler {
       final ApiPrisoner prisoner,
       final Duration time
   ) {
-    if (prisoner.released()) {
-      throw new CommandError(
-          ctx, CommandError.JAILTIME_FAILED_PLAYER_NOT_JAILED,
-          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
-          CommandError.executorVariable(sender.getName())
-      );
-    }
-
     final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
     this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), sender.getName(), time, prisoner.imprisonmentReason(), false);
     sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(time)));
@@ -463,7 +422,7 @@ public final class CommandHandler {
   public ApiPrisoner resolvePrisoner(final CommandContext<CommandSender> ctx, final CommandInput input) {
     final String name = input.readString();
     final ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(this.plugin.findUniqueId(name));
-    if (prisoner != null) {
+    if (prisoner != null && !prisoner.released()) {
       return prisoner;
     } else {
       throw new CommandError(ctx, CommandError.RESOLVE_PRISONER_FAILED, CommandError.prisonerVariable(name));
