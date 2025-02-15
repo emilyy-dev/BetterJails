@@ -323,17 +323,6 @@ public final class CommandHandler {
     }, this.plugin);
   }
 
-  public enum JailTimeAction {
-    ADD(Duration::plus),
-    SUBTRACT(Duration::minus),
-    SET((t1, t2) -> t2);
-
-    final BinaryOperator<Duration> op;
-    JailTimeAction(BinaryOperator<Duration> op) {
-      this.op = op;
-    }
-  }
-
   @Permission("betterjails.jailtime")
   @Command("jailtime <prisoner> <action> <time>")
   @CommandDescription("Increase, reduce, or modify the sentence time of a prisoner")
@@ -424,5 +413,16 @@ public final class CommandHandler {
   @ExceptionHandler(CommandError.class)
   public void handleCommandError(final CommandSender sender, final CommandError error) {
     sender.sendMessage(error.getMessage());
+  }
+
+  public enum JailTimeAction {
+    ADD(Duration::plus),
+    SUBTRACT(Duration::minus),
+    SET((t1, t2) -> t2);
+
+    final BinaryOperator<Duration> op;
+    JailTimeAction(BinaryOperator<Duration> op) {
+      this.op = op;
+    }
   }
 }
