@@ -326,14 +326,14 @@ public final class CommandHandler {
   @Permission("betterjails.jailtime")
   @Command("jailtime <prisoner> <action> <time>")
   @CommandDescription("Increase, reduce, or modify the sentence time of a prisoner")
-  public void jailTimeAdd(
+  public void jailTime(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
       final ApiPrisoner prisoner,
       final JailTimeAction action,
       final Duration time
   ) {
-    final Duration newDuration = action.op.apply(prisoner.timeLeft(), (time));
+    final Duration newDuration = action.op.apply(prisoner.timeLeft(), time);
     final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
     this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), sender.getName(), newDuration, prisoner.imprisonmentReason(), false);
     sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(newDuration)));
