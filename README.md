@@ -37,6 +37,7 @@ been online for the required time.
 * `/jail info <player>` / Will print out in the chat some information about the jailed player stored
   in the player data file.
 * `/unjail <player>` / Teleports a jailed player back to where they were when jailed.
+* `/jailtime <player> (add|subtract|set) <time>` / Increase, reduce, or set the sentence time of a prisoner.
 * `/betterjails` / Prints the version of the plugin.
 * `/betterjails reload` / Reloads files into memory.
 * `/betterjails save` / Saves files from memory.

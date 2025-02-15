@@ -325,7 +325,7 @@ public final class CommandHandler {
 
   @Permission("betterjails.jailtime")
   @Command("jailtime <prisoner> <action> <time>")
-  @CommandDescription("Increase, reduce, or modify the sentence time of a prisoner")
+  @CommandDescription("Increase, reduce, or set the sentence time of a prisoner")
   public void jailTime(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
