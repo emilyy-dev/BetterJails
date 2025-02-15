@@ -123,6 +123,7 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
     private static final String SETJAIL_SUCCESS = "setjailSuccess";
     private static final String MODJAIL_SUCCESS = "modify-jail-success";
     private static final String DELJAIL_SUCCESS = "deljailSuccess";
+    private static final String JAILTIME_SUCCESS = "jailtime-success";
     private static final String RELOAD = "reload";
     private static final String SAVE = "save";
     private static final String LIST_NO_JAILS = "listNoJails";
@@ -187,6 +188,10 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
 
     public String deleteJailSuccess(final String executorName, final String jail) {
       return formatMessage(DELJAIL_SUCCESS, null, executorName, jail, null, null);
+    }
+
+    public String jailtimeSuccess(final String prisoner, final String executorName, final String duration) {
+      return formatMessage(JAILTIME_SUCCESS, prisoner, executorName, null, duration, null);
     }
 
     public String reloadData(final String executorName) {

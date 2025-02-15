@@ -60,6 +60,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
 
 import static io.github.emilyydev.betterjails.util.Util.color;
@@ -70,6 +71,9 @@ public final class CommandHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
   private static String durationString(Duration duration) {
+    if (duration.isZero() || duration.isNegative()) {
+      return "0s";
+    }
     final StringBuilder timeLeftBuilder = new StringBuilder();
     duration = appendAndTruncateIfApplicable(duration, ChronoUnit.DAYS, 'd', timeLeftBuilder);
     duration = appendAndTruncateIfApplicable(duration, ChronoUnit.HOURS, 'h', timeLeftBuilder);
@@ -153,15 +157,6 @@ public final class CommandHandler {
       final CommandSender sender,
       final ApiPrisoner prisoner
   ) {
-    final String executorName = sender.getName();
-    if (prisoner.released()) {
-      throw new CommandError(
-          ctx, CommandError.INFO_FAILED_PLAYER_NOT_JAILED,
-          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
-          CommandError.executorVariable(executorName)
-      );
-    }
-
     final ImmutableLocation lastLocation = prisoner.lastLocationNullable();
     final String lastLocationString = lastLocation == null
         ? color("&cunknown")
@@ -225,14 +220,6 @@ public final class CommandHandler {
       final ApiPrisoner prisoner
   ) {
     final String executorName = sender.getName();
-    if (prisoner.released()) {
-      throw new CommandError(
-          ctx, CommandError.UNJAIL_FAILED_PLAYER_NOT_JAILED,
-          CommandError.prisonerVariable(prisoner.nameOr("(unknown)")),
-          CommandError.executorVariable(sender.getName())
-      );
-    }
-
     this.plugin.prisonerData().releasePrisoner(prisoner, this.server.getOfflinePlayer(prisoner.uuid()), uuidOrNil(sender), executorName, true);
     this.server.broadcast(
         this.configuration.messages().releasePrisonerSuccess(prisoner.nameOr("(unknown)"), executorName),
@@ -336,6 +323,22 @@ public final class CommandHandler {
     }, this.plugin);
   }
 
+  @Permission("betterjails.jailtime")
+  @Command("jailtime <prisoner> <action> <time>")
+  @CommandDescription("Increase, reduce, or set the sentence time of a prisoner")
+  public void jailTime(
+      final CommandContext<CommandSender> ctx,
+      final CommandSender sender,
+      final ApiPrisoner prisoner,
+      final JailTimeAction action,
+      final Duration time
+  ) {
+    final Duration newDuration = action.op.apply(prisoner.timeLeft(), time);
+    final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
+    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), sender.getName(), newDuration, prisoner.imprisonmentReason(), false);
+    sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(newDuration)));
+  }
+
   @Permission("betterjails.betterjails")
   @Command("betterjails")
   @CommandDescription("Prints the version of the plugin")
@@ -392,7 +395,7 @@ public final class CommandHandler {
   public ApiPrisoner resolvePrisoner(final CommandContext<CommandSender> ctx, final CommandInput input) {
     final String name = input.readString();
     final ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(this.plugin.findUniqueId(name));
-    if (prisoner != null) {
+    if (prisoner != null && !prisoner.released()) {
       return prisoner;
     } else {
       throw new CommandError(ctx, CommandError.RESOLVE_PRISONER_FAILED, CommandError.prisonerVariable(name));
@@ -410,5 +413,16 @@ public final class CommandHandler {
   @ExceptionHandler(CommandError.class)
   public void handleCommandError(final CommandSender sender, final CommandError error) {
     sender.sendMessage(error.getMessage());
+  }
+
+  public enum JailTimeAction {
+    ADD(Duration::plus),
+    SUBTRACT(Duration::minus),
+    SET((t1, t2) -> t2);
+
+    final BinaryOperator<Duration> op;
+    JailTimeAction(BinaryOperator<Duration> op) {
+      this.op = op;
+    }
   }
 }

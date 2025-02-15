@@ -37,6 +37,7 @@ been online for the required time.
 * `/jail info <player>` / Will print out in the chat some information about the jailed player stored
   in the player data file.
 * `/unjail <player>` / Teleports a jailed player back to where they were when jailed.
+* `/jailtime <player> (add|subtract|set) <time>` / Increase, reduce, or set the sentence time of a prisoner.
 * `/betterjails` / Prints the version of the plugin.
 * `/betterjails reload` / Reloads files into memory.
 * `/betterjails save` / Saves files from memory.
@@ -54,6 +55,7 @@ All permissions default to operators only unless otherwise noted.
 * `betterjails.setjail` / Lets the user execute the `/setjail` command.
 * `betterjails.modjail` / Lets the user execute the `/modjail` command.
 * `betterjails.deljail` / Lets the user execute the `/deljail` command.
+* `betterjails.jailtime` / Lets the user execute the `/jailtime` command.
 * `betterjails.receivebroadcast` / Prints in the user's chat when a player has been jailed/unjailed.
 * `betterjails.betterjails` / Lets the user execute the `/betterjails` command. Permission defaults
   to true for all users.
