@@ -60,6 +60,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
 
 import static io.github.emilyydev.betterjails.util.Util.color;
@@ -322,48 +323,31 @@ public final class CommandHandler {
     }, this.plugin);
   }
 
+  public enum JailTimeAction {
+    ADD(Duration::plus),
+    SUBTRACT(Duration::minus),
+    SET((t1, t2) -> t2);
+
+    final BinaryOperator<Duration> op;
+    JailTimeAction(BinaryOperator<Duration> op) {
+      this.op = op;
+    }
+  }
+
   @Permission("betterjails.jailtime")
-  @Command("jailtime <prisoner> add <time>")
-  @CommandDescription("Adds more sentence time to a prisoner")
+  @Command("jailtime <prisoner> <action> <time>")
+  @CommandDescription("Increase, reduce, or modify the sentence time of a prisoner")
   public void jailTimeAdd(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
       final ApiPrisoner prisoner,
+      final JailTimeAction action,
       final Duration time
   ) {
-    final Duration newDuration = prisoner.timeLeft().plus(time);
+    final Duration newDuration = action.op.apply(prisoner.timeLeft(), (time));
     final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
     this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), sender.getName(), newDuration, prisoner.imprisonmentReason(), false);
     sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(newDuration)));
-  }
-
-  @Permission("betterjails.jailtime")
-  @Command("jailtime <prisoner> subtract <time>")
-  @CommandDescription("Subtracts sentence time from a prisoner")
-  public void jailTimeSubtract(
-      final CommandContext<CommandSender> ctx,
-      final CommandSender sender,
-      final ApiPrisoner prisoner,
-      final Duration time
-  ) {
-    final Duration newDuration = prisoner.timeLeft().minus(time);
-    final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
-    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), sender.getName(), newDuration, prisoner.imprisonmentReason(), false);
-    sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(newDuration)));
-  }
-
-  @Permission("betterjails.jailtime")
-  @Command("jailtime <prisoner> set <time>")
-  @CommandDescription("Sets the sentence time of a prisoner")
-  public void jailTimeSet(
-      final CommandContext<CommandSender> ctx,
-      final CommandSender sender,
-      final ApiPrisoner prisoner,
-      final Duration time
-  ) {
-    final OfflinePlayer player = this.server.getOfflinePlayer(prisoner.uuid());
-    this.plugin.prisonerData().addJailedPlayer(player, prisoner.jail(), uuidOrNil(sender), sender.getName(), time, prisoner.imprisonmentReason(), false);
-    sender.sendMessage(this.configuration.messages().jailtimeSuccess(prisoner.nameOr("(unknown)"), sender.getName(), durationString(time)));
   }
 
   @Permission("betterjails.betterjails")
