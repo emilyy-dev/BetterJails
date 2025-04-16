@@ -212,15 +212,17 @@ public final class CommandHandler {
   }
 
   @Permission("betterjails.unjail")
-  @Command("unjail|release <prisoner>")
+  @Command("unjail|release <prisoner> [teleport]")
   @CommandDescription("Releases an imprisoned player")
   public void releasePrisoner(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
-      final ApiPrisoner prisoner
-  ) {
+      final ApiPrisoner prisoner,
+      @Nullable final Boolean teleport
+      ) {
     final String executorName = sender.getName();
-    this.plugin.prisonerData().releasePrisoner(prisoner, this.server.getOfflinePlayer(prisoner.uuid()), uuidOrNil(sender), executorName, true);
+    final Boolean doTeleport = MoreObjects.firstNonNull(teleport, Boolean.TRUE);
+    this.plugin.prisonerData().releasePrisoner(prisoner, this.server.getOfflinePlayer(prisoner.uuid()), uuidOrNil(sender), executorName, doTeleport);
     this.server.broadcast(
         this.configuration.messages().releasePrisonerSuccess(prisoner.nameOr("(unknown)"), executorName),
         "betterjails.receivebroadcast"
