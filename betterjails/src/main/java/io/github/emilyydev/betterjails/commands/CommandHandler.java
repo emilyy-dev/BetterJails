@@ -41,6 +41,7 @@ import org.bukkit.entity.Player;
 import org.incendo.cloud.annotation.specifier.Greedy;
 import org.incendo.cloud.annotations.Command;
 import org.incendo.cloud.annotations.CommandDescription;
+import org.incendo.cloud.annotations.Default;
 import org.incendo.cloud.annotations.Permission;
 import org.incendo.cloud.annotations.exception.ExceptionHandler;
 import org.incendo.cloud.annotations.parser.Parser;
@@ -212,15 +213,16 @@ public final class CommandHandler {
   }
 
   @Permission("betterjails.unjail")
-  @Command("unjail|release <prisoner>")
+  @Command("unjail|release <prisoner> [teleport]")
   @CommandDescription("Releases an imprisoned player")
   public void releasePrisoner(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
-      final ApiPrisoner prisoner
-  ) {
+      final ApiPrisoner prisoner,
+      @Default("true") final boolean teleport
+      ) {
     final String executorName = sender.getName();
-    this.plugin.prisonerData().releasePrisoner(prisoner, this.server.getOfflinePlayer(prisoner.uuid()), uuidOrNil(sender), executorName, true);
+    this.plugin.prisonerData().releasePrisoner(prisoner, this.server.getOfflinePlayer(prisoner.uuid()), uuidOrNil(sender), executorName, teleport);
     this.server.broadcast(
         this.configuration.messages().releasePrisonerSuccess(prisoner.nameOr("(unknown)"), executorName),
         "betterjails.receivebroadcast"
