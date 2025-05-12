@@ -36,7 +36,8 @@ been online for the required time.
   The command optionally takes an imprisonment reason.
 * `/jail info <player>` / Will print out in the chat some information about the jailed player stored
   in the player data file.
-* `/unjail <player>` / Teleports a jailed player back to where they were when jailed.
+* `/unjail <player> [teleport]` / Releases an imprisoned player, (optionally) teleporting them back to the
+* location they were when jailed.
 * `/jailtime <player> (add|subtract|set) <time>` / Increase, reduce, or set the sentence time of a prisoner.
 * `/betterjails` / Prints the version of the plugin.
 * `/betterjails reload` / Reloads files into memory.
@@ -164,7 +165,7 @@ If you are using Maven, all you have to do is add the dependency itself that wil
 <dependency>
     <groupId>io.github.emilyy-dev</groupId>
     <artifactId>betterjails-api</artifactId>
-    <version>1.5</version>
+    <version>1.6</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -183,7 +184,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'io.github.emilyy-dev:betterjails-api:1.5'
+    compileOnly 'io.github.emilyy-dev:betterjails-api:1.6'
 }
 ```
 
@@ -196,17 +197,17 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.github.emilyy-dev:betterjails-api:1.5")
+    compileOnly("io.github.emilyy-dev:betterjails-api:1.6")
 }
 ```
 
 
 ### Manually
 
-If you want to manually add the API dependency to your classpath, you can obtain the jar by [downloading it from here](https://repo1.maven.org/maven2/io/github/emilyy-dev/betterjails-api/1.5/).
+If you want to manually add the API dependency to your classpath, you can obtain the jar by [downloading it from here](https://repo1.maven.org/maven2/io/github/emilyy-dev/betterjails-api/1.6/).
 
 
 ## Compiling
 
 You can compile this plugin by cloning the repository and running `./gradlew build` in the root
-directory of the project, you can find the final jar in `./betterjails/build/libs/betterjails-1.5.jar`.
+directory of the project, you can find the final jar in `./betterjails/build/libs/betterjails-1.6.jar`.
