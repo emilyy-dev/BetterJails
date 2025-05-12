@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2025 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -68,7 +68,7 @@ final class LuckPermsPermissionInterface extends AbstractPermissionInterface {
         user.getNodes(NodeType.INHERITANCE)
             .stream()
             // see below TODO
-            .filter(node -> node.getContexts().isEmpty())
+            .filter(node -> node.getContexts().isEmpty() && !node.hasExpiry())
             .map(InheritanceNode::getGroupName)
             .collect(Util.toImmutableSet())
     );
@@ -81,7 +81,8 @@ final class LuckPermsPermissionInterface extends AbstractPermissionInterface {
           // TODO consider non-contextual node removal? That renders a problem for later, as currently parent groups
           //  are stored as-is, no context information, therefore it is lost when re-adding the nodes back.
           //  Remove global nodes for now...
-          nodeMap.clear(ImmutableContextSet.empty(), NodeType.INHERITANCE::matches);
+          //  (same issue is present with temporary permissions)
+          nodeMap.clear(ImmutableContextSet.empty(), NodeType.INHERITANCE.predicate(node -> !node.hasExpiry()));
           nodeMap.add(this.prisonerGroupNode);
         })
         .thenCompose(ignored -> {
