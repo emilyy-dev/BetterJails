@@ -3,7 +3,6 @@ cloud = "2.0.0"
 cloud-paper = "2.0.0-beta.10"
 spigot = "1.8.8-R0.1-SNAPSHOT"
 bstats = "3.0.2"
-worldguard = "7.0.0"
 luckperms = "5.4"
 vault = "1.7"
 essentialsx = "2.18.2"
@@ -17,7 +16,6 @@ cloud-annotations = { module = "org.incendo:cloud-annotations", version.ref = "c
 cloud-paper = { module = "org.incendo:cloud-paper", version.ref = "cloud-paper" }
 spigot = { module = "org.spigotmc:spigot-api", version.ref = "spigot" }
 bstats = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
-worldguard = { module = "com.sk89q.worldguard:worldguard-bukkit", version.ref = "worldguard" }
 luckperms = { module = "net.luckperms:api", version.ref = "luckperms" }
 vault = { module = "com.github.MilkBowl:VaultAPI", version.ref = "vault" }
 essentialsx = { module = "net.ess3:EssentialsX", version.ref = "essentialsx" }

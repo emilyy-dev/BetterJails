@@ -62,15 +62,15 @@ public final class PlayerListeners implements Listener {
     final PluginManager pluginManager = this.plugin.getServer().getPluginManager();
     pluginManager.registerEvent(
         PlayerSpawnLocationEvent.class, this, EventPriority.HIGH,
-        (l, e) -> playerSpawn((PlayerSpawnLocationEvent) e), this.plugin
+        (l, e) -> ((PlayerListeners) l).playerSpawn((PlayerSpawnLocationEvent) e), this.plugin
     );
     pluginManager.registerEvent(
         PlayerQuitEvent.class, this, EventPriority.NORMAL,
-        (l, e) -> playerQuit((PlayerQuitEvent) e), this.plugin
+        (l, e) -> ((PlayerListeners) l).playerQuit((PlayerQuitEvent) e), this.plugin
     );
     pluginManager.registerEvent(
         PlayerRespawnEvent.class, this, EventPriority.HIGH,
-        (l, e) -> playerRespawn((PlayerRespawnEvent) e), this.plugin
+        (l, e) -> ((PlayerListeners) l).playerRespawn((PlayerRespawnEvent) e), this.plugin
     );
   }
 

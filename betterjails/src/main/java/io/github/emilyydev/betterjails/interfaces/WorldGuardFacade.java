@@ -24,32 +24,61 @@
 
 package io.github.emilyydev.betterjails.interfaces;
 
-import com.sk89q.worldguard.LocalPlayer;
-import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import org.bukkit.entity.Player;
 
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
+
+import static java.lang.invoke.MethodHandles.Lookup;
+import static java.lang.invoke.MethodHandles.dropArguments;
+import static java.lang.invoke.MethodHandles.exactInvoker;
+import static java.lang.invoke.MethodHandles.filterArguments;
+import static java.lang.invoke.MethodHandles.filterReturnValue;
+import static java.lang.invoke.MethodHandles.lookup;
+import static java.lang.invoke.MethodType.methodType;
 
 public final class WorldGuardFacade {
 
-  private static final MethodHandle RESET_STATE_INTERNAL_MH;
+  private static final MethodHandle RESET_STATE;
 
   static {
     try {
-      final MethodHandles.Lookup lookup = MethodHandles.lookup();
-      MethodHandle resetStateMh = lookup.findStatic(WorldGuardFacade.class, "resetStateNop", MethodType.methodType(void.class, Player.class));
+      final Lookup lookup = lookup();
+      MethodHandle resetState = lookup.findStatic(WorldGuardFacade.class, "empty", methodType(void.class));
+      resetState = dropArguments(resetState, 0, Player.class);
       try {
-        final Class<?> sessionManagerClass = Class.forName("com.sk89q.worldguard.session.SessionManager");
-        if (sessionManagerClass.isInterface()) { // 7.x
-          resetStateMh = lookup.findStatic(WorldGuardFacade.class, "resetState0", MethodType.methodType(void.class, Player.class));
+        final Class<?> SessionManager = Class.forName("com.sk89q.worldguard.session.SessionManager");
+        if (SessionManager.isInterface()) { // 7.x
+          final Class<?> WorldGuardPlugin = Class.forName("com.sk89q.worldguard.bukkit.WorldGuardPlugin");
+          final Class<?> WorldGuard = Class.forName("com.sk89q.worldguard.WorldGuard");
+          final Class<?> WorldGuardPlatform = Class.forName("com.sk89q.worldguard.internal.platform.WorldGuardPlatform");
+          final Class<?> LocalPlayer = Class.forName("com.sk89q.worldguard.LocalPlayer");
+
+          // WorldGuard.getInstance().getPlatform().getSessionManager().resetState(WorldGuardPlugin.inst().wrapPlayer(player));
+
+          final MethodHandle WorldGuardPlugin_inst = lookup.findStatic(WorldGuardPlugin, "inst", methodType(WorldGuardPlugin));
+          final MethodHandle WorldGuardPlugin_wrapPlayer = lookup.findVirtual(WorldGuardPlugin, "wrapPlayer", methodType(LocalPlayer, Player.class));
+
+          final MethodHandle WorldGuard_getInstance = lookup.findStatic(WorldGuard, "getInstance", methodType(WorldGuard));
+          final MethodHandle WorldGuard_getPlatform = lookup.findVirtual(WorldGuard, "getPlatform", methodType(WorldGuardPlatform));
+          final MethodHandle WorldGuardPlatform_getSessionManager = lookup.findVirtual(WorldGuardPlatform, "getSessionManager", methodType(SessionManager));
+          final MethodHandle SessionManager_resetState = lookup.findVirtual(SessionManager, "resetState", methodType(void.class, LocalPlayer));
+
+          MethodHandle wrapPlayer = WorldGuardPlugin_wrapPlayer;                                    // (WorldGuardPlugin,Player)LocalPlayer
+          wrapPlayer = filterArguments(wrapPlayer, 0, exactInvoker(methodType(WorldGuardPlugin)));  // (MethodHandle,Player)LocalPlayer
+          wrapPlayer = wrapPlayer.bindTo(WorldGuardPlugin_inst);                                    // (Player)LocalPlayer
+
+          MethodHandle getSessionManager = WorldGuard_getInstance;                                        // ()WorldGuard
+          getSessionManager = filterReturnValue(getSessionManager, WorldGuard_getPlatform);               // ()WorldGuardPlatform
+          getSessionManager = filterReturnValue(getSessionManager, WorldGuardPlatform_getSessionManager); // ()SessionManager
+
+          resetState = SessionManager_resetState;                                                             // (SessionManager,LocalPlayer)void
+          resetState = filterArguments(resetState, 0, exactInvoker(methodType(SessionManager)), wrapPlayer);  // (MethodHandle,Player)void
+          resetState = resetState.bindTo(getSessionManager);                                                  // (Player)void
         } // TODO: <=1.12
       } catch (final ClassNotFoundException ignored) {
       }
 
-      RESET_STATE_INTERNAL_MH = resetStateMh;
+      RESET_STATE = resetState;
     } catch (final NoSuchMethodException | IllegalAccessException ex) {
       throw new ExceptionInInitializerError(ex);
     }
@@ -57,7 +86,7 @@ public final class WorldGuardFacade {
 
   public static void resetState(final Player player) {
     try {
-      RESET_STATE_INTERNAL_MH.invokeExact(player);
+      RESET_STATE.invokeExact(player);
     } catch (final RuntimeException | Error ex) {
       throw ex;
     } catch (final Throwable ex) {
@@ -65,11 +94,6 @@ public final class WorldGuardFacade {
     }
   }
 
-  private static void resetState0(final Player player) {
-    final LocalPlayer localPlayer = WorldGuardPlugin.inst().wrapPlayer(player);
-    WorldGuard.getInstance().getPlatform().getSessionManager().resetState(localPlayer);
-  }
-
-  private static void resetStateNop(final Player player) {
+  private static void empty() {
   }
 }

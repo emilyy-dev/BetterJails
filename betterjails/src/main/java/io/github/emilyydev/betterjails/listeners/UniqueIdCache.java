@@ -25,12 +25,13 @@
 package io.github.emilyydev.betterjails.listeners;
 
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.PluginMetrics;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -53,8 +54,8 @@ public final class UniqueIdCache implements Listener {
     }
 
     server.getPluginManager().registerEvent(
-        PlayerLoginEvent.class, this, EventPriority.MONITOR,
-        (l, e) -> playerLogin((PlayerLoginEvent) e), plugin
+        PlayerJoinEvent.class, this, EventPriority.MONITOR,
+        (l, e) -> ((UniqueIdCache) l).playerLogin((PlayerJoinEvent) e), plugin
     );
   }
 
@@ -62,10 +63,16 @@ public final class UniqueIdCache implements Listener {
     return this.cache.getOrDefault(name.toLowerCase(Locale.ROOT), NIL_UUID);
   }
 
-  private void playerLogin(final PlayerLoginEvent event) {
-    if (event.getResult() == PlayerLoginEvent.Result.ALLOWED) {
-      final Player player = event.getPlayer();
-      this.cache.putIfAbsent(player.getName().toLowerCase(Locale.ROOT), player.getUniqueId());
-    }
+  @PluginMetrics.Metric(
+      metric = PluginMetrics.ID_CACHE_SIZE,
+      trackedFor = "Determining whether to replace the on-memory cache with SQLite"
+  )
+  public int cacheSize() {
+    return this.cache.size();
+  }
+
+  private void playerLogin(final PlayerJoinEvent event) {
+    final Player player = event.getPlayer();
+    this.cache.putIfAbsent(player.getName().toLowerCase(Locale.ROOT), player.getUniqueId());
   }
 }

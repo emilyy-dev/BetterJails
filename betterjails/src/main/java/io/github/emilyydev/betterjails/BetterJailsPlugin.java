@@ -122,6 +122,14 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
     return this.uniqueIdCache.findUniqueId(name);
   }
 
+  @PluginMetrics.Metric(
+      metric = PluginMetrics.ID_CACHE_SIZE,
+      trackedFor = "Determining whether to replace the on-memory name-id cache with SQLite"
+  )
+  public int uniqueIdCacheSize() {
+    return this.uniqueIdCache.cacheSize();
+  }
+
   public PrisonerDataHandler prisonerData() {
     return this.prisonerData;
   }

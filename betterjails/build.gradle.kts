@@ -1,13 +1,11 @@
 plugins {
   id("buildlogic.java-conventions")
-  id("com.gradleup.shadow") version "8.3.1"
+  id("com.gradleup.shadow") version "8.3.8"
   id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
 repositories {
   maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
-  maven("https://oss.sonatype.org/content/repositories/snapshots/")
-  maven("https://maven.enginehub.org/repo/")
   maven("https://repo.essentialsx.net/releases")
   maven("https://jitpack.io")
 
@@ -23,7 +21,6 @@ dependencies {
 
   compileOnly(libs.spigot)
   implementation(libs.bstats)
-  compileOnly(libs.worldguard) { exclude("org.bukkit") }
   compileOnly(libs.luckperms)
   compileOnly(libs.vault) { isTransitive = false }
   compileOnly(libs.essentialsx) { isTransitive = false }
@@ -78,7 +75,7 @@ tasks {
   }
 
   runServer {
-    minecraftVersion("1.21.1")
+    minecraftVersion("1.21.7")
     systemProperty("disable.watchdog", true)
   }
 }
