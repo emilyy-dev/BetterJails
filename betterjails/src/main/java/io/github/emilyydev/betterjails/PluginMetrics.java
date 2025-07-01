@@ -28,21 +28,46 @@ import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.AdvancedPie;
 import org.bstats.charts.SimplePie;
+import org.intellij.lang.annotations.MagicConstant;
 
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static java.lang.annotation.ElementType.CONSTRUCTOR;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.LOCAL_VARIABLE;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PACKAGE;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE;
+
 public final class PluginMetrics {
+
+  @PluginMetrics.Metric(
+      metric = PluginMetrics.ID_CACHE_SIZE,
+      trackedFor = "Determining whether to replace the on-memory cache with SQLite"
+  )
+  public static final String ID_CACHE_SIZE = "id_cache_size";
+
+  public static final String JAIL_COUNT = "jail_count";
+  public static final String PRISONER_COUNT = "prisoner_count";
+  public static final String PERMISSION_PLUGIN_HOOK = "permission_plugin_hook";
+  public static final String SENTENCE_TIME = "sentence_time";
 
   private static final int BSTATS_ID = 9015;
 
   public static Metrics prepareMetrics(final BetterJailsPlugin plugin) {
     final Metrics metrics = new Metrics(plugin, BSTATS_ID);
-    metrics.addCustomChart(new SimplePie("jail_count", () -> String.valueOf(plugin.jailData().getJails().size())));
-    metrics.addCustomChart(new SimplePie("prisoner_count", () -> String.valueOf(plugin.prisonerData().getAllPrisoners().size())));
-    metrics.addCustomChart(new SimplePie("permission_plugin_hook", () -> plugin.permissionInterface().name()));
-    metrics.addCustomChart(new AdvancedPie("sentence_time", () -> {
+    metrics.addCustomChart(new SimplePie(ID_CACHE_SIZE, () -> String.valueOf(plugin.uniqueIdCacheSize())));
+    metrics.addCustomChart(new SimplePie(JAIL_COUNT, () -> String.valueOf(plugin.jailData().getJails().size())));
+    metrics.addCustomChart(new SimplePie(PRISONER_COUNT, () -> String.valueOf(plugin.prisonerData().getAllPrisoners().size())));
+    metrics.addCustomChart(new SimplePie(PERMISSION_PLUGIN_HOOK, () -> plugin.permissionInterface().name()));
+    metrics.addCustomChart(new AdvancedPie(SENTENCE_TIME, () -> {
       final Map<String, Integer> map = new LinkedHashMap<>();
       for (final Prisoner prisoner : plugin.prisonerData().getAllPrisoners()) {
         final Duration sentenceTime = prisoner.totalSentenceTime();
@@ -75,5 +100,32 @@ public final class PluginMetrics {
   }
 
   private PluginMetrics() {
+  }
+
+  /**
+   * Annotates a type, field, method, parameter, constructor, local variable, or package that exists solely for
+   * statistic tracking and decision making, and might be removed in the future when the metric is no longer needed.
+   */
+  @Retention(RetentionPolicy.CLASS)
+  @Target({TYPE, FIELD, METHOD, PARAMETER, CONSTRUCTOR, LOCAL_VARIABLE, PACKAGE})
+  @Repeatable(MetricContainer.class)
+  public @interface Metric {
+
+    /**
+     * {@return the metric identifier the annotated element is used to track}
+     */
+    @MagicConstant(valuesFromClass = PluginMetrics.class) String metric();
+
+    /**
+     * {@return the reason for this metric to exist and measure what it does}
+     */
+    String trackedFor();
+  }
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target({TYPE, FIELD, METHOD, PARAMETER, CONSTRUCTOR, LOCAL_VARIABLE, PACKAGE})
+  public @interface MetricContainer {
+
+    Metric[] value();
   }
 }
