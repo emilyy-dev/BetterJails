@@ -27,13 +27,11 @@ package io.github.emilyydev.betterjails.interfaces;
 import org.bukkit.entity.Player;
 
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 
-import static java.lang.invoke.MethodHandles.Lookup;
 import static java.lang.invoke.MethodHandles.dropArguments;
 import static java.lang.invoke.MethodHandles.exactInvoker;
 import static java.lang.invoke.MethodHandles.filterArguments;
-import static java.lang.invoke.MethodHandles.filterReturnValue;
-import static java.lang.invoke.MethodHandles.lookup;
 import static java.lang.invoke.MethodType.methodType;
 
 public final class WorldGuardFacade {
@@ -42,9 +40,9 @@ public final class WorldGuardFacade {
 
   static {
     try {
-      final Lookup lookup = lookup();
-      MethodHandle resetState = lookup.findStatic(WorldGuardFacade.class, "empty", methodType(void.class));
-      resetState = dropArguments(resetState, 0, Player.class);
+      final MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle resetState = lookup.findStatic(WorldGuardFacade.class, "empty", methodType(void.class)); // ()void
+      resetState = dropArguments(resetState, 0, Player.class);                                              // (Player)void
       try {
         final Class<?> SessionManager = Class.forName("com.sk89q.worldguard.session.SessionManager");
         if (SessionManager.isInterface()) { // 7.x
@@ -67,13 +65,11 @@ public final class WorldGuardFacade {
           wrapPlayer = filterArguments(wrapPlayer, 0, exactInvoker(methodType(WorldGuardPlugin)));  // (MethodHandle,Player)LocalPlayer
           wrapPlayer = wrapPlayer.bindTo(WorldGuardPlugin_inst);                                    // (Player)LocalPlayer
 
-          MethodHandle getSessionManager = WorldGuard_getInstance;                                        // ()WorldGuard
-          getSessionManager = filterReturnValue(getSessionManager, WorldGuard_getPlatform);               // ()WorldGuardPlatform
-          getSessionManager = filterReturnValue(getSessionManager, WorldGuardPlatform_getSessionManager); // ()SessionManager
-
-          resetState = SessionManager_resetState;                                                             // (SessionManager,LocalPlayer)void
-          resetState = filterArguments(resetState, 0, exactInvoker(methodType(SessionManager)), wrapPlayer);  // (MethodHandle,Player)void
-          resetState = resetState.bindTo(getSessionManager);                                                  // (Player)void
+          resetState = SessionManager_resetState;                                                         // (SessionManager,LocalPlayer)void
+          resetState = filterArguments(resetState, 0, WorldGuardPlatform_getSessionManager, wrapPlayer);  // (WorldGuardPlatform,Player)void
+          resetState = filterArguments(resetState, 0, WorldGuard_getPlatform);                            // (WorldGuard,Player)void
+          resetState = filterArguments(resetState, 0, exactInvoker(methodType(WorldGuard)));              // (MethodHandle,Player)void
+          resetState = resetState.bindTo(WorldGuard_getInstance);                                         // (Player)void
         } // TODO: <=1.12
       } catch (final ClassNotFoundException ignored) {
       }
