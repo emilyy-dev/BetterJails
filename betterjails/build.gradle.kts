@@ -15,8 +15,12 @@ repositories {
 
 dependencies {
   implementation(project(":betterjails-api"))
+  implementation(platform(libs.cloud.bom))
+  implementation(platform(libs.cloud.minecraft.bom))
   implementation(libs.cloud.paper)
   implementation(libs.cloud.annotations)
+
+  annotationProcessor(platform(libs.cloud.bom))
   annotationProcessor(libs.cloud.annotations)
 
   compileOnly(libs.spigot)
