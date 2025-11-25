@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2025 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -63,40 +63,57 @@ public final class PluginMetrics {
 
   public static Metrics prepareMetrics(final BetterJailsPlugin plugin) {
     final Metrics metrics = new Metrics(plugin, BSTATS_ID);
-    metrics.addCustomChart(new SimplePie(ID_CACHE_SIZE, () -> String.valueOf(plugin.uniqueIdCacheSize())));
+    metrics.addCustomChart(new SimplePie(ID_CACHE_SIZE, () -> determineUniqueIdCacheSizeShorthand(plugin)));
     metrics.addCustomChart(new SimplePie(JAIL_COUNT, () -> String.valueOf(plugin.jailData().getJails().size())));
     metrics.addCustomChart(new SimplePie(PRISONER_COUNT, () -> String.valueOf(plugin.prisonerData().getAllPrisoners().size())));
     metrics.addCustomChart(new SimplePie(PERMISSION_PLUGIN_HOOK, () -> plugin.permissionInterface().name()));
-    metrics.addCustomChart(new AdvancedPie(SENTENCE_TIME, () -> {
-      final Map<String, Integer> map = new LinkedHashMap<>();
-      for (final Prisoner prisoner : plugin.prisonerData().getAllPrisoners()) {
-        final Duration sentenceTime = prisoner.totalSentenceTime();
-        if (sentenceTime.isZero()) {
-          continue;
-        }
-
-        final String key;
-        if (sentenceTime.compareTo(Duration.ofMinutes(1L)) <= 0) {
-          key = "<= 1m";
-        } else if (sentenceTime.compareTo(Duration.ofMinutes(10L)) <= 0) {
-          key = "<= 10m";
-        } else if (sentenceTime.compareTo(Duration.ofHours(1L)) <= 0) {
-          key = "<= 1h";
-        } else if (sentenceTime.compareTo(Duration.ofHours(10L)) <= 0) {
-          key = "<= 10h";
-        } else if (sentenceTime.compareTo(Duration.ofDays(1L)) <= 0) {
-          key = "<= 1d";
-        } else {
-          key = "> 1d";
-        }
-
-        map.merge(key, 1, Integer::sum);
-      }
-
-      return map;
-    }));
+    metrics.addCustomChart(new AdvancedPie(SENTENCE_TIME, () -> collectSentenceTimes(plugin)));
 
     return metrics;
+  }
+
+  private static String determineUniqueIdCacheSizeShorthand(final BetterJailsPlugin plugin) {
+    final int uniqueIdCacheSize = plugin.uniqueIdCacheSize();
+    if (uniqueIdCacheSize <= 10) {
+      return "<= 10";
+    } else if (uniqueIdCacheSize <= 100) {
+      return "<= 100";
+    } else if (uniqueIdCacheSize <= 1000) {
+      return "<= 1,000";
+    } else if (uniqueIdCacheSize <= 10000) {
+      return "<= 10,000";
+    } else {
+      return "> 10,000";
+    }
+  }
+
+  private static Map<String, Integer> collectSentenceTimes(final BetterJailsPlugin plugin) {
+    final Map<String, Integer> map = new LinkedHashMap<>();
+    for (final Prisoner prisoner : plugin.prisonerData().getAllPrisoners()) {
+      final Duration sentenceTime = prisoner.totalSentenceTime();
+      if (!sentenceTime.isZero()) {
+        final String key = determineSentenceTimeShorthand(sentenceTime);
+        map.merge(key, 1, Integer::sum);
+      }
+    }
+
+    return map;
+  }
+
+  private static String determineSentenceTimeShorthand(final Duration sentenceTime) {
+    if (sentenceTime.compareTo(Duration.ofMinutes(1L)) <= 0) {
+      return "<= 1m";
+    } else if (sentenceTime.compareTo(Duration.ofMinutes(10L)) <= 0) {
+      return "<= 10m";
+    } else if (sentenceTime.compareTo(Duration.ofHours(1L)) <= 0) {
+      return "<= 1h";
+    } else if (sentenceTime.compareTo(Duration.ofHours(10L)) <= 0) {
+      return "<= 10h";
+    } else if (sentenceTime.compareTo(Duration.ofDays(1L)) <= 0) {
+      return "<= 1d";
+    } else {
+      return "> 1d";
+    }
   }
 
   private PluginMetrics() {

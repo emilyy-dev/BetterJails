@@ -1,15 +1,17 @@
 [versions]
 cloud = "2.0.0"
-cloud-minecraft = "2.0.0-beta.11"
+cloud-minecraft = "2.0.0-beta.13"
 spigot = "1.8.8-R0.1-SNAPSHOT"
-bstats = "3.0.2"
+bstats = "3.1.0"
 luckperms = "5.4"
-vault = "1.7"
+vault = "1.7.1"
 essentialsx = "2.18.2"
 annotations = "20.1.0"
 slf4j = "2.0.16"
 junit = "5.10.2"
 mockbukkit = "3.71.0"
+shadow = "8.3.9"
+run-paper = "3.0.2"
 
 [libraries]
 cloud-bom = { module = "org.incendo:cloud-bom", version.ref = "cloud" }
@@ -26,3 +28,7 @@ slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-impl = { module = "org.slf4j:slf4j-jdk14", version.ref = "slf4j" }
 junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 mockbukkit = { module = "com.github.seeseemelk:MockBukkit-v1.20", version.ref = "mockbukkit" }
+
+[plugins]
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "run-paper" }
