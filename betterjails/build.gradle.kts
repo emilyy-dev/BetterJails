@@ -1,7 +1,7 @@
 plugins {
   id("buildlogic.java-conventions")
-  id("com.gradleup.shadow") version "8.3.8"
-  id("xyz.jpenilla.run-paper") version "2.3.1"
+  alias(libs.plugins.shadow)
+  alias(libs.plugins.run.paper)
 }
 
 repositories {
@@ -26,7 +26,7 @@ dependencies {
   compileOnly(libs.spigot)
   implementation(libs.bstats)
   compileOnly(libs.luckperms)
-  compileOnly(libs.vault) { isTransitive = false }
+  compileOnly(libs.vault)
   compileOnly(libs.essentialsx) { isTransitive = false }
   compileOnly(libs.annotations)
   implementation(libs.slf4j.api)
@@ -55,7 +55,7 @@ tasks {
     relocate("org.slf4j", "io.github.emilyydev.betterjails.slf4j")
   }
 
-  withType<Jar> {
+  withType<Jar>().configureEach {
     manifest.attributes["paperweight-mappings-namespace"] = "mojang"
   }
 
@@ -64,6 +64,7 @@ tasks {
   }
 
   processResources {
+    val version = project.version
     inputs.property("version", version)
     filesMatching("plugin.yml") {
       expand("version" to version)
@@ -79,7 +80,7 @@ tasks {
   }
 
   runServer {
-    minecraftVersion("1.21.7")
+    minecraftVersion("1.21.10")
     systemProperty("disable.watchdog", true)
   }
 }

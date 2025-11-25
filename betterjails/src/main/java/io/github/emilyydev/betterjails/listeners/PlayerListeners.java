@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2025 emilyy-dev
 // Copyright (c) 2024 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,6 +35,7 @@ import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.PluginManager;
@@ -65,6 +66,10 @@ public final class PlayerListeners implements Listener {
         (l, e) -> ((PlayerListeners) l).playerSpawn((PlayerSpawnLocationEvent) e), this.plugin
     );
     pluginManager.registerEvent(
+        PlayerJoinEvent.class, this, EventPriority.NORMAL,
+        (l, e) -> ((PlayerListeners) l).playerJoin((PlayerJoinEvent) e), this.plugin
+    );
+    pluginManager.registerEvent(
         PlayerQuitEvent.class, this, EventPriority.NORMAL,
         (l, e) -> ((PlayerListeners) l).playerQuit((PlayerQuitEvent) e), this.plugin
     );
@@ -79,46 +84,57 @@ public final class PlayerListeners implements Listener {
     final UUID uuid = player.getUniqueId();
 
     ApiPrisoner prisoner = this.plugin.prisonerData().getPrisoner(uuid);
-    if (prisoner != null) {
-      if (prisoner.released() || player.hasPermission("betterjails.jail.exempt")) {
-        // The player has been released...
-        // put them back where they were if there is no release location, and at the release location otherwise
-        final ImmutableLocation lastLocation = prisoner.lastLocationNullable();
-        final ImmutableLocation releaseLocation = prisoner.jail().releaseLocation();
-        if (releaseLocation != null) {
-          event.setSpawnLocation(releaseLocation.mutable());
-        } else if (lastLocation != null) {
-          event.setSpawnLocation(lastLocation.mutable());
-        }
-
-        this.plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, null, false);
-      } else {
-        if (prisoner.unknownLastLocation()) {
-          prisoner = prisoner.withLastLocation(ImmutableLocation.copyOf(player.getLocation()));
-
-          // Must be delayed by 1 tick, otherwise player.isOnline() is false and stuff explodes
-          final String jailedBy = prisoner.jailedBy() == null ? "" : prisoner.jailedBy();
-          this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
-            final SubCommandsConfiguration.SubCommands subCommands = this.plugin.subCommands().onJail();
-            subCommands.executeAsPrisoner(this.plugin.getServer(), player, jailedBy);
-            subCommands.executeAsConsole(this.plugin.getServer(), player, jailedBy);
-          }, 1);
-        }
-
-        prisoner = prisoner.withTimeRunning();
-        this.plugin.prisonerData().savePrisoner(prisoner).exceptionally(error -> {
-          LOGGER.error("An error occurred saving data for prisoner {}", uuid, error);
-          return null;
-        });
-        event.setSpawnLocation(prisoner.jail().location().mutable());
-      }
+    if (prisoner == null) {
+      return;
     }
 
+    if (prisoner.released() || player.hasPermission("betterjails.jail.exempt")) {
+      // The player has been released...
+      // put them back where they were if there is no release location, and at the release location otherwise
+      final ImmutableLocation lastLocation = prisoner.lastLocationNullable();
+      final ImmutableLocation releaseLocation = prisoner.jail().releaseLocation();
+      if (releaseLocation != null) {
+        event.setSpawnLocation(releaseLocation.mutable());
+      } else if (lastLocation != null) {
+        event.setSpawnLocation(lastLocation.mutable());
+      }
+
+      this.plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, null, false);
+      return;
+    }
+
+    if (prisoner.unknownLastLocation()) {
+      prisoner = prisoner.withLastLocation(ImmutableLocation.copyOf(player.getLocation()));
+
+      // Must be delayed by 1 tick, otherwise player.isOnline() is false and stuff explodes
+      final String jailedBy = prisoner.jailedBy() == null ? "" : prisoner.jailedBy();
+      this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
+        final SubCommandsConfiguration.SubCommands subCommands = this.plugin.subCommands().onJail();
+        subCommands.executeAsPrisoner(this.plugin.getServer(), player, jailedBy);
+        subCommands.executeAsConsole(this.plugin.getServer(), player, jailedBy);
+      }, 1);
+    }
+
+    prisoner = prisoner.withTimeRunning();
+    this.plugin.prisonerData().savePrisoner(prisoner).exceptionally(error -> {
+      LOGGER.error("An error occurred saving data for prisoner {}", uuid, error);
+      return null;
+    });
+    event.setSpawnLocation(prisoner.jail().location().mutable());
+  }
+
+  private void playerJoin(final PlayerJoinEvent event) {
+    final Player player = event.getPlayer();
+    final UUID uuid = player.getUniqueId();
     if (player.hasPermission("betterjails.receivebroadcast")) {
       this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () ->
           UpdateChecker.fetchRemoteVersion(this.plugin).thenAccept(version -> {
-            if (!this.plugin.getDescription().getVersion().equals(version)) {
-              player.sendMessage(Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version));
+            final boolean versionChanged = !this.plugin.getDescription().getVersion().equals(version);
+            final Player callbackPlayer = this.plugin.getServer().getPlayer(uuid);
+            if (versionChanged && callbackPlayer != null) {
+              callbackPlayer.sendMessage(
+                  Util.color("&7[&bBetterJails&7] &3New version &b%s &3for &bBetterJails &3available.", version)
+              );
             }
           }), 100L);
     }
