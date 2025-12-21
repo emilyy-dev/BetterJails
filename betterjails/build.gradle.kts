@@ -33,6 +33,7 @@ dependencies {
   runtimeOnly(libs.slf4j.impl)
 
   testImplementation(libs.junit)
+  testRuntimeOnly(libs.junit.platform)
   testImplementation(libs.mockbukkit)
 }
 
