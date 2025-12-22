@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2025 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,8 +25,6 @@
 package io.github.emilyydev.betterjails.data.upgrade.jail;
 
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
-import io.github.emilyydev.betterjails.BetterJailsPlugin;
-import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -36,15 +34,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public final class JailV1ToV2 implements DataUpgrader {
+public final class ObsoleteJailsV1ToV2 {
 
   private static final String JAILS_FIELD = "jails";
 
   private static final String NAME_FIELD = "name";
   private static final String LOCATION_FIELD = "location";
 
-  @Override
-  public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
+  public static void upgrade(final ConfigurationSection config) {
     final Set<String> keys = config.getKeys(false);
     final List<Map<String, Object>> jails = new ArrayList<>();
     for (final String name : keys) {
