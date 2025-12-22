@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2025 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -183,13 +183,11 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
       this.subCommands.load();
 
       alertNewConfigAvailable();
+      getServer().getServicesManager().register(BetterJails.class, this.api, this, ServicePriority.Normal);
     } catch (final IOException | InvalidConfigurationException ex) {
       this.failedToLoad = true;
       LOGGER.error("The configuration failed to load, the plugin will not load", ex);
-      return;
     }
-
-    getServer().getServicesManager().register(BetterJails.class, this.api, this, ServicePriority.Normal);
   }
 
   @Override
@@ -233,7 +231,7 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
         // Jails must be loaded first, loading prisoners depends on jails already being loaded
         this.jailData.load();
         this.prisonerData.load();
-      } catch (final IOException | RuntimeException ex) {
+      } catch (final Throwable ex) {
         LOGGER.error("Error loading plugin data, the plugin will disable", ex);
         pluginManager.disablePlugin(this);
       }
@@ -269,20 +267,22 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
     try {
       this.prisonerData.save().get();
     } catch (final InterruptedException | ExecutionException ex) {
+      if (ex instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
       LOGGER.error("Could not save prisoner data files", ex);
     }
 
     try {
       this.jailData.save().get();
     } catch (final InterruptedException | ExecutionException ex) {
+      if (ex instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
       LOGGER.error("Could not save jails data file", ex);
     }
 
-    try {
-      this.storageAccess.close();
-    } catch (final InterruptedException ignored) {
-    }
-
+    this.storageAccess.close();
     this.permissionInterface.close();
 
     this.eventBus.unsubscribeAll();

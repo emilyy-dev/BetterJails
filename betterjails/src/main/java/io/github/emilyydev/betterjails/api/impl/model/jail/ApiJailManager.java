@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2025 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -61,6 +61,7 @@ public final class ApiJailManager implements JailManager {
       this.jailData.addJail(name, ImmutableLocation.copyOf(location)).get();
     } catch (final InterruptedException ex) {
       // bleh
+      Thread.currentThread().interrupt();
     } catch (final ExecutionException ex) {
       throw new RuntimeException(ex.getCause());
     }
@@ -82,6 +83,7 @@ public final class ApiJailManager implements JailManager {
       this.jailData.removeJail(jail).get();
     } catch (final InterruptedException ex) {
       // bleh
+      Thread.currentThread().interrupt();
     } catch (final ExecutionException ex) {
       throw new RuntimeException(ex.getCause());
     }
