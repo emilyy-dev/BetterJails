@@ -58,6 +58,7 @@ public final class PluginMetrics {
   public static final String PRISONER_COUNT = "prisoner_count";
   public static final String PERMISSION_PLUGIN_HOOK = "permission_plugin_hook";
   public static final String SENTENCE_TIME = "sentence_time";
+  public static final String LONG_VERSION = "long_version";
 
   private static final int BSTATS_ID = 9015;
 
@@ -68,6 +69,12 @@ public final class PluginMetrics {
     metrics.addCustomChart(new SimplePie(PRISONER_COUNT, () -> String.valueOf(plugin.prisonerData().getAllPrisoners().size())));
     metrics.addCustomChart(new SimplePie(PERMISSION_PLUGIN_HOOK, () -> plugin.permissionInterface().name()));
     metrics.addCustomChart(new AdvancedPie(SENTENCE_TIME, () -> collectSentenceTimes(plugin)));
+
+    final String serverSoftware = plugin.getServer().getName();
+    final String serverVersion = plugin.getServer().getBukkitVersion();
+    final String pluginVersion = plugin.getDescription().getVersion();
+    final String longVersion = String.format("%s - %s - %s", serverSoftware, serverVersion, pluginVersion);
+    metrics.addCustomChart(new SimplePie(LONG_VERSION, () -> longVersion));
 
     return metrics;
   }
