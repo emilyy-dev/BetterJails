@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2025 emilyy-dev
 // Copyright (c) 2024 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -49,6 +49,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -162,9 +163,16 @@ public final class BukkitConfigurationStorage implements StorageInterface {
         final String jailName = yaml.getString(JAIL_FIELD);
         Jail jail = this.plugin.jailData().getJail(jailName);
         if (jail == null) {
-          // If the jail has been removed, just fall back to the first jail in the config. If there are no jails, this
-          // will throw an exception, but why would you have no jails?
-          jail = this.plugin.jailData().getJails().values().iterator().next();
+          // If the jail has been removed, just fall back to the first jail in the config.
+          // If there are no jails, idk what to do, but why would you have no jails?
+          final Iterator<Jail> it = this.plugin.jailData().getJails().values().iterator();
+          if (!it.hasNext()) {
+            LOGGER.error("Cannot load any of the prisoners' data. No jails present to spawn them into");
+            LOGGER.error("!!! Create a new jail with the `/setjail` command and then run `/betterjails reload` to load the prisoner data !!!");
+            break;
+          }
+
+          jail = it.next();
           LOGGER.warn("Jail {} does not exist", jailName);
           LOGGER.warn("Player {}/{} was attempted to relocate to {}", name, uuid, jail.name());
         }

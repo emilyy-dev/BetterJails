@@ -260,10 +260,6 @@ public class BetterJailsPlugin extends JavaPlugin implements Executor {
 
   @Override
   public void onDisable() {
-    if (this.failedToLoad) {
-      return;
-    }
-
     try {
       this.prisonerData.save().get();
     } catch (final InterruptedException | ExecutionException ex) {
