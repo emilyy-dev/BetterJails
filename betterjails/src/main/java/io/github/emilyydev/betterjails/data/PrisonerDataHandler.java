@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2025 emilyy-dev
 // Copyright (c) 2024 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -77,6 +77,7 @@ public final class PrisonerDataHandler {
   private final StorageAccess storage;
   private final Server server;
   private final Map<UUID, ApiPrisoner> prisoners = new HashMap<>();
+  private boolean loaded = false;
 
   private @Deprecated ImmutableLocation backupLocation;
 
@@ -98,8 +99,10 @@ public final class PrisonerDataHandler {
   private void loadPrisoners() throws IOException {
     try {
       this.prisoners.putAll(this.storage.loadPrisoners().get());
+      this.loaded = true;
     } catch (final InterruptedException ex) {
       // bleh
+      Thread.currentThread().interrupt();
     } catch (final ExecutionException ex) {
       throw new IOException(ex.getCause());
     }
@@ -228,6 +231,9 @@ public final class PrisonerDataHandler {
     try {
       this.storage.deletePrisoner(prisoner).get();
     } catch (final InterruptedException | ExecutionException ex) {
+      if (ex instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
       LOGGER.error("Could not delete prisoner {}/{}", prisoner.uuid(), prisoner.name(), ex);
     }
   }
@@ -326,7 +332,7 @@ public final class PrisonerDataHandler {
   }
 
   public CompletableFuture<Void> save() {
-    return this.storage.savePrisoners(this.prisoners);
+    return this.loaded ? this.storage.savePrisoners(this.prisoners) : CompletableFuture.completedFuture(null);
   }
 
   public void timer() {

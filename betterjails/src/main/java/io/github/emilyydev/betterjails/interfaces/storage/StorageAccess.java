@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2025 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -91,9 +91,14 @@ public final class StorageAccess implements AutoCloseable {
   }
 
   @Override
-  public void close() throws InterruptedException {
+  public void close() {
     this.ioExecutor.shutdown();
-    if (!this.ioExecutor.awaitTermination(30L, TimeUnit.SECONDS)) {
+    try {
+      if (!this.ioExecutor.awaitTermination(30L, TimeUnit.SECONDS)) {
+        this.ioExecutor.shutdownNow().forEach(Runnable::run);
+      }
+    } catch (final InterruptedException ex) {
+      Thread.currentThread().interrupt();
       this.ioExecutor.shutdownNow();
     }
   }

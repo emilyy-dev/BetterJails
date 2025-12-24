@@ -1,7 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2024 emilyy-dev
+// Copyright (c) 2025 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -41,9 +41,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public final class JailDataHandler {
+
   private final BetterJailsPlugin plugin;
   private final StorageAccess storage;
   private final Map<String, Jail> jails = new HashMap<>();
+  private boolean loaded = false;
 
   public JailDataHandler(final BetterJailsPlugin plugin) {
     this.plugin = plugin;
@@ -58,15 +60,17 @@ public final class JailDataHandler {
   private void loadJails() throws IOException {
     try {
       this.jails.putAll(this.storage.loadJails().get());
+      this.loaded = true;
     } catch (final InterruptedException ex) {
       // bleh
+      Thread.currentThread().interrupt();
     } catch (final ExecutionException ex) {
       throw new IOException(ex.getCause());
     }
   }
 
   public CompletableFuture<Void> save() {
-    return this.storage.saveJails(this.jails);
+    return this.loaded ? this.storage.saveJails(this.jails) : CompletableFuture.completedFuture(null);
   }
 
   public Map<String, Jail> getJails() {
