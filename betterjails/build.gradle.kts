@@ -81,7 +81,7 @@ tasks {
   }
 
   runServer {
-    minecraftVersion("1.21.10")
+    minecraftVersion("1.21.11")
     systemProperty("disable.watchdog", true)
   }
 }
