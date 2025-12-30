@@ -24,8 +24,8 @@
 
 package io.github.emilyydev.betterjails.interfaces.storage;
 
-import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.google.common.collect.ImmutableMap;
+import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 
 import java.util.Map;
@@ -73,20 +73,20 @@ public final class StorageAccess implements AutoCloseable {
     return submit(this.storageInterface::loadPrisoners);
   }
 
-  public CompletableFuture<Void> saveJail(final Jail jail) {
+  public CompletableFuture<Void> saveJail(final ApiJail jail) {
     return submit(() -> this.storageInterface.saveJail(jail));
   }
 
-  public CompletableFuture<Void> saveJails(final Map<String, Jail> jails) {
-    final Map<String, Jail> copy = ImmutableMap.copyOf(jails);
+  public CompletableFuture<Void> saveJails(final Map<String, ApiJail> jails) {
+    final Map<String, ApiJail> copy = ImmutableMap.copyOf(jails);
     return submit(() -> this.storageInterface.saveJails(copy));
   }
 
-  public CompletableFuture<Void> deleteJail(final Jail jail) {
+  public CompletableFuture<Void> deleteJail(final ApiJail jail) {
     return submit(() -> this.storageInterface.deleteJail(jail));
   }
 
-  public CompletableFuture<Map<String, Jail>> loadJails() {
+  public CompletableFuture<Map<String, ApiJail>> loadJails() {
     return submit(this.storageInterface::loadJails);
   }
 

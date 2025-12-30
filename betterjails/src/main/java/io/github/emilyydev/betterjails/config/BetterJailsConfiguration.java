@@ -29,6 +29,7 @@ import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
 import io.github.emilyydev.betterjails.util.Util;
 import org.jetbrains.annotations.Nullable;
 
@@ -113,7 +114,7 @@ public final class BetterJailsConfiguration extends AbstractConfiguration {
                 (s) -> ImmutableList.of(Util.color(s))
             ));
 
-    Collection<String> formatJailList(Collection<Jail> jailList);
+    Collection<String> formatJailList(Collection<ApiJail> jailList);
   }
 
   public static final class MessageHolder {

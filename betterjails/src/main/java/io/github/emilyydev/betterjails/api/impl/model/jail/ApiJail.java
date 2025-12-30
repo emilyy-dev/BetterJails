@@ -31,15 +31,18 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.UUID;
 
 public final class ApiJail implements Jail {
 
   private final String name;
+  private final UUID uuid;
   private volatile ImmutableLocation location;
   private volatile ImmutableLocation releaseLocation;
 
-  public ApiJail(final String name, final ImmutableLocation location, final ImmutableLocation releaseLocation) {
+  public ApiJail(final String name, final UUID uuid, final ImmutableLocation location, final ImmutableLocation releaseLocation) {
     this.name = name;
+    this.uuid = uuid;
     this.location = location;
     this.releaseLocation = releaseLocation;
   }
@@ -68,6 +71,10 @@ public final class ApiJail implements Jail {
   @Override
   public @NotNull String name() {
     return this.name;
+  }
+
+  public @NotNull UUID uuid() {
+    return this.uuid;
   }
 
   @Override

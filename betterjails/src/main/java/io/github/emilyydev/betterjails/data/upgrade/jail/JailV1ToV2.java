@@ -22,26 +22,25 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.interfaces.storage;
+package io.github.emilyydev.betterjails.data.upgrade.jail;
 
-import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
-import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
+import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
+import org.bukkit.configuration.ConfigurationSection;
 
-import java.util.Map;
 import java.util.UUID;
 
-public interface StorageInterface {
+/**
+ * Generate a random UUID for all jails
+ */
+public final class JailV1ToV2 implements DataUpgrader {
+  private static final String V2_UUID_FIELD = "uuid";
 
-  void savePrisoner(ApiPrisoner prisoner) throws Exception;
-  void savePrisoners(Map<UUID, ApiPrisoner> prisoners) throws Exception;
-  void deletePrisoner(ApiPrisoner prisoner) throws Exception;
-  Map<UUID, ApiPrisoner> loadPrisoners() throws Exception;
-
-  void saveJail(ApiJail jail) throws Exception;
-  void saveJails(Map<String, ApiJail> jails) throws Exception;
-  void deleteJail(ApiJail jail) throws Exception;
-  Map<String, ApiJail> loadJails() throws Exception;
-
-  // TODO(rymiel): There's asymmetry between these: ApiPrisoner vs Jail, this is because not all data needed here
-  //   is stored in Prisoner. Perhaps some stuff from ApiPrisoner should be exposed in Prisoner.
+  @Override
+  public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
+    if (!config.contains(V2_UUID_FIELD)) {
+      UUID uuid = UUID.randomUUID();
+      config.set(V2_UUID_FIELD, uuid.toString());
+    }
+  }
 }
