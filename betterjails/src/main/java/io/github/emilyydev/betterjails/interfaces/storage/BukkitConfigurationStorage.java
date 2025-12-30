@@ -93,6 +93,15 @@ public final class BukkitConfigurationStorage implements StorageInterface {
     this.legacyJailsFile = pluginDir.resolve("jails.yml");
   }
 
+  private Path prisonerFile(final ApiPrisoner prisoner) {
+    return this.playerDataFolder.resolve(prisoner.uuid() + ".yml");
+  }
+
+  private Path jailFile(final Jail jail) {
+    // TODO: yikes! assign each jail a unique ID instead
+    return this.jailDataFolder.resolve(jail.name() + ".yml");
+  }
+
   @Override
   public void savePrisoner(final ApiPrisoner prisoner) throws IOException {
     final YamlConfiguration yaml = new YamlConfiguration();
@@ -110,7 +119,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
     yaml.set(EXTRA_GROUPS_FIELD, ImmutableList.copyOf(prisoner.parentGroups()));
 
     final byte[] bytes = yaml.saveToString().getBytes(StandardCharsets.UTF_8);
-    Files.write(this.playerDataFolder.resolve(prisoner.uuid() + ".yml"), bytes);
+    Files.write(prisonerFile(prisoner), bytes);
   }
 
   @Override
@@ -136,8 +145,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
 
   @Override
   public void deletePrisoner(final ApiPrisoner prisoner) throws IOException {
-    final Path playerFile = this.playerDataFolder.resolve(prisoner.uuid() + ".yml");
-    Files.deleteIfExists(playerFile);
+    Files.deleteIfExists(prisonerFile(prisoner));
   }
 
   @Override
@@ -161,7 +169,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
           }
         }
 
-        final UUID uuid = UUID.fromString(file.getFileName().toString().replace(".yml", ""));
+        final UUID uuid = UUID.fromString(yaml.getString(UUID_FIELD));
         final String name = yaml.getString(NAME_FIELD);
 
         final boolean unknownLocation = !yaml.contains(LAST_LOCATION_FIELD);
@@ -238,7 +246,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
     yaml.set(RELEASE_LOCATION_FIELD, jail.releaseLocation());
 
     final byte[] bytes = yaml.saveToString().getBytes(StandardCharsets.UTF_8);
-    Files.write(this.jailDataFolder.resolve(jail.name() + ".yml"), bytes);
+    Files.write(jailFile(jail), bytes);
   }
 
   @Override
@@ -264,8 +272,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
 
   @Override
   public void deleteJail(final Jail jail) throws IOException {
-    final Path jailFile = this.jailDataFolder.resolve(jail.name() + ".yml");
-    Files.deleteIfExists(jailFile);
+    Files.deleteIfExists(jailFile(jail));
   }
 
   @Override
