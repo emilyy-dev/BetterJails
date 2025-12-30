@@ -83,14 +83,15 @@ public final class JailDataHandler {
 
   public CompletableFuture<Void> addJail(final String name, final ImmutableLocation location) {
     final String lowerCaseName = name.toLowerCase(Locale.ROOT);
-    this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, location, null)).location(location);
+    final Jail jail = this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, location, null));
+    jail.location(location);
     this.plugin.eventBus().post(JailCreateEvent.class, name, location);
-    return save();
+    return this.storage.saveJail(jail);
   }
 
   public CompletableFuture<Void> removeJail(final Jail jail) {
     this.jails.remove(jail.name().toLowerCase(Locale.ROOT));
     this.plugin.eventBus().post(JailDeleteEvent.class, jail);
-    return save();
+    return this.storage.deleteJail(jail);
   }
 }
