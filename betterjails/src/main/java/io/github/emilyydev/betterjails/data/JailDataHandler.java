@@ -2,6 +2,7 @@
 // This file is part of BetterJails, licensed under the MIT License.
 //
 // Copyright (c) 2025 emilyy-dev
+// Copyright (c) 2025 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +27,6 @@ package io.github.emilyydev.betterjails.data;
 
 import com.github.fefo.betterjails.api.event.jail.JailCreateEvent;
 import com.github.fefo.betterjails.api.event.jail.JailDeleteEvent;
-import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -44,7 +45,7 @@ public final class JailDataHandler {
 
   private final BetterJailsPlugin plugin;
   private final StorageAccess storage;
-  private final Map<String, Jail> jails = new HashMap<>();
+  private final Map<String, ApiJail> jails = new HashMap<>();
   private boolean loaded = false;
 
   public JailDataHandler(final BetterJailsPlugin plugin) {
@@ -73,23 +74,24 @@ public final class JailDataHandler {
     return this.loaded ? this.storage.saveJails(this.jails) : CompletableFuture.completedFuture(null);
   }
 
-  public Map<String, Jail> getJails() {
+  public Map<String, ApiJail> getJails() {
     return this.jails;
   }
 
-  public @Nullable Jail getJail(final String name) {
+  public @Nullable ApiJail getJail(final String name) {
     return this.jails.get(name.toLowerCase(Locale.ROOT));
   }
 
   public CompletableFuture<Void> addJail(final String name, final ImmutableLocation location) {
     final String lowerCaseName = name.toLowerCase(Locale.ROOT);
-    final Jail jail = this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, location, null));
+    final UUID uuid = UUID.randomUUID();
+    final ApiJail jail = this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, uuid, location, null));
     jail.location(location);
     this.plugin.eventBus().post(JailCreateEvent.class, name, location);
     return this.storage.saveJail(jail);
   }
 
-  public CompletableFuture<Void> removeJail(final Jail jail) {
+  public CompletableFuture<Void> removeJail(final ApiJail jail) {
     this.jails.remove(jail.name().toLowerCase(Locale.ROOT));
     this.plugin.eventBus().post(JailDeleteEvent.class, jail);
     return this.storage.deleteJail(jail);

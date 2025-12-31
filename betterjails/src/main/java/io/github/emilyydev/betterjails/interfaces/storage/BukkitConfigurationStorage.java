@@ -2,7 +2,7 @@
 // This file is part of BetterJails, licensed under the MIT License.
 //
 // Copyright (c) 2025 emilyy-dev
-// Copyright (c) 2024 Emilia Kond
+// Copyright (c) 2025 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -57,6 +57,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class BukkitConfigurationStorage implements StorageInterface {
 
@@ -97,9 +98,8 @@ public final class BukkitConfigurationStorage implements StorageInterface {
     return this.playerDataFolder.resolve(prisoner.uuid() + ".yml");
   }
 
-  private Path jailFile(final Jail jail) {
-    // TODO: yikes! assign each jail a unique ID instead
-    return this.jailDataFolder.resolve(jail.name() + ".yml");
+  private Path jailFile(final ApiJail jail) {
+    return this.jailDataFolder.resolve(jail.uuid() + ".yml");
   }
 
   @Override
@@ -178,7 +178,7 @@ public final class BukkitConfigurationStorage implements StorageInterface {
         if (jail == null) {
           // If the jail has been removed, just fall back to the first jail in the config.
           // If there are no jails, idk what to do, but why would you have no jails?
-          final Iterator<Jail> it = this.plugin.jailData().getJails().values().iterator();
+          final Iterator<ApiJail> it = this.plugin.jailData().getJails().values().iterator();
           if (!it.hasNext()) {
             LOGGER.error("Cannot load any of the prisoners' data. No jails present to spawn them into");
             LOGGER.error("!!! Create a new jail with the `/setjail` command and then run `/betterjails reload` to load the prisoner data !!!");
@@ -237,11 +237,12 @@ public final class BukkitConfigurationStorage implements StorageInterface {
   }
 
   @Override
-  public void saveJail(final Jail jail) throws IOException {
+  public void saveJail(final ApiJail jail) throws IOException {
     final YamlConfiguration yaml = new YamlConfiguration();
     DataUpgrader.markJailVersion(yaml);
 
     yaml.set(NAME_FIELD, jail.name());
+    yaml.set(UUID_FIELD, jail.uuid().toString());
     yaml.set(LOCATION_FIELD, jail.location());
     yaml.set(RELEASE_LOCATION_FIELD, jail.releaseLocation());
 
@@ -250,10 +251,10 @@ public final class BukkitConfigurationStorage implements StorageInterface {
   }
 
   @Override
-  public void saveJails(final Map<String, Jail> jails) throws IOException {
+  public void saveJails(final Map<String, ApiJail> jails) throws IOException {
     IOException ex = null;
 
-    for (final Jail jail : jails.values()) {
+    for (final ApiJail jail : jails.values()) {
       try {
         saveJail(jail);
       } catch (final IOException ioex) {
@@ -271,19 +272,19 @@ public final class BukkitConfigurationStorage implements StorageInterface {
   }
 
   @Override
-  public void deleteJail(final Jail jail) throws IOException {
+  public void deleteJail(final ApiJail jail) throws IOException {
     Files.deleteIfExists(jailFile(jail));
   }
 
   @Override
-  public Map<String, Jail> loadJails() throws IOException {
+  public Map<String, ApiJail> loadJails() throws IOException {
     Files.createDirectories(this.jailDataFolder);
-    final Map<String, Jail> out = new HashMap<>();
+    final Map<String, ApiJail> out = new HashMap<>();
     if (Files.exists(this.legacyJailsFile)) {
       final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(this.legacyJailsFile.toFile());
       for (final YamlConfiguration newJailData : migrateLegacyJailData(yaml)) {
         try {
-          final Path jailFile = this.jailDataFolder.resolve(newJailData.getString(NAME_FIELD).toLowerCase(Locale.ROOT) + ".yml");
+          final Path jailFile = this.jailDataFolder.resolve(newJailData.getString(UUID_FIELD) + ".yml");
           Files.write(jailFile, newJailData.saveToString().getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE_NEW);
         } catch (final FileAlreadyExistsException ignored) {
         }
@@ -293,30 +294,38 @@ public final class BukkitConfigurationStorage implements StorageInterface {
     }
 
     IOException migrationException = null;
-    try (final DirectoryStream<Path> ds = Files.newDirectoryStream(this.jailDataFolder)) {
-      for (final Path file : ds) {
-        final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file.toFile());
-        try {
-          migrateJailData(yaml, file);
-        } catch (final IOException ex) {
-          if (migrationException == null) {
-            migrationException = ex;
-          } else {
-            migrationException.addSuppressed(ex);
-          }
+    List<Path> files;
+    try (final Stream<Path> s = Files.list(this.jailDataFolder)) {
+      // Read directory content ahead of time so it doesn't change if we need to move things
+      files = s.collect(Collectors.toList());
+    }
+    for (final Path file : files) {
+      final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file.toFile());
+      try {
+        migrateJailData(yaml, file);
+      } catch (final IOException ex) {
+        if (migrationException == null) {
+          migrationException = ex;
+        } else {
+          migrationException.addSuppressed(ex);
         }
-
-        final String name = yaml.getString(NAME_FIELD).toLowerCase(Locale.ROOT);
-        final ImmutableLocation location = (ImmutableLocation) yaml.get(LOCATION_FIELD);
-        final ImmutableLocation releaseLocation = (ImmutableLocation) yaml.get(RELEASE_LOCATION_FIELD);
-        out.put(name, new ApiJail(name, location, releaseLocation));
-      }
-    } catch (final IOException ex) {
-      if (migrationException != null) {
-        ex.addSuppressed(migrationException);
       }
 
-      throw ex;
+      final String name = yaml.getString(NAME_FIELD).toLowerCase(Locale.ROOT);
+      final ImmutableLocation location = (ImmutableLocation) yaml.get(LOCATION_FIELD);
+      final ImmutableLocation releaseLocation = (ImmutableLocation) yaml.get(RELEASE_LOCATION_FIELD);
+      final UUID uuid = UUID.fromString(yaml.getString(UUID_FIELD));
+      ApiJail apiJail = new ApiJail(name, uuid, location, releaseLocation);
+      out.put(name, apiJail);
+      try {
+        Files.move(file, jailFile(apiJail));
+      } catch (final IOException ex) {
+        if (migrationException == null) {
+          migrationException = ex;
+        } else {
+          migrationException.addSuppressed(ex);
+        }
+      }
     }
 
     if (migrationException != null) {
@@ -372,9 +381,11 @@ public final class BukkitConfigurationStorage implements StorageInterface {
 
     return yaml.getMapList(JAILS_FIELD).stream().map(jail -> {
       final YamlConfiguration jailYaml = new YamlConfiguration();
+      final UUID uuid = UUID.randomUUID();
       jailYaml.set(NAME_FIELD, jail.get(NAME_FIELD));
       jailYaml.set(LOCATION_FIELD, jail.get(LOCATION_FIELD));
       jailYaml.set(RELEASE_LOCATION_FIELD, jail.get(RELEASE_LOCATION_FIELD));
+      jailYaml.set(UUID_FIELD, uuid.toString());
       jailYaml.set("version", 1);
       return jailYaml;
     }).collect(Collectors.toList());

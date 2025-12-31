@@ -2,7 +2,7 @@
 // This file is part of BetterJails, licensed under the MIT License.
 //
 // Copyright (c) 2024 emilyy-dev
-// Copyright (c) 2024 Emilia Kond
+// Copyright (c) 2025 Emilia Kond
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,11 +26,11 @@
 package io.github.emilyydev.betterjails.commands;
 
 import com.github.fefo.betterjails.api.event.plugin.PluginReloadEvent;
-import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.github.fefo.betterjails.api.model.prisoner.Prisoner;
 import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import com.google.common.base.MoreObjects;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
+import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
 import io.github.emilyydev.betterjails.config.BetterJailsConfiguration;
 import org.bukkit.OfflinePlayer;
@@ -115,7 +115,7 @@ public final class CommandHandler {
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
       final OfflinePlayer target,
-      final Jail jail,
+      final ApiJail jail,
       final Duration time,
       @Greedy final @Nullable String reason
   ) {
@@ -199,7 +199,7 @@ public final class CommandHandler {
   @CommandDescription("Prints a list of available jails")
   public void printJails(final CommandSender sender) {
     final BetterJailsConfiguration.MessageHolder messages = this.configuration.messages();
-    final Map<String, Jail> jails = this.plugin.jailData().getJails();
+    final Map<String, ApiJail> jails = this.plugin.jailData().getJails();
     final List<String> buffer = new ArrayList<>();
 
     if (jails.isEmpty()) {
@@ -258,7 +258,7 @@ public final class CommandHandler {
   public CompletableFuture<Void> modifyJailSetReleaseLocation(
       final CommandContext<Player> ctx,
       final Player sender,
-      final Jail jail
+      final ApiJail jail
   ) {
     // TODO(rymiel): neither of these modjail commands run any events. Should they?
     jail.releaseLocation(ImmutableLocation.copyOf(sender.getLocation()));
@@ -283,7 +283,7 @@ public final class CommandHandler {
   public CompletableFuture<Void> modifyJailClearReleaseLocation(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
-      final Jail jail
+      final ApiJail jail
   ) {
     jail.releaseLocation(null);
     return this.plugin.jailData().save().handleAsync((v, ex) -> {
@@ -307,7 +307,7 @@ public final class CommandHandler {
   public CompletableFuture<Void> deleteJail(
       final CommandContext<CommandSender> ctx,
       final CommandSender sender,
-      final Jail jail
+      final ApiJail jail
   ) {
     final String name = jail.name();
     return this.plugin.jailData().removeJail(jail).handleAsync((v, ex) -> {
@@ -378,9 +378,9 @@ public final class CommandHandler {
   }
 
   @Parser(suggestions = "jail")
-  public Jail resolveJail(final CommandContext<CommandSender> ctx, final CommandInput input) {
+  public ApiJail resolveJail(final CommandContext<CommandSender> ctx, final CommandInput input) {
     final String name = input.readString();
-    final Jail jail = this.plugin.jailData().getJail(name);
+    final ApiJail jail = this.plugin.jailData().getJail(name);
     if (jail != null) {
       return jail;
     } else {
