@@ -42,7 +42,4 @@ public interface StorageInterface {
   void saveJails(Map<String, ApiJail> jails) throws Exception;
   void deleteJail(ApiJail jail) throws Exception;
   Map<String, ApiJail> loadJails() throws Exception;
-
-  // TODO(rymiel): There's asymmetry between these: ApiPrisoner vs Jail, this is because not all data needed here
-  //   is stored in Prisoner. Perhaps some stuff from ApiPrisoner should be exposed in Prisoner.
 }
