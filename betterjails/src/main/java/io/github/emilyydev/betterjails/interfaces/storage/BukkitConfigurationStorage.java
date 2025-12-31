@@ -50,7 +50,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -58,6 +57,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class BukkitConfigurationStorage implements StorageInterface {
 
@@ -294,43 +294,38 @@ public final class BukkitConfigurationStorage implements StorageInterface {
     }
 
     IOException migrationException = null;
-    try (final DirectoryStream<Path> ds = Files.newDirectoryStream(this.jailDataFolder)) {
-      final List<Path> files = new ArrayList<>();
-      ds.forEach(files::add); // Read directory content ahead of time so it doesn't change if we need to move things
-      for (final Path file : files) {
-        final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file.toFile());
-        try {
-          migrateJailData(yaml, file);
-        } catch (final IOException ex) {
-          if (migrationException == null) {
-            migrationException = ex;
-          } else {
-            migrationException.addSuppressed(ex);
-          }
-        }
-
-        final String name = yaml.getString(NAME_FIELD).toLowerCase(Locale.ROOT);
-        final ImmutableLocation location = (ImmutableLocation) yaml.get(LOCATION_FIELD);
-        final ImmutableLocation releaseLocation = (ImmutableLocation) yaml.get(RELEASE_LOCATION_FIELD);
-        final UUID uuid = UUID.fromString(yaml.getString(UUID_FIELD));
-        ApiJail apiJail = new ApiJail(name, uuid, location, releaseLocation);
-        out.put(name, apiJail);
-        try {
-          Files.move(file, jailFile(apiJail));
-        } catch (final IOException ex) {
-          if (migrationException == null) {
-            migrationException = ex;
-          } else {
-            migrationException.addSuppressed(ex);
-          }
+    List<Path> files;
+    try (final Stream<Path> s = Files.list(this.jailDataFolder)) {
+      // Read directory content ahead of time so it doesn't change if we need to move things
+      files = s.collect(Collectors.toList());
+    }
+    for (final Path file : files) {
+      final YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file.toFile());
+      try {
+        migrateJailData(yaml, file);
+      } catch (final IOException ex) {
+        if (migrationException == null) {
+          migrationException = ex;
+        } else {
+          migrationException.addSuppressed(ex);
         }
       }
-    } catch (final IOException ex) {
-      if (migrationException != null) {
-        ex.addSuppressed(migrationException);
-      }
 
-      throw ex;
+      final String name = yaml.getString(NAME_FIELD).toLowerCase(Locale.ROOT);
+      final ImmutableLocation location = (ImmutableLocation) yaml.get(LOCATION_FIELD);
+      final ImmutableLocation releaseLocation = (ImmutableLocation) yaml.get(RELEASE_LOCATION_FIELD);
+      final UUID uuid = UUID.fromString(yaml.getString(UUID_FIELD));
+      ApiJail apiJail = new ApiJail(name, uuid, location, releaseLocation);
+      out.put(name, apiJail);
+      try {
+        Files.move(file, jailFile(apiJail));
+      } catch (final IOException ex) {
+        if (migrationException == null) {
+          migrationException = ex;
+        } else {
+          migrationException.addSuppressed(ex);
+        }
+      }
     }
 
     if (migrationException != null) {
