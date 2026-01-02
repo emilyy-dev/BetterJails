@@ -206,4 +206,51 @@ public final class MessageUtil {
         final Component component = MINI_MESSAGE.deserialize(miniMessage);
         return LEGACY_SERIALIZER.serialize(component);
     }
+
+    /**
+     * Broadcasts a message to all online players and console who have the specified permission.
+     *
+     * @param message    The message to broadcast (MiniMessage format or legacy & codes)
+     * @param permission The permission required to receive the message
+     */
+    public static void broadcast(final String message, final String permission) {
+        if (audiences == null) {
+            throw new IllegalStateException("BukkitAudiences not initialized!");
+        }
+
+        Audience filtered = audiences.filter(audience ->
+                audience.hasPermission(permission)
+        );
+
+        send(filtered, message);
+    }
+
+    /**
+     * Broadcasts a pre-parsed component to all who have the permission.
+     *
+     * @param component  The component to broadcast
+     * @param permission The permission required to receive the message
+     */
+    public static void broadcast(final ComponentLike component, final String permission) {
+        if (audiences == null) {
+            throw new IllegalStateException("BukkitAudiences not initialized!");
+        }
+
+        Audience filtered = audiences.filter(audience ->
+                audience.hasPermission(permission)
+        );
+
+        filtered.sendMessage(component);
+    }
+
+    /**
+     * Returns the BukkitAudiences instance (for advanced use).
+     * Only available after init() has been called.
+     */
+    public static @NotNull BukkitAudiences audiences() {
+        if (audiences == null) {
+            throw new IllegalStateException("BukkitAudiences not initialized! Call MessageUtil.init(plugin) in onEnable()");
+        }
+        return audiences;
+    }
 }
