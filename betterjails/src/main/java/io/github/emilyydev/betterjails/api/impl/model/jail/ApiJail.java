@@ -34,61 +34,65 @@ import java.util.Objects;
 
 public final class ApiJail implements Jail {
 
-  private final String name;
-  private volatile ImmutableLocation location;
-  private volatile ImmutableLocation releaseLocation;
+    private final String name;
+    private volatile ImmutableLocation location;
+    private volatile ImmutableLocation releaseLocation;
 
-  public ApiJail(final String name, final ImmutableLocation location, final ImmutableLocation releaseLocation) {
-    this.name = name;
-    this.location = location;
-    this.releaseLocation = releaseLocation;
-  }
+    public ApiJail(final String name, final ImmutableLocation location, final ImmutableLocation releaseLocation) {
+        this.name = name;
+        this.location = location;
+        this.releaseLocation = releaseLocation;
+    }
 
-  @Override
-  public @NotNull ImmutableLocation location() {
-    return this.location;
-  }
+    @Override
+    public @NotNull ImmutableLocation location() {
+        return this.location;
+    }
 
-  @Override
-  public void location(final @NotNull ImmutableLocation location) {
-    Objects.requireNonNull(location, "location");
-    this.location = location;
-  }
+    @Override
+    public void location(final @NotNull ImmutableLocation location) {
+        Objects.requireNonNull(location, "location");
+        this.location = location;
+    }
 
-  @Override
-  public @Nullable ImmutableLocation releaseLocation() {
-    return this.releaseLocation;
-  }
+    @Override
+    public @Nullable ImmutableLocation releaseLocation() {
+        return this.releaseLocation;
+    }
 
-  @Override
-  public void releaseLocation(final @Nullable ImmutableLocation location) {
-    this.releaseLocation = location;
-  }
+    @Override
+    public void releaseLocation(final @Nullable ImmutableLocation location) {
+        this.releaseLocation = location;
+    }
 
-  @Override
-  public @NotNull String name() {
-    return this.name;
-  }
+    @Override
+    public @NotNull String name() {
+        return this.name;
+    }
 
-  @Override
-  public boolean equals(final Object other) {
-    if (this == other) { return true; }
-    if (other == null || other.getClass() != this.getClass()) { return false; }
-    final ApiJail that = (ApiJail) other;
-    return this.name.equals(that.name);
-  }
+    @Override
+    public boolean equals(final Object other) {
+        if (this == other) {
+            return true;
+        }
+        if (other == null || other.getClass() != this.getClass()) {
+            return false;
+        }
+        final ApiJail that = (ApiJail) other;
+        return this.name.equals(that.name);
+    }
 
-  @Override
-  public int hashCode() {
-    return this.name.hashCode();
-  }
+    @Override
+    public int hashCode() {
+        return this.name.hashCode();
+    }
 
-  @Override
-  public String toString() {
-    return "Jail["
-        + "name=" + this.name
-        + ", location=" + this.location
-        + ", releaseLocation=" + this.releaseLocation
-        + ']';
-  }
+    @Override
+    public String toString() {
+        return "Jail["
+                + "name=" + this.name
+                + ", location=" + this.location
+                + ", releaseLocation=" + this.releaseLocation
+                + ']';
+    }
 }

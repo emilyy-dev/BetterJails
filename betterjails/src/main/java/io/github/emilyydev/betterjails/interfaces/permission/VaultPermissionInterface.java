@@ -32,6 +32,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServiceRegisterEvent;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.NoSuchElementException;
@@ -42,65 +43,65 @@ import java.util.concurrent.CompletionStage;
 
 final class VaultPermissionInterface extends AbstractPermissionInterface implements Listener {
 
-  private static <T> CompletionStage<? extends T> completed(final T value) {
-    return CompletableFuture.completedFuture(value);
-  }
+    private Permission permission;
 
-  private Permission permission;
-
-  VaultPermissionInterface(final BetterJailsPlugin plugin) {
-    super(plugin.configuration().prisonerPermissionGroup().orElseThrow(NoSuchElementException::new));
-    this.permission = plugin.getServer().getServicesManager().load(Permission.class);
-    plugin.getServer().getPluginManager().registerEvent(
-        ServiceRegisterEvent.class, this, EventPriority.MONITOR,
-        (l, e) -> onPermissionServiceRegistered((ServiceRegisterEvent) e), plugin
-    );
-  }
-
-  private void onPermissionServiceRegistered(final ServiceRegisterEvent event) {
-    final RegisteredServiceProvider<?> provider = event.getProvider();
-    if (provider.getService() == Permission.class) {
-      this.permission = (Permission) provider.getProvider();
+    VaultPermissionInterface(final @NotNull BetterJailsPlugin plugin) {
+        super(plugin.configuration().prisonerPermissionGroup().orElseThrow(NoSuchElementException::new));
+        this.permission = plugin.getServer().getServicesManager().load(Permission.class);
+        plugin.getServer().getPluginManager().registerEvent(
+                ServiceRegisterEvent.class, this, EventPriority.MONITOR,
+                (l, e) -> onPermissionServiceRegistered((ServiceRegisterEvent) e), plugin
+        );
     }
-  }
 
-  @Override
-  public void close() {
-    ServiceRegisterEvent.getHandlerList().unregister(this);
-  }
+    private static <T> @NotNull CompletionStage<? extends T> completed(final T value) {
+        return CompletableFuture.completedFuture(value);
+    }
 
-  @Override
-  public CompletionStage<? extends String> fetchPrimaryGroup(final OfflinePlayer player) {
-    return completed(this.permission.getPrimaryGroup(null, player));
-  }
+    private void onPermissionServiceRegistered(final @NotNull ServiceRegisterEvent event) {
+        final RegisteredServiceProvider<?> provider = event.getProvider();
+        if (provider.getService() == Permission.class) {
+            this.permission = (Permission) provider.getProvider();
+        }
+    }
 
-  @Override
-  public CompletionStage<? extends Set<? extends String>> fetchParentGroups(final OfflinePlayer player) {
-    return completed(ImmutableSet.copyOf(this.permission.getPlayerGroups(null, player)));
-  }
+    @Override
+    public void close() {
+        ServiceRegisterEvent.getHandlerList().unregister(this);
+    }
 
-  @Override
-  public CompletionStage<?> setPrisonerGroup(final OfflinePlayer player, final UUID source, final String sourceName) {
-    return fetchParentGroups(player).thenAccept(parentGroups -> {
-      this.permission.playerAddGroup(null, player, prisonerGroup());
-      parentGroups.forEach(group -> this.permission.playerRemoveGroup(null, player, group));
-    });
-  }
+    @Override
+    public @NotNull CompletionStage<? extends String> fetchPrimaryGroup(final OfflinePlayer player) {
+        return completed(this.permission.getPrimaryGroup(null, player));
+    }
 
-  @Override
-  public CompletionStage<?> setParentGroups(
-      final OfflinePlayer player,
-      final Collection<? extends String> parentGroups,
-      final UUID source,
-      final String sourceName
-  ) {
-    parentGroups.forEach(group -> this.permission.playerAddGroup(null, player, group));
-    this.permission.playerRemoveGroup(null, player, prisonerGroup());
-    return completed(null);
-  }
+    @Override
+    public @NotNull CompletionStage<? extends Set<? extends String>> fetchParentGroups(final OfflinePlayer player) {
+        return completed(ImmutableSet.copyOf(this.permission.getPlayerGroups(null, player)));
+    }
 
-  @Override
-  public String name() {
-    return "Vault (" + this.permission.getName() + ')';
-  }
+    @Override
+    public @NotNull CompletionStage<?> setPrisonerGroup(final OfflinePlayer player, final UUID source, final String sourceName) {
+        return fetchParentGroups(player).thenAccept(parentGroups -> {
+            this.permission.playerAddGroup(null, player, prisonerGroup());
+            parentGroups.forEach(group -> this.permission.playerRemoveGroup(null, player, group));
+        });
+    }
+
+    @Override
+    public @NotNull CompletionStage<?> setParentGroups(
+            final OfflinePlayer player,
+            final @NotNull Collection<? extends String> parentGroups,
+            final UUID source,
+            final String sourceName
+    ) {
+        parentGroups.forEach(group -> this.permission.playerAddGroup(null, player, group));
+        this.permission.playerRemoveGroup(null, player, prisonerGroup());
+        return completed(null);
+    }
+
+    @Override
+    public @NotNull String name() {
+        return "Vault (" + this.permission.getName() + ')';
+    }
 }

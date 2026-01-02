@@ -33,10 +33,10 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface PluginReloadEvent extends BetterJailsEvent {
 
-  /**
-   * Gets the {@link CommandSender} that ran the reload command.
-   *
-   * @return the command sender responsible for this event
-   */
-  @NotNull CommandSender sender();
+    /**
+     * Gets the {@link CommandSender} that ran the reload command.
+     *
+     * @return the command sender responsible for this event
+     */
+    @NotNull CommandSender sender();
 }

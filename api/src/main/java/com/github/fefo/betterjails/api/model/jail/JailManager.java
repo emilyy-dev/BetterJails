@@ -38,46 +38,48 @@ import java.util.Collection;
 @ApiStatus.NonExtendable
 public interface JailManager {
 
-  /**
-   * Creates a new jail for that name at that location if it doesn't exist.
-   * Jail names are case insensitive and converted to lowercase.
-   * <p>
-   * If it does exist this method throws an {@link IllegalArgumentException}.
-   * </p>
-   * <p>
-   * If it does not exist, a new jail will be created, saved to storage and returned.
-   * </p>
-   *
-   * @param name     the identifying name of the new jail
-   * @param location the location of the new jail
-   * @return a new jail with no prisoners
-   * @throws IllegalArgumentException if there is an already existing jail with that name
-   */
-  @NotNull Jail createAndSaveJail(@NotNull String name, @NotNull Location location) throws IllegalArgumentException;
+    /**
+     * Creates a new jail for that name at that location if it doesn't exist.
+     * Jail names are case insensitive and converted to lowercase.
+     * <p>
+     * If it does exist this method throws an {@link IllegalArgumentException}.
+     * </p>
+     * <p>
+     * If it does not exist, a new jail will be created, saved to storage and returned.
+     * </p>
+     *
+     * @param name     the identifying name of the new jail
+     * @param location the location of the new jail
+     * @return a new jail with no prisoners
+     * @throws IllegalArgumentException if there is an already existing jail with that name
+     */
+    @NotNull Jail createAndSaveJail(@NotNull String name, @NotNull Location location) throws IllegalArgumentException;
 
-  /**
-   * Gets the jail by that name, case insensitive.
-   *
-   * @param name the name of the jail to retrieve - case insensitive
-   * @return the {@link Jail} instance for that name if present or {@code null} if non-existent
-   */
-  @Nullable Jail getJail(@NotNull String name);
+    /**
+     * Gets the jail by that name, case insensitive.
+     *
+     * @param name the name of the jail to retrieve - case insensitive
+     * @return the {@link Jail} instance for that name if present or {@code null} if non-existent
+     */
+    @Nullable Jail getJail(@NotNull String name);
 
-  /**
-   * Permanently deletes a jail from storage. Prisoners jailed in this jail will be transported
-   * to another jail. If no such jail exists this method will no-op.
-   *
-   * @param jail the jail to remove
-   */
-  void deleteJail(@NotNull Jail jail);
+    /**
+     * Permanently deletes a jail from storage. Prisoners jailed in this jail will be transported
+     * to another jail. If no such jail exists this method will no-op.
+     *
+     * @param jail the jail to remove
+     */
+    void deleteJail(@NotNull Jail jail);
 
-  /**
-   * Gets a set of all available {@link Jail}s.
-   * <p>
-   * This collection is unmodifiable and it updates over time as the backend map changes.
-   * </p>
-   *
-   * @return an unmodifiable view of the jail collection
-   */
-  @NotNull @UnmodifiableView Collection<@NotNull Jail> getAllJails();
+    /**
+     * Gets a set of all available {@link Jail}s.
+     * <p>
+     * This collection is unmodifiable and it updates over time as the backend map changes.
+     * </p>
+     *
+     * @return an unmodifiable view of the jail collection
+     */
+    @NotNull
+    @UnmodifiableView
+    Collection<@NotNull Jail> getAllJails();
 }

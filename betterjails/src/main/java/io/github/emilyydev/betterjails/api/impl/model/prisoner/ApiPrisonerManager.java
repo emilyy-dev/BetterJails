@@ -43,48 +43,48 @@ import java.util.UUID;
 
 public final class ApiPrisonerManager implements PrisonerManager {
 
-  private final BetterJailsPlugin plugin;
+    private final BetterJailsPlugin plugin;
 
-  public ApiPrisonerManager(final BetterJailsPlugin plugin) {
-    this.plugin = plugin;
-  }
+    public ApiPrisonerManager(final BetterJailsPlugin plugin) {
+        this.plugin = plugin;
+    }
 
-  @Override
-  public @Nullable Prisoner getPrisoner(final @NotNull UUID uuid) {
-    return this.plugin.prisonerData().getPrisoner(uuid);
-  }
+    @Override
+    public @Nullable Prisoner getPrisoner(final @NotNull UUID uuid) {
+        return this.plugin.prisonerData().getPrisoner(uuid);
+    }
 
-  @Override
-  @SuppressWarnings("ConstantConditions")
-  public @NotNull Prisoner jailPlayer(final @NotNull UUID uuid, final @NotNull Jail jail, final @NotNull Duration duration, final @Nullable String reason) {
-    Objects.requireNonNull(uuid, "uuid");
-    Objects.requireNonNull(jail, "jail");
-    Objects.requireNonNull(duration, "duration");
+    @Override
+    @SuppressWarnings("ConstantConditions")
+    public @NotNull Prisoner jailPlayer(final @NotNull UUID uuid, final @NotNull Jail jail, final @NotNull Duration duration, final @Nullable String reason) {
+        Objects.requireNonNull(uuid, "uuid");
+        Objects.requireNonNull(jail, "jail");
+        Objects.requireNonNull(duration, "duration");
 
-    final Instant now = Instant.now();
-    final Instant jailedUntil = now.plus(duration);
-    Preconditions.checkState(jailedUntil.isAfter(now), "duration must be positive");
+        final Instant now = Instant.now();
+        final Instant jailedUntil = now.plus(duration);
+        Preconditions.checkState(jailedUntil.isAfter(now), "duration must be positive");
 
-    final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
-    this.plugin.prisonerData().addJailedPlayer(player, jail, Util.NIL_UUID, "api", duration, reason, true);
-    return getPrisoner(uuid);
-  }
+        final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(uuid);
+        this.plugin.prisonerData().addJailedPlayer(player, jail, Util.NIL_UUID, "api", duration, reason, true);
+        return getPrisoner(uuid);
+    }
 
-  @Override
-  public boolean releasePrisoner(final @NotNull Prisoner prisoner) {
-    Objects.requireNonNull(prisoner, "prisoner");
-    final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(prisoner.uuid());
-    return this.plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, "api", true);
-  }
+    @Override
+    public boolean releasePrisoner(final @NotNull Prisoner prisoner) {
+        Objects.requireNonNull(prisoner, "prisoner");
+        final OfflinePlayer player = this.plugin.getServer().getOfflinePlayer(prisoner.uuid());
+        return this.plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, "api", true);
+    }
 
-  @Override
-  public boolean isPlayerJailed(final @NotNull UUID uuid) {
-    Objects.requireNonNull(uuid, "uuid");
-    return this.plugin.prisonerData().isPlayerJailed(uuid);
-  }
+    @Override
+    public boolean isPlayerJailed(final @NotNull UUID uuid) {
+        Objects.requireNonNull(uuid, "uuid");
+        return this.plugin.prisonerData().isPlayerJailed(uuid);
+    }
 
-  @Override
-  public @NotNull @Unmodifiable Collection<@NotNull Prisoner> getAllPrisoners() {
-    return this.plugin.prisonerData().getAllPrisoners();
-  }
+    @Override
+    public @NotNull @Unmodifiable Collection<@NotNull Prisoner> getAllPrisoners() {
+        return this.plugin.prisonerData().getAllPrisoners();
+    }
 }

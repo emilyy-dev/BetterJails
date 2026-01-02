@@ -38,43 +38,43 @@ import java.util.UUID;
  */
 public interface Jail {
 
-  /**
-   * Gets the current location players will be teleported to when jailed.
-   *
-   * @return the jail location
-   */
-  @NotNull ImmutableLocation location();
+    /**
+     * Gets the current location players will be teleported to when jailed.
+     *
+     * @return the jail location
+     */
+    @NotNull ImmutableLocation location();
 
-  /**
-   * Sets the new location players will be teleported to when jailed.
-   * <p>
-   * This method <b>does not</b> teleport the current prisoners to the new location, use
-   * {@link PrisonerManager#jailPlayer(UUID, Jail, Duration)} to relocate them.
-   * </p>
-   *
-   * @param location the new location
-   */
-  void location(@NotNull ImmutableLocation location);
+    /**
+     * Sets the new location players will be teleported to when jailed.
+     * <p>
+     * This method <b>does not</b> teleport the current prisoners to the new location, use
+     * {@link PrisonerManager#jailPlayer(UUID, Jail, Duration)} to relocate them.
+     * </p>
+     *
+     * @param location the new location
+     */
+    void location(@NotNull ImmutableLocation location);
 
-  /**
-   * Gets the location players will be teleported to when released from jail, unless it is null,
-   * in which case players get teleported to the last location they were at before they were jailed.
-   *
-   * @return the release location
-   */
-  @Nullable ImmutableLocation releaseLocation();
+    /**
+     * Gets the location players will be teleported to when released from jail, unless it is null,
+     * in which case players get teleported to the last location they were at before they were jailed.
+     *
+     * @return the release location
+     */
+    @Nullable ImmutableLocation releaseLocation();
 
-  /**
-   * Sets the new location players will be teleported to when released.
-   *
-   * @param location the new release location
-   */
-  void releaseLocation(@Nullable ImmutableLocation location);
+    /**
+     * Sets the new location players will be teleported to when released.
+     *
+     * @param location the new release location
+     */
+    void releaseLocation(@Nullable ImmutableLocation location);
 
-  /**
-   * The identifying name of this jail. This is a unique identifier.
-   *
-   * @return the jail name
-   */
-  @NotNull String name();
+    /**
+     * The identifying name of this jail. This is a unique identifier.
+     *
+     * @return the jail name
+     */
+    @NotNull String name();
 }

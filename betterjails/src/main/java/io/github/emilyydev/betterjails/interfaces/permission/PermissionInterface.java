@@ -27,6 +27,8 @@ package io.github.emilyydev.betterjails.interfaces.permission;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.PluginManager;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.Set;
@@ -36,69 +38,70 @@ import java.util.concurrent.CompletionStage;
 
 public interface PermissionInterface extends AutoCloseable {
 
-  PermissionInterface NULL = new PermissionInterface() {
+    PermissionInterface NULL = new PermissionInterface() {
 
-    @Override
-    public void close() {
+        @Override
+        public void close() {
+        }
+
+        @Contract(pure = true)
+        @Override
+        public @NotNull String name() {
+            return "null";
+        }
+
+        @Override
+        public @NotNull CompletionStage<? extends String> fetchPrimaryGroup(final OfflinePlayer player) {
+            return failedStage();
+        }
+
+        @Override
+        public @NotNull CompletionStage<? extends Set<? extends String>> fetchParentGroups(final OfflinePlayer player) {
+            return failedStage();
+        }
+
+        @Override
+        public @NotNull CompletionStage<?> setPrisonerGroup(final OfflinePlayer player, final UUID source, final String sourceName) {
+            return failedStage();
+        }
+
+        @Override
+        public @NotNull CompletionStage<?> setParentGroups(
+                final OfflinePlayer player,
+                final Collection<? extends String> parentGroups,
+                final UUID source,
+                final String sourceName
+        ) {
+            return failedStage();
+        }
+
+        private <T> @NotNull CompletionStage<? extends T> failedStage() {
+            final CompletableFuture<T> future = new CompletableFuture<>();
+            future.completeExceptionally(new UnsupportedOperationException());
+            return future;
+        }
+    };
+
+    static PermissionInterface determinePermissionInterface(final @NotNull BetterJailsPlugin plugin, final String prisonerGroup) {
+        final PluginManager pluginManager = plugin.getServer().getPluginManager();
+        if (pluginManager.isPluginEnabled("LuckPerms")) {
+            return new LuckPermsPermissionInterface(plugin.getServer(), prisonerGroup);
+        } else if (pluginManager.isPluginEnabled("Vault")) {
+            return new VaultPermissionInterface(plugin);
+        } else {
+            return NULL;
+        }
     }
 
-    @Override
-    public String name() {
-      return "null";
-    }
+    String name();
 
-    @Override
-    public CompletionStage<? extends String> fetchPrimaryGroup(final OfflinePlayer player) {
-      return failedStage();
-    }
+    void close();
 
-    @Override
-    public CompletionStage<? extends Set<? extends String>> fetchParentGroups(final OfflinePlayer player) {
-      return failedStage();
-    }
+    CompletionStage<? extends String> fetchPrimaryGroup(OfflinePlayer player);
 
-    @Override
-    public CompletionStage<?> setPrisonerGroup(final OfflinePlayer player, final UUID source, final String sourceName) {
-      return failedStage();
-    }
+    CompletionStage<? extends Set<? extends String>> fetchParentGroups(OfflinePlayer player);
 
-    @Override
-    public CompletionStage<?> setParentGroups(
-        final OfflinePlayer player,
-        final Collection<? extends String> parentGroups,
-        final UUID source,
-        final String sourceName
-    ) {
-      return failedStage();
-    }
+    CompletionStage<?> setPrisonerGroup(OfflinePlayer player, UUID source, String sourceName);
 
-    private <T> CompletionStage<? extends T> failedStage() {
-      final CompletableFuture<T> future = new CompletableFuture<>();
-      future.completeExceptionally(new UnsupportedOperationException());
-      return future;
-    }
-  };
-
-  static PermissionInterface determinePermissionInterface(final BetterJailsPlugin plugin, final String prisonerGroup) {
-    final PluginManager pluginManager = plugin.getServer().getPluginManager();
-    if (pluginManager.isPluginEnabled("LuckPerms")) {
-      return new LuckPermsPermissionInterface(plugin.getServer(), prisonerGroup);
-    } else if (pluginManager.isPluginEnabled("Vault")) {
-      return new VaultPermissionInterface(plugin);
-    } else {
-      return NULL;
-    }
-  }
-
-  String name();
-
-  void close();
-
-  CompletionStage<? extends String> fetchPrimaryGroup(OfflinePlayer player);
-
-  CompletionStage<? extends Set<? extends String>> fetchParentGroups(OfflinePlayer player);
-
-  CompletionStage<?> setPrisonerGroup(OfflinePlayer player, UUID source, String sourceName);
-
-  CompletionStage<?> setParentGroups(OfflinePlayer player, Collection<? extends String> parentGroups, UUID source, String sourceName);
+    CompletionStage<?> setParentGroups(OfflinePlayer player, Collection<? extends String> parentGroups, UUID source, String sourceName);
 }

@@ -29,6 +29,8 @@ import io.github.emilyydev.betterjails.util.Util;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -41,79 +43,82 @@ import java.util.regex.Pattern;
 
 public final class SubCommandsConfiguration extends AbstractConfiguration {
 
-  private static final String ON_JAIL = "on-jail";
-  private static final String ON_RELEASE = "on-release";
+    private static final String ON_JAIL = "on-jail";
+    private static final String ON_RELEASE = "on-release";
 
-  public SubCommandsConfiguration(final Path dir) {
-    super(dir, "subcommands.yml", HashMap::new);
-  }
+    public SubCommandsConfiguration(final Path dir) {
+        super(dir, "subcommands.yml", HashMap::new);
+    }
 
-  public SubCommands onJail() {
-    return setting(ON_JAIL, key -> new SubCommands(config().getConfigurationSection(key)));
-  }
+    public SubCommands onJail() {
+        return setting(ON_JAIL, key -> new SubCommands(config().getConfigurationSection(key)));
+    }
 
-  public SubCommands onRelease() {
-    return setting(ON_RELEASE, key -> new SubCommands(config().getConfigurationSection(key)));
-  }
+    public SubCommands onRelease() {
+        return setting(ON_RELEASE, key -> new SubCommands(config().getConfigurationSection(key)));
+    }
 
-  public static final class SubCommands {
+    public static final class SubCommands {
 
-    private static final String AS_PRISONER = "as-prisoner";
-    private static final String AS_CONSOLE = "as-console";
+        private static final String AS_PRISONER = "as-prisoner";
+        private static final String AS_CONSOLE = "as-console";
 
-    private static final Pattern PLACEHOLDERS = Pattern.compile("\\{prisoner}|\\{player}");
+        private static final Pattern PLACEHOLDERS = Pattern.compile("\\{prisoner}|\\{player}");
+        private final Collection<String> asPrisoner;
+        private final Collection<String> asConsole;
 
-    private static Function<? super MatchResult, ? extends String> replacer(
-        final String prisoner,
-        final String executorName
-    ) {
-      return matchResult -> {
-        final String matchedGroup = matchResult.group();
-        switch (Util.removeBracesFromMatchedPlaceholderPleaseAndThankYou(matchedGroup)) {
-          case "prisoner": return prisoner;
-          case "player": return executorName;
-          default: return matchedGroup;
+        private SubCommands(final @NotNull ConfigurationSection section) {
+            final List<String> asPrisoner = section.getStringList(AS_PRISONER);
+            asPrisoner.removeIf(String::isEmpty);
+            this.asPrisoner = ImmutableList.copyOf(asPrisoner);
+
+            final List<String> asConsole = section.getStringList(AS_CONSOLE);
+            asConsole.removeIf(String::isEmpty);
+            this.asConsole = ImmutableList.copyOf(asConsole);
         }
-      };
+
+        @Contract(pure = true)
+        private static @NotNull Function<? super MatchResult, ? extends String> replacer(
+                final String prisoner,
+                final String executorName
+        ) {
+            return matchResult -> {
+                final String matchedGroup = matchResult.group();
+                switch (Util.removeBracesFromMatchedPlaceholderPleaseAndThankYou(matchedGroup)) {
+                    case "prisoner":
+                        return prisoner;
+                    case "player":
+                        return executorName;
+                    default:
+                        return matchedGroup;
+                }
+            };
+        }
+
+        public void executeAsPrisoner(final Server server, final @NotNull CommandSender prisoner, final String executorName) {
+            final String prisonerName = prisoner.getName();
+            this.asPrisoner.stream()
+                    .map(s -> replacePlaceholders(s, prisonerName, executorName))
+                    .forEach(s -> server.dispatchCommand(prisoner, s));
+        }
+
+        public void executeAsConsole(final @NotNull Server server, final @NotNull CommandSender prisoner, final String executorName) {
+            final String prisonerName = prisoner.getName();
+            final CommandSender consoleSender = server.getConsoleSender();
+            this.asConsole.stream()
+                    .map(s -> replacePlaceholders(s, prisonerName, executorName))
+                    .forEach(s -> server.dispatchCommand(consoleSender, s));
+        }
+
+        private @NotNull String replacePlaceholders(final String command, final String prisoner, final String executorName) {
+            final Function<? super MatchResult, ? extends String> replacer = replacer(prisoner, executorName);
+            final Matcher matcher = PLACEHOLDERS.matcher(command);
+            final StringBuffer buffer = new StringBuffer();
+            while (matcher.find()) {
+                matcher.appendReplacement(buffer, replacer.apply(matcher.toMatchResult()));
+            }
+
+            return matcher.appendTail(buffer).toString();
+        }
     }
-
-    private final Collection<String> asPrisoner;
-    private final Collection<String> asConsole;
-
-    private SubCommands(final ConfigurationSection section) {
-      final List<String> asPrisoner = section.getStringList(AS_PRISONER);
-      asPrisoner.removeIf(String::isEmpty);
-      this.asPrisoner = ImmutableList.copyOf(asPrisoner);
-
-      final List<String> asConsole = section.getStringList(AS_CONSOLE);
-      asConsole.removeIf(String::isEmpty);
-      this.asConsole = ImmutableList.copyOf(asConsole);
-    }
-
-    public void executeAsPrisoner(final Server server, final CommandSender prisoner, final String executorName) {
-      final String prisonerName = prisoner.getName();
-      this.asPrisoner.stream()
-          .map(s -> replacePlaceholders(s, prisonerName, executorName))
-          .forEach(s -> server.dispatchCommand(prisoner, s));
-    }
-
-    public void executeAsConsole(final Server server, final CommandSender prisoner, final String executorName) {
-      final String prisonerName = prisoner.getName();
-      final CommandSender consoleSender = server.getConsoleSender();
-      this.asConsole.stream()
-          .map(s -> replacePlaceholders(s, prisonerName, executorName))
-          .forEach(s -> server.dispatchCommand(consoleSender, s));
-    }
-
-    private String replacePlaceholders(final String command, final String prisoner, final String executorName) {
-      final Function<? super MatchResult, ? extends String> replacer = replacer(prisoner, executorName);
-      final Matcher matcher = PLACEHOLDERS.matcher(command);
-      final StringBuffer buffer = new StringBuffer();
-      while (matcher.find()) {
-        matcher.appendReplacement(buffer, replacer.apply(matcher.toMatchResult()));
-      }
-
-      return matcher.appendTail(buffer).toString();
-    }
-  }
 }

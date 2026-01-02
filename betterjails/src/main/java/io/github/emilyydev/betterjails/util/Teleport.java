@@ -28,90 +28,89 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.CompletableFuture;
 
-import static java.lang.invoke.MethodHandles.filterArguments;
-import static java.lang.invoke.MethodHandles.filterReturnValue;
-import static java.lang.invoke.MethodHandles.permuteArguments;
+import static java.lang.invoke.MethodHandles.*;
 import static java.lang.invoke.MethodType.methodType;
 
 public final class Teleport {
 
-  private static final MethodHandle TELEPORT_ASYNC;
+    private static final MethodHandle TELEPORT_ASYNC;
 
-  static {
-    final MethodHandles.Lookup lookup = MethodHandles.lookup();
-    MethodHandle teleportAsync;
-    try {
-      try {
-        teleportAsync = lookup.findVirtual(Entity.class, "teleportAsync", methodType(CompletableFuture.class, Location.class));
-      } catch (final NoSuchMethodException ignored) {
+    static {
+        final MethodHandles.Lookup lookup = MethodHandles.lookup();
+        MethodHandle teleportAsync;
         try {
-          teleportAsync = findGetChunkAtAsyncTeleport(lookup);
-        } catch (final NoSuchMethodException ignored2) {
-          teleportAsync = findSyncTeleport(lookup);
+            try {
+                teleportAsync = lookup.findVirtual(Entity.class, "teleportAsync", methodType(CompletableFuture.class, Location.class));
+            } catch (final NoSuchMethodException ignored) {
+                try {
+                    teleportAsync = findGetChunkAtAsyncTeleport(lookup);
+                } catch (final NoSuchMethodException ignored2) {
+                    teleportAsync = findSyncTeleport(lookup);
+                }
+            }
+
+            TELEPORT_ASYNC = teleportAsync;
+        } catch (final NoSuchMethodException | IllegalAccessException ex) {
+            throw new ExceptionInInitializerError(ex);
         }
-      }
-
-      TELEPORT_ASYNC = teleportAsync;
-    } catch (final NoSuchMethodException | IllegalAccessException ex) {
-      throw new ExceptionInInitializerError(ex);
     }
-  }
 
-  @SuppressWarnings("unchecked")
-  public static CompletableFuture<Boolean> teleportAsync(final Entity entity, final Location location) {
-    try {
-      return (CompletableFuture<Boolean>) TELEPORT_ASYNC.invokeExact(entity, location);
-    } catch (final RuntimeException | Error ex) {
-      throw ex;
-    } catch (final Throwable ex) {
-      throw new RuntimeException(ex);
+    private Teleport() {
     }
-  }
 
-  private static MethodHandle findGetChunkAtAsyncTeleport(final MethodHandles.Lookup lookup)
-      throws NoSuchMethodException, IllegalAccessException {
-    // teleportAsyncOld(location.getWorld().getChunkAtAsync(location), entity, location)
+    @SuppressWarnings("unchecked")
+    public static CompletableFuture<Boolean> teleportAsync(final Entity entity, final Location location) {
+        try {
+            return (CompletableFuture<Boolean>) TELEPORT_ASYNC.invokeExact(entity, location);
+        } catch (final RuntimeException | Error ex) {
+            throw ex;
+        } catch (final Throwable ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
-    final MethodHandle Location_getWorld = lookup.findVirtual(Location.class, "getWorld", methodType(World.class));
-    final MethodHandle World_getChunkAtAsync = lookup.findVirtual(World.class, "getChunkAtAsync", methodType(CompletableFuture.class, Location.class));
+    private static MethodHandle findGetChunkAtAsyncTeleport(final MethodHandles.@NotNull Lookup lookup)
+            throws NoSuchMethodException, IllegalAccessException {
+        // teleportAsyncOld(location.getWorld().getChunkAtAsync(location), entity, location)
 
-    final MethodHandle teleportAsyncOld = lookup.findStatic(Teleport.class, "teleportAsyncOld", methodType(CompletableFuture.class, CompletableFuture.class, Entity.class, Location.class));
+        final MethodHandle Location_getWorld = lookup.findVirtual(Location.class, "getWorld", methodType(World.class));
+        final MethodHandle World_getChunkAtAsync = lookup.findVirtual(World.class, "getChunkAtAsync", methodType(CompletableFuture.class, Location.class));
 
-    MethodHandle getChunkAtAsync = World_getChunkAtAsync;                                                           // (World,Location)CF<Chunk>
-    getChunkAtAsync = filterArguments(getChunkAtAsync, 0, Location_getWorld);                                       // (Location,Location)CF<Chunk>
-    getChunkAtAsync = permuteArguments(getChunkAtAsync, methodType(CompletableFuture.class, Location.class), 0, 0); // (Location)CF<Chunk>
+        final MethodHandle teleportAsyncOld = lookup.findStatic(Teleport.class, "teleportAsyncOld", methodType(CompletableFuture.class, CompletableFuture.class, Entity.class, Location.class));
 
-    MethodHandle teleportAsync = teleportAsyncOld;                                                                                // (CF<Chunk>,Entity,Location)CF<Boolean>
-    teleportAsync = filterArguments(teleportAsync, 0, getChunkAtAsync);                                                           // (Location,Entity,Location)CF<Boolean>
-    teleportAsync = permuteArguments(teleportAsync, methodType(CompletableFuture.class, Entity.class, Location.class), 1, 0, 1);  // (Entity,Location)CF<Boolean>
-    return teleportAsync;
-  }
+        MethodHandle getChunkAtAsync = World_getChunkAtAsync;                                                           // (World,Location)CF<Chunk>
+        getChunkAtAsync = filterArguments(getChunkAtAsync, 0, Location_getWorld);                                       // (Location,Location)CF<Chunk>
+        getChunkAtAsync = permuteArguments(getChunkAtAsync, methodType(CompletableFuture.class, Location.class), 0, 0); // (Location)CF<Chunk>
 
-  private static CompletableFuture<Boolean>
-  teleportAsyncOld(final CompletableFuture<Chunk> cf, final Entity entity, final Location location) {
-    return cf.thenApply(chunk -> entity.teleport(location));
-  }
+        MethodHandle teleportAsync = teleportAsyncOld;                                                                                // (CF<Chunk>,Entity,Location)CF<Boolean>
+        teleportAsync = filterArguments(teleportAsync, 0, getChunkAtAsync);                                                           // (Location,Entity,Location)CF<Boolean>
+        teleportAsync = permuteArguments(teleportAsync, methodType(CompletableFuture.class, Entity.class, Location.class), 1, 0, 1);  // (Entity,Location)CF<Boolean>
+        return teleportAsync;
+    }
 
-  private static MethodHandle findSyncTeleport(final MethodHandles.Lookup lookup)
-      throws NoSuchMethodException, IllegalAccessException {
-    // CompletableFuture.completedFuture(entity.teleport(location))
+    private static @NotNull CompletableFuture<Boolean>
+    teleportAsyncOld(final @NotNull CompletableFuture<Chunk> cf, final Entity entity, final Location location) {
+        return cf.thenApply(chunk -> entity.teleport(location));
+    }
 
-    final MethodHandle CompletableFuture_completedFuture = lookup.findStatic(CompletableFuture.class, "completedFuture", methodType(CompletableFuture.class, Object.class));
-    final MethodHandle Entity_teleport = lookup.findVirtual(Entity.class, "teleport", methodType(boolean.class, Location.class));
+    private static MethodHandle findSyncTeleport(final MethodHandles.@NotNull Lookup lookup)
+            throws NoSuchMethodException, IllegalAccessException {
+        // CompletableFuture.completedFuture(entity.teleport(location))
 
-    MethodHandle completedFuture = CompletableFuture_completedFuture;                             // (Object)CF<Object>
-    completedFuture = completedFuture.asType(methodType(CompletableFuture.class, boolean.class)); // (boolean)CF<Boolean>
+        final MethodHandle CompletableFuture_completedFuture = lookup.findStatic(CompletableFuture.class, "completedFuture", methodType(CompletableFuture.class, Object.class));
+        final MethodHandle Entity_teleport = lookup.findVirtual(Entity.class, "teleport", methodType(boolean.class, Location.class));
 
-    MethodHandle teleportSync = Entity_teleport;                      // (Entity,Location)boolean
-    teleportSync = filterReturnValue(teleportSync, completedFuture);  // (Entity,Location)CF<Boolean>
-    return teleportSync;
-  }
+        MethodHandle completedFuture = CompletableFuture_completedFuture;                             // (Object)CF<Object>
+        completedFuture = completedFuture.asType(methodType(CompletableFuture.class, boolean.class)); // (boolean)CF<Boolean>
 
-  private Teleport() {
-  }
+        MethodHandle teleportSync = Entity_teleport;                      // (Entity,Location)boolean
+        teleportSync = filterReturnValue(teleportSync, completedFuture);  // (Entity,Location)CF<Boolean>
+        return teleportSync;
+    }
 }

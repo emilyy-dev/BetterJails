@@ -26,13 +26,13 @@ package io.github.emilyydev.betterjails.interfaces.permission;
 
 abstract class AbstractPermissionInterface implements PermissionInterface {
 
-  private final String prisonerGroup;
+    private final String prisonerGroup;
 
-  AbstractPermissionInterface(final String prisonerGroup) {
-    this.prisonerGroup = prisonerGroup;
-  }
+    AbstractPermissionInterface(final String prisonerGroup) {
+        this.prisonerGroup = prisonerGroup;
+    }
 
-  protected final String prisonerGroup() {
-    return this.prisonerGroup;
-  }
+    protected final String prisonerGroup() {
+        return this.prisonerGroup;
+    }
 }

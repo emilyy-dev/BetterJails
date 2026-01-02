@@ -27,14 +27,11 @@ package io.github.emilyydev.betterjails.interfaces.storage;
 import com.github.fefo.betterjails.api.model.jail.Jail;
 import com.google.common.collect.ImmutableMap;
 import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Gates access to the StorageInterface via a single-threaded executor service,
@@ -44,88 +41,88 @@ import java.util.concurrent.TimeUnit;
  */
 public final class StorageAccess implements AutoCloseable {
 
-  private final StorageInterface storageInterface;
-  private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor(task -> {
-    final Thread t = new Thread(task, "BetterJails I/O Thread");
-    t.setPriority(Thread.MIN_PRIORITY);
-    t.setDaemon(false);
-    return t;
-  });
+    private final StorageInterface storageInterface;
+    private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor(task -> {
+        final Thread t = new Thread(task, "BetterJails I/O Thread");
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.setDaemon(false);
+        return t;
+    });
 
-  public StorageAccess(final StorageInterface storageInterface) {
-    this.storageInterface = storageInterface;
-  }
-
-  public CompletableFuture<Void> savePrisoner(final ApiPrisoner prisoner) {
-    return submit(() -> this.storageInterface.savePrisoner(prisoner));
-  }
-
-  public CompletableFuture<Void> savePrisoners(final Map<UUID, ApiPrisoner> prisoners) {
-    final Map<UUID, ApiPrisoner> copy = ImmutableMap.copyOf(prisoners);
-    return submit(() -> this.storageInterface.savePrisoners(copy));
-  }
-
-  public CompletableFuture<Void> deletePrisoner(final ApiPrisoner prisoner) {
-    return submit(() -> this.storageInterface.deletePrisoner(prisoner));
-  }
-
-  public CompletableFuture<Map<UUID, ApiPrisoner>> loadPrisoners() {
-    return submit(this.storageInterface::loadPrisoners);
-  }
-
-  public CompletableFuture<Void> saveJail(final Jail jail) {
-    return submit(() -> this.storageInterface.saveJail(jail));
-  }
-
-  public CompletableFuture<Void> saveJails(final Map<String, Jail> jails) {
-    final Map<String, Jail> copy = ImmutableMap.copyOf(jails);
-    return submit(() -> this.storageInterface.saveJails(copy));
-  }
-
-  public CompletableFuture<Void> deleteJail(final Jail jail) {
-    return submit(() -> this.storageInterface.deleteJail(jail));
-  }
-
-  public CompletableFuture<Map<String, Jail>> loadJails() {
-    return submit(this.storageInterface::loadJails);
-  }
-
-  @Override
-  public void close() throws InterruptedException {
-    this.ioExecutor.shutdown();
-    if (!this.ioExecutor.awaitTermination(30L, TimeUnit.SECONDS)) {
-      this.ioExecutor.shutdownNow();
+    public StorageAccess(final StorageInterface storageInterface) {
+        this.storageInterface = storageInterface;
     }
-  }
 
-  private CompletableFuture<Void> submit(final ThrowingRunnable task) {
-    final CompletableFuture<Void> future = new CompletableFuture<>();
-    this.ioExecutor.execute(() -> {
-      try {
-        task.run();
-        future.complete(null);
-      } catch (final Exception ex) {
-        future.completeExceptionally(ex);
-      }
-    });
-    return future;
-  }
+    public @NotNull CompletableFuture<Void> savePrisoner(final ApiPrisoner prisoner) {
+        return submit(() -> this.storageInterface.savePrisoner(prisoner));
+    }
 
-  private <T> CompletableFuture<T> submit(final Callable<T> task) {
-    final CompletableFuture<T> future = new CompletableFuture<>();
-    this.ioExecutor.execute(() -> {
-      try {
-        future.complete(task.call());
-      } catch (final Exception ex) {
-        future.completeExceptionally(ex);
-      }
-    });
-    return future;
-  }
+    public @NotNull CompletableFuture<Void> savePrisoners(final Map<UUID, ApiPrisoner> prisoners) {
+        final Map<UUID, ApiPrisoner> copy = ImmutableMap.copyOf(prisoners);
+        return submit(() -> this.storageInterface.savePrisoners(copy));
+    }
 
-  @FunctionalInterface
-  private interface ThrowingRunnable {
+    public @NotNull CompletableFuture<Void> deletePrisoner(final ApiPrisoner prisoner) {
+        return submit(() -> this.storageInterface.deletePrisoner(prisoner));
+    }
 
-    void run() throws Exception;
-  }
+    public @NotNull CompletableFuture<Map<UUID, ApiPrisoner>> loadPrisoners() {
+        return submit(this.storageInterface::loadPrisoners);
+    }
+
+    public @NotNull CompletableFuture<Void> saveJail(final Jail jail) {
+        return submit(() -> this.storageInterface.saveJail(jail));
+    }
+
+    public @NotNull CompletableFuture<Void> saveJails(final Map<String, Jail> jails) {
+        final Map<String, Jail> copy = ImmutableMap.copyOf(jails);
+        return submit(() -> this.storageInterface.saveJails(copy));
+    }
+
+    public @NotNull CompletableFuture<Void> deleteJail(final Jail jail) {
+        return submit(() -> this.storageInterface.deleteJail(jail));
+    }
+
+    public @NotNull CompletableFuture<Map<String, Jail>> loadJails() {
+        return submit(this.storageInterface::loadJails);
+    }
+
+    @Override
+    public void close() throws InterruptedException {
+        this.ioExecutor.shutdown();
+        if (!this.ioExecutor.awaitTermination(30L, TimeUnit.SECONDS)) {
+            this.ioExecutor.shutdownNow();
+        }
+    }
+
+    private @NotNull CompletableFuture<Void> submit(final ThrowingRunnable task) {
+        final CompletableFuture<Void> future = new CompletableFuture<>();
+        this.ioExecutor.execute(() -> {
+            try {
+                task.run();
+                future.complete(null);
+            } catch (final Exception ex) {
+                future.completeExceptionally(ex);
+            }
+        });
+        return future;
+    }
+
+    private <T> @NotNull CompletableFuture<T> submit(final Callable<T> task) {
+        final CompletableFuture<T> future = new CompletableFuture<>();
+        this.ioExecutor.execute(() -> {
+            try {
+                future.complete(task.call());
+            } catch (final Exception ex) {
+                future.completeExceptionally(ex);
+            }
+        });
+        return future;
+    }
+
+    @FunctionalInterface
+    private interface ThrowingRunnable {
+
+        void run() throws Exception;
+    }
 }

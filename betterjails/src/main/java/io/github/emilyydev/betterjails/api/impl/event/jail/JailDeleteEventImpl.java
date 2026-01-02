@@ -33,16 +33,16 @@ import org.jetbrains.annotations.NotNull;
 
 public final class JailDeleteEventImpl extends SimpleBetterJailsEvent implements JailDeleteEvent {
 
-  private final Jail jail;
+    private final Jail jail;
 
-  public JailDeleteEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
-      final Jail jail) {
-    super(api, eventType);
-    this.jail = jail;
-  }
+    public JailDeleteEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
+                               final Jail jail) {
+        super(api, eventType);
+        this.jail = jail;
+    }
 
-  @Override
-  public @NotNull Jail jail() {
-    return this.jail;
-  }
+    @Override
+    public @NotNull Jail jail() {
+        return this.jail;
+    }
 }

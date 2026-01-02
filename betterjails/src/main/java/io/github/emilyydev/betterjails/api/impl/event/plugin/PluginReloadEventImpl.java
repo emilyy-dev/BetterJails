@@ -33,16 +33,16 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PluginReloadEventImpl extends SimpleBetterJailsEvent implements PluginReloadEvent {
 
-  private final CommandSender sender;
+    private final CommandSender sender;
 
-  public PluginReloadEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
-      final CommandSender sender) {
-    super(api, eventType);
-    this.sender = sender;
-  }
+    public PluginReloadEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
+                                 final CommandSender sender) {
+        super(api, eventType);
+        this.sender = sender;
+    }
 
-  @Override
-  public @NotNull CommandSender sender() {
-    return this.sender;
-  }
+    @Override
+    public @NotNull CommandSender sender() {
+        return this.sender;
+    }
 }

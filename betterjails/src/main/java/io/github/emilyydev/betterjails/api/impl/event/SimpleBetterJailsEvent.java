@@ -30,21 +30,21 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class SimpleBetterJailsEvent implements BetterJailsEvent {
 
-  private final BetterJails api;
-  private final Class<? extends BetterJailsEvent> eventType;
+    private final BetterJails api;
+    private final Class<? extends BetterJailsEvent> eventType;
 
-  protected SimpleBetterJailsEvent(final BetterJails api, final Class<? extends BetterJailsEvent> eventType) {
-    this.api = api;
-    this.eventType = eventType;
-  }
+    protected SimpleBetterJailsEvent(final BetterJails api, final Class<? extends BetterJailsEvent> eventType) {
+        this.api = api;
+        this.eventType = eventType;
+    }
 
-  @Override
-  public @NotNull BetterJails getBetterJails() {
-    return this.api;
-  }
+    @Override
+    public @NotNull BetterJails getBetterJails() {
+        return this.api;
+    }
 
-  @Override
-  public @NotNull Class<? extends BetterJailsEvent> getEventType() {
-    return this.eventType;
-  }
+    @Override
+    public @NotNull Class<? extends BetterJailsEvent> getEventType() {
+        return this.eventType;
+    }
 }

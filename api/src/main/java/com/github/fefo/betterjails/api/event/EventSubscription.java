@@ -37,49 +37,49 @@ import java.util.function.Consumer;
  */
 public interface EventSubscription<T extends BetterJailsEvent> {
 
-  /**
-   * Gets the subscription underlying event handler.
-   *
-   * @return the event handler
-   */
-  @NotNull Consumer<? super T> handler();
+    /**
+     * Gets the subscription underlying event handler.
+     *
+     * @return the event handler
+     */
+    @NotNull Consumer<? super T> handler();
 
-  /**
-   * Gets the interface or superinterface of event types this subscription handles.
-   *
-   * @return the event type this subscription registered to
-   */
-  @NotNull Class<T> eventType();
+    /**
+     * Gets the interface or superinterface of event types this subscription handles.
+     *
+     * @return the event type this subscription registered to
+     */
+    @NotNull Class<T> eventType();
 
-  /**
-   * Gets the plugin that owns this event subscription.
-   *
-   * @return the plugin registering this subscription
-   */
-  @NotNull Plugin plugin();
+    /**
+     * Gets the plugin that owns this event subscription.
+     *
+     * @return the plugin registering this subscription
+     */
+    @NotNull Plugin plugin();
 
-  /**
-   * Deactivates this subscription and replaces the handler with one that always throws.
-   */
-  void unsubscribe();
+    /**
+     * Deactivates this subscription and replaces the handler with one that always throws.
+     */
+    void unsubscribe();
 
-  /**
-   * Gets the activation state of this subscription, {@code true} if it is still handling events,
-   * {@code false} otherwise.
-   *
-   * @return the subscription activation state
-   */
-  boolean isActive();
+    /**
+     * Gets the activation state of this subscription, {@code true} if it is still handling events,
+     * {@code false} otherwise.
+     *
+     * @return the subscription activation state
+     */
+    boolean isActive();
 
-  /**
-   * Gets the inverse of the activation state of this subscription.
-   * <p>
-   * Useful for using as method reference as predicate ({@code EventSubscription::isNotActive}).
-   * </p>
-   *
-   * @return {@code true} if the subscription is <b>not</b> active
-   */
-  default boolean isNotActive() {
-    return !isActive();
-  }
+    /**
+     * Gets the inverse of the activation state of this subscription.
+     * <p>
+     * Useful for using as method reference as predicate ({@code EventSubscription::isNotActive}).
+     * </p>
+     *
+     * @return {@code true} if the subscription is <b>not</b> active
+     */
+    default boolean isNotActive() {
+        return !isActive();
+    }
 }

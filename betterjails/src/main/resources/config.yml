@@ -20,61 +20,72 @@ prisonerGroup: prisoner
 # Set to 0 to disable.
 autoSaveTimeInMinutes: 5
 
+# Enable action logging for audit purposes
+# Logs will be stored in plugins/BetterJails/logs/
+enableActionLogging: true
+
 # Messages shown.
+# Messages now support MiniMessage format! https://docs.advntr.dev/minimessage/format.html
+# Legacy color codes (&a, &b, etc.) are still supported for backwards compatibility
 messages:
   # Placeholders for /jail:
-  # · {prisoner}: player to be jailed.
-  # · {player}: player that executes the command.
-  # · {jail}: jail name to where the prisoner will be sent.
-  # · {time}: time argument provided.
-  # · {reason}: imprisonment reason.
-  jailSuccess: "&c{prisoner} &6has been jailed by &c{player} &6for &c{time}&6."
-  jailFailedPlayerNeverJoined: "&cPlayer &4{prisoner} &cnever joined this server."
-  jailFailedPlayerExempt: "&4{prisoner} &ccannot be jailed."
+  # · <prisoner>: player to be jailed.
+  # · <player>: player that executes the command.
+  # · <jail>: jail name to where the prisoner will be sent.
+  # · <time>: time argument provided.
+  # · <reason>: imprisonment reason.
+  jailSuccess: "<red><prisoner></red> <gold>has been jailed by</gold> <red><player></red> <gold>for</gold> <red><time></red><gold>.</gold>"
+  jailFailedPlayerNeverJoined: "<red>Player</red> <dark_red><prisoner></dark_red> <red>never joined this server.</red>"
+  jailFailedPlayerExempt: "<dark_red><prisoner></dark_red> <red>cannot be jailed.</red>"
+  jailFailedDurationExceeded: "<red>You can only jail players for up to</red> <dark_red><max_duration></dark_red><red>. You tried to jail for</red> <dark_red><requested_duration></dark_red><red>.</red>"
 
   # Generic error messages when resolving a jail or prisoner for a command.
   # Available placeholders:
-  # · {jail}: non-existent jail attempted to resolve.
-  non-existent-jail: "&cJail &4{jail} &cdoesn't exist"
-  # · {prisoner}: non-existent prisoner attempted to resolve.
-  player-not-imprisoned: "&4{prisoner} &cis not imprisoned"
+  # · <jail>: non-existent jail attempted to resolve.
+  non-existent-jail: "<red>Jail</red> <dark_red><jail></dark_red> <red>doesn't exist</red>"
+  # · <prisoner>: non-existent prisoner attempted to resolve.
+  player-not-imprisoned: "<dark_red><prisoner></dark_red> <red>is not imprisoned</red>"
 
   # Placeholders for /unjail:
-  # · {prisoner}: player to be unjailed.
-  # · {player}: player that executes the command.
-  unjailSuccess: "&c{prisoner} &6has been unjailed by &c{player}&6."
+  # · <prisoner>: player to be unjailed.
+  # · <player>: player that executes the command.
+  unjailSuccess: "<red><prisoner></red> <gold>has been unjailed by</gold> <red><player></red><gold>.</gold>"
 
   # Placeholders for /setjail, /modjail and /deljail:
-  # · {player}: player that executes the command.
-  # · {jail}: jail name to be added/removed.
-  setjailSuccess: "&6Jail added successfully!"
-  save-jail-failed: "&cAn error occurred while saving data for jail &4{jail}&c. Check the console for errors."
-  modify-jail-success: "&6Jail modified successfully!"
-  modify-jail-failed: "&cAn error occurred while modifying data for jail &4{jail}&c. Check the console for errors."
-  deljailSuccess: "&6Jail removed successfully!"
-  delete-jail-failed: "&cAn error occurred while deleting data for jail &4{jail}&c. Check the console for errors."
+  # · <player>: player that executes the command.
+  # · <jail>: jail name to be added/removed.
+  setjailSuccess: "<gold>Jail added successfully!</gold>"
+  save-jail-failed: "<red>An error occurred while saving data for jail</red> <dark_red><jail></dark_red><red>. Check the console for errors.</red>"
+  modify-jail-success: "<gold>Jail modified successfully!</gold>"
+  modify-jail-failed: "<red>An error occurred while modifying data for jail</red> <dark_red><jail></dark_red><red>. Check the console for errors.</red>"
+  deljailSuccess: "<gold>Jail removed successfully!</gold>"
+  delete-jail-failed: "<red>An error occurred while deleting data for jail</red> <dark_red><jail></dark_red><red>. Check the console for errors.</red>"
 
   # Placeholders for /jailtime:
-  # · {prisoner}: player whose sentence time will be modified.
-  # · {player}: player that executes the command.
-  # · {time}: new sentence time.
-  jailtime-success: "&6Sentence time of &c{prisoner} &6is now &c{time}&6."
+  # · <prisoner>: player whose sentence time will be modified.
+  # · <player>: player that executes the command.
+  # · <time>: new sentence time.
+  jailtime-success: "<gold>Sentence time of</gold> <red><prisoner></red> <gold>is now</gold> <red><time></red><gold>.</gold>"
 
   # Placeholders for /betterjails reload and /betterjails save:
-  # · {player}: player that executes the command.
-  reload: "&6Files reloaded successfully!"
-  reload-failed: "&cAn error occurred while reloading plugin data. Check the console for errors."
-  save: "&6Files saved successfully!"
-  save-all-failed: "&cAn error occurred while saving plugin data. Check the console for errors."
+  # · <player>: player that executes the command.
+  reload: "<gold>Files reloaded successfully!</gold>"
+  reload-failed: "<red>An error occurred while reloading plugin data. Check the console for errors.</red>"
+  save: "<gold>Files saved successfully!</gold>"
+  save-all-failed: "<red>An error occurred while saving plugin data. Check the console for errors.</red>"
 
   # Placeholders for /jails premessages:
   # · None :(
-  listNoJails: "&6There are no jails available!"
-  listJailsPremessage: "&6Available jails:"
+  listNoJails: "<gold>There are no jails available!</gold>"
+  listJailsPremessage: "<gold>Available jails:</gold>"
 
   # Placeholders for /jails list:
   # · None :(
   jailsFormat: "line"
+
+  # For jail time limits:
+  # · <max_duration>: the maximum duration allowed
+  # · <requested_duration>: the duration that was requested
 
   # jailsFormat can be any of these values:
   # · list

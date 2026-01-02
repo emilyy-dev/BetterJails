@@ -32,28 +32,28 @@ import org.jetbrains.annotations.NotNull;
 
 public final class BetterJailsApi implements BetterJails {
 
-  private final JailManager jailManager;
-  private final PrisonerManager prisonerManager;
-  private final ApiEventBus eventBus;
+    private final JailManager jailManager;
+    private final PrisonerManager prisonerManager;
+    private final ApiEventBus eventBus;
 
-  public BetterJailsApi(final JailManager jailManager, final PrisonerManager prisonerManager) {
-    this.jailManager = jailManager;
-    this.prisonerManager = prisonerManager;
-    this.eventBus = new ApiEventBus(this);
-  }
+    public BetterJailsApi(final JailManager jailManager, final PrisonerManager prisonerManager) {
+        this.jailManager = jailManager;
+        this.prisonerManager = prisonerManager;
+        this.eventBus = new ApiEventBus(this);
+    }
 
-  @Override
-  public @NotNull JailManager getJailManager() {
-    return this.jailManager;
-  }
+    @Override
+    public @NotNull JailManager getJailManager() {
+        return this.jailManager;
+    }
 
-  @Override
-  public @NotNull PrisonerManager getPrisonerManager() {
-    return this.prisonerManager;
-  }
+    @Override
+    public @NotNull PrisonerManager getPrisonerManager() {
+        return this.prisonerManager;
+    }
 
-  @Override
-  public @NotNull ApiEventBus getEventBus() {
-    return this.eventBus;
-  }
+    @Override
+    public @NotNull ApiEventBus getEventBus() {
+        return this.eventBus;
+    }
 }

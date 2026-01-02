@@ -37,17 +37,17 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface JailCreateEvent extends BetterJailsEvent {
 
-  /**
-   * Gets the name of the {@link Jail} being created.
-   *
-   * @return the name of the jail
-   */
-  @NotNull String jailName();
+    /**
+     * Gets the name of the {@link Jail} being created.
+     *
+     * @return the name of the jail
+     */
+    @NotNull String jailName();
 
-  /**
-   * Gets the {@link ImmutableLocation} of the jail being created.
-   *
-   * @return the jail location
-   */
-  @NotNull ImmutableLocation jailLocation();
+    /**
+     * Gets the {@link ImmutableLocation} of the jail being created.
+     *
+     * @return the jail location
+     */
+    @NotNull ImmutableLocation jailLocation();
 }

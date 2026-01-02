@@ -38,18 +38,18 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface BetterJailsEvent {
 
-  /**
-   * Gets the API instance that posted this event.
-   *
-   * @return the API instance this event was dispatched from
-   */
-  @NotNull BetterJails getBetterJails();
+    /**
+     * Gets the API instance that posted this event.
+     *
+     * @return the API instance this event was dispatched from
+     */
+    @NotNull BetterJails getBetterJails();
 
-  /**
-   * Gets the specific type of this event. This is useful for listeners that are subscribed to
-   * superinterfaces of some events to listen to all of the subinterfaces' dispatching.
-   *
-   * @return the event type
-   */
-  @NotNull Class<? extends BetterJailsEvent> getEventType();
+    /**
+     * Gets the specific type of this event. This is useful for listeners that are subscribed to
+     * superinterfaces of some events to listen to all of the subinterfaces' dispatching.
+     *
+     * @return the event type
+     */
+    @NotNull Class<? extends BetterJailsEvent> getEventType();
 }

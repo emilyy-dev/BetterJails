@@ -29,65 +29,63 @@ import org.bukkit.entity.Player;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 
-import static java.lang.invoke.MethodHandles.dropArguments;
-import static java.lang.invoke.MethodHandles.filterArguments;
-import static java.lang.invoke.MethodHandles.foldArguments;
+import static java.lang.invoke.MethodHandles.*;
 import static java.lang.invoke.MethodType.methodType;
 
 public final class WorldGuardFacade {
 
-  private static final MethodHandle RESET_STATE;
+    private static final MethodHandle RESET_STATE;
 
-  static {
-    try {
-      final MethodHandles.Lookup lookup = MethodHandles.lookup();
-      MethodHandle resetState = lookup.findStatic(WorldGuardFacade.class, "empty", methodType(void.class)); // ()void
-      resetState = dropArguments(resetState, 0, Player.class);                                              // (Player)void
-      try {
-        final Class<?> SessionManager = Class.forName("com.sk89q.worldguard.session.SessionManager");
-        if (SessionManager.isInterface()) { // 7.x
-          final Class<?> WorldGuardPlugin = Class.forName("com.sk89q.worldguard.bukkit.WorldGuardPlugin");
-          final Class<?> WorldGuard = Class.forName("com.sk89q.worldguard.WorldGuard");
-          final Class<?> WorldGuardPlatform = Class.forName("com.sk89q.worldguard.internal.platform.WorldGuardPlatform");
-          final Class<?> LocalPlayer = Class.forName("com.sk89q.worldguard.LocalPlayer");
+    static {
+        try {
+            final MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodHandle resetState = lookup.findStatic(WorldGuardFacade.class, "empty", methodType(void.class)); // ()void
+            resetState = dropArguments(resetState, 0, Player.class);                                              // (Player)void
+            try {
+                final Class<?> SessionManager = Class.forName("com.sk89q.worldguard.session.SessionManager");
+                if (SessionManager.isInterface()) { // 7.x
+                    final Class<?> WorldGuardPlugin = Class.forName("com.sk89q.worldguard.bukkit.WorldGuardPlugin");
+                    final Class<?> WorldGuard = Class.forName("com.sk89q.worldguard.WorldGuard");
+                    final Class<?> WorldGuardPlatform = Class.forName("com.sk89q.worldguard.internal.platform.WorldGuardPlatform");
+                    final Class<?> LocalPlayer = Class.forName("com.sk89q.worldguard.LocalPlayer");
 
-          // WorldGuard.getInstance().getPlatform().getSessionManager().resetState(WorldGuardPlugin.inst().wrapPlayer(player));
+                    // WorldGuard.getInstance().getPlatform().getSessionManager().resetState(WorldGuardPlugin.inst().wrapPlayer(player));
 
-          final MethodHandle WorldGuardPlugin_inst = lookup.findStatic(WorldGuardPlugin, "inst", methodType(WorldGuardPlugin));
-          final MethodHandle WorldGuardPlugin_wrapPlayer = lookup.findVirtual(WorldGuardPlugin, "wrapPlayer", methodType(LocalPlayer, Player.class));
+                    final MethodHandle WorldGuardPlugin_inst = lookup.findStatic(WorldGuardPlugin, "inst", methodType(WorldGuardPlugin));
+                    final MethodHandle WorldGuardPlugin_wrapPlayer = lookup.findVirtual(WorldGuardPlugin, "wrapPlayer", methodType(LocalPlayer, Player.class));
 
-          final MethodHandle WorldGuard_getInstance = lookup.findStatic(WorldGuard, "getInstance", methodType(WorldGuard));
-          final MethodHandle WorldGuard_getPlatform = lookup.findVirtual(WorldGuard, "getPlatform", methodType(WorldGuardPlatform));
-          final MethodHandle WorldGuardPlatform_getSessionManager = lookup.findVirtual(WorldGuardPlatform, "getSessionManager", methodType(SessionManager));
-          final MethodHandle SessionManager_resetState = lookup.findVirtual(SessionManager, "resetState", methodType(void.class, LocalPlayer));
+                    final MethodHandle WorldGuard_getInstance = lookup.findStatic(WorldGuard, "getInstance", methodType(WorldGuard));
+                    final MethodHandle WorldGuard_getPlatform = lookup.findVirtual(WorldGuard, "getPlatform", methodType(WorldGuardPlatform));
+                    final MethodHandle WorldGuardPlatform_getSessionManager = lookup.findVirtual(WorldGuardPlatform, "getSessionManager", methodType(SessionManager));
+                    final MethodHandle SessionManager_resetState = lookup.findVirtual(SessionManager, "resetState", methodType(void.class, LocalPlayer));
 
-          MethodHandle wrapPlayer = WorldGuardPlugin_wrapPlayer;          // (WorldGuardPlugin,Player)LocalPlayer
-          wrapPlayer = foldArguments(wrapPlayer, WorldGuardPlugin_inst);  // (Player)LocalPlayer
+                    MethodHandle wrapPlayer = WorldGuardPlugin_wrapPlayer;          // (WorldGuardPlugin,Player)LocalPlayer
+                    wrapPlayer = foldArguments(wrapPlayer, WorldGuardPlugin_inst);  // (Player)LocalPlayer
 
-          resetState = SessionManager_resetState;                                                         // (SessionManager,LocalPlayer)void
-          resetState = filterArguments(resetState, 0, WorldGuardPlatform_getSessionManager, wrapPlayer);  // (WorldGuardPlatform,Player)void
-          resetState = filterArguments(resetState, 0, WorldGuard_getPlatform);                            // (WorldGuard,Player)void
-          resetState = foldArguments(resetState, WorldGuard_getInstance);                                 // (Player)void
-        } // TODO: <=1.12
-      } catch (final ClassNotFoundException ignored) {
-      }
+                    resetState = SessionManager_resetState;                                                         // (SessionManager,LocalPlayer)void
+                    resetState = filterArguments(resetState, 0, WorldGuardPlatform_getSessionManager, wrapPlayer);  // (WorldGuardPlatform,Player)void
+                    resetState = filterArguments(resetState, 0, WorldGuard_getPlatform);                            // (WorldGuard,Player)void
+                    resetState = foldArguments(resetState, WorldGuard_getInstance);                                 // (Player)void
+                } // TODO: <=1.12
+            } catch (final ClassNotFoundException ignored) {
+            }
 
-      RESET_STATE = resetState;
-    } catch (final NoSuchMethodException | IllegalAccessException ex) {
-      throw new ExceptionInInitializerError(ex);
+            RESET_STATE = resetState;
+        } catch (final NoSuchMethodException | IllegalAccessException ex) {
+            throw new ExceptionInInitializerError(ex);
+        }
     }
-  }
 
-  public static void resetState(final Player player) {
-    try {
-      RESET_STATE.invokeExact(player);
-    } catch (final RuntimeException | Error ex) {
-      throw ex;
-    } catch (final Throwable ex) {
-      throw new RuntimeException(ex);
+    public static void resetState(final Player player) {
+        try {
+            RESET_STATE.invokeExact(player);
+        } catch (final RuntimeException | Error ex) {
+            throw ex;
+        } catch (final Throwable ex) {
+            throw new RuntimeException(ex);
+        }
     }
-  }
 
-  private static void empty() {
-  }
+    private static void empty() {
+    }
 }

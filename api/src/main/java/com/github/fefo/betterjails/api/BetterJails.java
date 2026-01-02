@@ -43,33 +43,33 @@ import org.jetbrains.annotations.NotNull;
 @ApiStatus.NonExtendable
 public interface BetterJails {
 
-  /**
-   * Gets the {@link JailManager}, responsible for managing {@link Jail} instances.
-   * <p>
-   * This manager can be used to create, delete and retrieve instances of a {@link Jail} by name
-   * or get all available jails.
-   * </p>
-   *
-   * @return the jail manager
-   */
-  @NotNull JailManager getJailManager();
+    /**
+     * Gets the {@link JailManager}, responsible for managing {@link Jail} instances.
+     * <p>
+     * This manager can be used to create, delete and retrieve instances of a {@link Jail} by name
+     * or get all available jails.
+     * </p>
+     *
+     * @return the jail manager
+     */
+    @NotNull JailManager getJailManager();
 
-  /**
-   * Gets the {@link PrisonerManager}, responsible for managing {@link Prisoner} instances.
-   * <p>
-   * This manager can be used to imprison players, retrieve and release {@link Prisoner}s or get
-   * all known prisoners.
-   * </p>
-   *
-   * @return the prisoner manager
-   */
-  @NotNull PrisonerManager getPrisonerManager();
+    /**
+     * Gets the {@link PrisonerManager}, responsible for managing {@link Prisoner} instances.
+     * <p>
+     * This manager can be used to imprison players, retrieve and release {@link Prisoner}s or get
+     * all known prisoners.
+     * </p>
+     *
+     * @return the prisoner manager
+     */
+    @NotNull PrisonerManager getPrisonerManager();
 
-  /**
-   * Gets the plugin {@link EventBus}, in which other plugins can subscribe (or "listen") to certain
-   * events and actions that happen throughout the functioning of the plugin.
-   *
-   * @return the event bus
-   */
-  @NotNull EventBus getEventBus();
+    /**
+     * Gets the plugin {@link EventBus}, in which other plugins can subscribe (or "listen") to certain
+     * events and actions that happen throughout the functioning of the plugin.
+     *
+     * @return the event bus
+     */
+    @NotNull EventBus getEventBus();
 }

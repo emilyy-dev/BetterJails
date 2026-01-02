@@ -1,13 +1,11 @@
 # BetterJails
 
-
 #### Resource in [spigotmc.org](https://www.spigotmc.org/resources/betterjails.76001/) & [dev.bukkit.org](https://dev.bukkit.org/projects/betterjails)
 
 A simple jails system Bukkit plugin aimed for most Minecraft versions.
 
 It lets you manage jails, jail offline players, and sentence time will be over when prisoners have
 been online for the required time.
-
 
 ### Sections
 
@@ -17,9 +15,7 @@ been online for the required time.
 * [Developer API](#Developer-API)
 * [Compiling](#Compiling)
 
-
 ## Commands and permissions
-
 
 ### Commands
 
@@ -43,7 +39,6 @@ been online for the required time.
 * `/betterjails reload` / Reloads files into memory.
 * `/betterjails save` / Saves files from memory.
 
-
 ### Permissions
 
 All permissions default to operators only unless otherwise noted.
@@ -62,7 +57,6 @@ All permissions default to operators only unless otherwise noted.
   to true for all users.
 * `betterjails.betterjails.reload` / Lets the user execute the `/betterjails reload` command.
 * `betterjails.betterjails.save` / Lets the user execute the `/betterjails save` command.
-
 
 ## Configuration
 
@@ -108,7 +102,6 @@ Various messages that pop up when doing commands.
 
 ___
 
-
 ## Sub-commands execution
 
 **This is pretty straight-forward.**
@@ -123,32 +116,40 @@ under `on-release` will be executed when the player gets released from jail.
 **All the commands will only be performed when the player is online. If they are jailed/released
 while offline, they will be executed when they get online.**
 
-
 ## Developer API
 
 BetterJails now ships with a developer API! Plugin developers can now interact with B.J., listen to
 specific events, create jails, release prisoners and much more.
 
-The [`BetterJails` interface](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/BetterJails.java) is the heart of the API, in there you can access all the other interfaces you need to work with B.J.:
-* A [`PrisonerManager`](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/prisoner/PrisonerManager.java) in which you can retrieve prisoners, jail players and release prisoners
-* A [`JailManager`](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/jail/JailManager.java) in which you can create and delete jails
-* An [`EventBus`](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/event/EventBus.java) where you can subscribe (or "listen") to certain events dispatched throughout the functioning of the plugin.
+The [
+`BetterJails` interface](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/BetterJails.java)
+is the heart of the API, in there you can access all the other interfaces you need to work with B.J.:
+
+* A [
+  `PrisonerManager`](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/prisoner/PrisonerManager.java)
+  in which you can retrieve prisoners, jail players and release prisoners
+* A [
+  `JailManager`](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/model/jail/JailManager.java)
+  in which you can create and delete jails
+* An [
+  `EventBus`](https://github.com/emilyy-dev/BetterJails/blob/v1/api/src/main/java/com/github/fefo/betterjails/api/event/EventBus.java)
+  where you can subscribe (or "listen") to certain events dispatched throughout the functioning of the plugin.
 
 You can get an instance of the `BetterJails` interface through the services manager as follows:
 
 ````java
 public class MyPlugin extends JavaPlugin {
 
-  private BetterJails betterJails;
+    private BetterJails betterJails;
 
-  public BetterJails getBetterJails() {
-    return this.betterJails;
-  }
+    public BetterJails getBetterJails() {
+        return this.betterJails;
+    }
 
-  @Override
-  public void onEnable() {
-    this.betterJails = getServer().getServicesManager().load(BetterJails.class);
-  }
+    @Override
+    public void onEnable() {
+        this.betterJails = getServer().getServicesManager().load(BetterJails.class);
+    }
 }
 ````
 
@@ -157,11 +158,12 @@ Don't forget to add `"BetterJails"` as `depend`/`softdepend` to your `plugin.yml
 The API is published in Maven Central Repository and snapshots are published to OSS Sonatype Snapshots repository.
 Importing the BetterJails API to your project depends on how you build your plugin.
 
-
 ### Maven
 
 If you are using Maven, all you have to do is add the dependency itself that will be pulled from Central
+
 ```xml
+
 <dependency>
     <groupId>io.github.emilyy-dev</groupId>
     <artifactId>betterjails-api</artifactId>
@@ -170,11 +172,9 @@ If you are using Maven, all you have to do is add the dependency itself that wil
 </dependency>
 ```
 
-
 ### Gradle
 
 Same principle applies if you are using Gradle to build your plugin, but you need to specify the `mavenCentral()` repo:
-
 
 ##### Groovy DSL
 
@@ -188,7 +188,6 @@ dependencies {
 }
 ```
 
-
 ##### Kotlin DSL
 
 ```kotlin
@@ -201,11 +200,10 @@ dependencies {
 }
 ```
 
-
 ### Manually
 
-If you want to manually add the API dependency to your classpath, you can obtain the jar by [downloading it from here](https://repo1.maven.org/maven2/io/github/emilyy-dev/betterjails-api/1.6/).
-
+If you want to manually add the API dependency to your classpath, you can obtain the jar
+by [downloading it from here](https://repo1.maven.org/maven2/io/github/emilyy-dev/betterjails-api/1.6/).
 
 ## Compiling
 

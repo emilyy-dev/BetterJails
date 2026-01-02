@@ -40,55 +40,55 @@ import java.util.concurrent.ExecutionException;
 
 public final class ApiJailManager implements JailManager {
 
-  private final JailDataHandler jailData;
+    private final JailDataHandler jailData;
 
-  public ApiJailManager(final JailDataHandler jailData) {
-    this.jailData = jailData;
-  }
-
-  @Override
-  @SuppressWarnings("ConstantConditions")
-  public @NotNull Jail createAndSaveJail(final @NotNull String name, final @NotNull Location location)
-      throws IllegalArgumentException {
-    Objects.requireNonNull(name, "name");
-    Objects.requireNonNull(location, "location");
-
-    if (this.jailData.getJail(name) != null) {
-      throw new IllegalArgumentException("name");
+    public ApiJailManager(final JailDataHandler jailData) {
+        this.jailData = jailData;
     }
 
-    try {
-      this.jailData.addJail(name, ImmutableLocation.copyOf(location)).get();
-    } catch (final InterruptedException ex) {
-      // bleh
-    } catch (final ExecutionException ex) {
-      throw new RuntimeException(ex.getCause());
+    @Override
+    @SuppressWarnings("ConstantConditions")
+    public @NotNull Jail createAndSaveJail(final @NotNull String name, final @NotNull Location location)
+            throws IllegalArgumentException {
+        Objects.requireNonNull(name, "name");
+        Objects.requireNonNull(location, "location");
+
+        if (this.jailData.getJail(name) != null) {
+            throw new IllegalArgumentException("name");
+        }
+
+        try {
+            this.jailData.addJail(name, ImmutableLocation.copyOf(location)).get();
+        } catch (final InterruptedException ex) {
+            // bleh
+        } catch (final ExecutionException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
+
+        return this.jailData.getJail(name);
     }
 
-    return this.jailData.getJail(name);
-  }
-
-  @Override
-  public @Nullable Jail getJail(final @NotNull String name) {
-    Objects.requireNonNull(name, "name");
-    return this.jailData.getJail(name);
-  }
-
-  @Override
-  public void deleteJail(final @NotNull Jail jail) {
-    Objects.requireNonNull(jail, "jail");
-
-    try {
-      this.jailData.removeJail(jail).get();
-    } catch (final InterruptedException ex) {
-      // bleh
-    } catch (final ExecutionException ex) {
-      throw new RuntimeException(ex.getCause());
+    @Override
+    public @Nullable Jail getJail(final @NotNull String name) {
+        Objects.requireNonNull(name, "name");
+        return this.jailData.getJail(name);
     }
-  }
 
-  @Override
-  public @NotNull @UnmodifiableView Collection<@NotNull Jail> getAllJails() {
-    return Collections.unmodifiableCollection(this.jailData.getJails().values());
-  }
+    @Override
+    public void deleteJail(final @NotNull Jail jail) {
+        Objects.requireNonNull(jail, "jail");
+
+        try {
+            this.jailData.removeJail(jail).get();
+        } catch (final InterruptedException ex) {
+            // bleh
+        } catch (final ExecutionException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
+    }
+
+    @Override
+    public @NotNull @UnmodifiableView Collection<@NotNull Jail> getAllJails() {
+        return Collections.unmodifiableCollection(this.jailData.getJails().values());
+    }
 }

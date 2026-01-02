@@ -29,27 +29,30 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 public final class PluginDisableListener implements Listener {
 
-  public static PluginDisableListener create(final ApiEventBus eventBus) {
-    return new PluginDisableListener(eventBus);
-  }
+    private final ApiEventBus eventBus;
 
-  private final ApiEventBus eventBus;
+    private PluginDisableListener(final ApiEventBus eventBus) {
+        this.eventBus = eventBus;
+    }
 
-  private PluginDisableListener(final ApiEventBus eventBus) {
-    this.eventBus = eventBus;
-  }
+    @Contract(value = "_ -> new", pure = true)
+    public static @NotNull PluginDisableListener create(final ApiEventBus eventBus) {
+        return new PluginDisableListener(eventBus);
+    }
 
-  public void register(final Plugin plugin) {
-    plugin.getServer().getPluginManager().registerEvent(
-        PluginDisableEvent.class, this, EventPriority.NORMAL,
-        (l, e) -> pluginDisable((PluginDisableEvent) e), plugin
-    );
-  }
+    public void register(final @NotNull Plugin plugin) {
+        plugin.getServer().getPluginManager().registerEvent(
+                PluginDisableEvent.class, this, EventPriority.NORMAL,
+                (l, e) -> pluginDisable((PluginDisableEvent) e), plugin
+        );
+    }
 
-  private void pluginDisable(final PluginDisableEvent event) {
-    this.eventBus.unsubscribe(event.getPlugin());
-  }
+    private void pluginDisable(final @NotNull PluginDisableEvent event) {
+        this.eventBus.unsubscribe(event.getPlugin());
+    }
 }

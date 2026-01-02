@@ -33,23 +33,23 @@ import org.jetbrains.annotations.NotNull;
 
 public final class JailCreateEventImpl extends SimpleBetterJailsEvent implements JailCreateEvent {
 
-  private final String jailName;
-  private final ImmutableLocation jailLocation;
+    private final String jailName;
+    private final ImmutableLocation jailLocation;
 
-  public JailCreateEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
-      final String jailName, final ImmutableLocation jailLocation) {
-    super(api, eventType);
-    this.jailName = jailName;
-    this.jailLocation = jailLocation;
-  }
+    public JailCreateEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
+                               final String jailName, final ImmutableLocation jailLocation) {
+        super(api, eventType);
+        this.jailName = jailName;
+        this.jailLocation = jailLocation;
+    }
 
-  @Override
-  public @NotNull String jailName() {
-    return this.jailName;
-  }
+    @Override
+    public @NotNull String jailName() {
+        return this.jailName;
+    }
 
-  @Override
-  public @NotNull ImmutableLocation jailLocation() {
-    return this.jailLocation;
-  }
+    @Override
+    public @NotNull ImmutableLocation jailLocation() {
+        return this.jailLocation;
+    }
 }

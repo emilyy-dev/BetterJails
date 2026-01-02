@@ -32,6 +32,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -40,39 +41,39 @@ import java.util.UUID;
 
 public final class UniqueIdCache implements Listener {
 
-  private static final UUID NIL_UUID = new UUID(0L, 0L);
+    private static final UUID NIL_UUID = new UUID(0L, 0L);
 
-  private final Map<String, UUID> cache = new HashMap<>();
+    private final Map<String, UUID> cache = new HashMap<>();
 
-  public void register(final BetterJailsPlugin plugin) {
-    final Server server = plugin.getServer();
-    for (final OfflinePlayer offlinePlayer : server.getOfflinePlayers()) {
-      final String name = offlinePlayer.getName();
-      if (name != null) {
-        this.cache.put(name.toLowerCase(Locale.ROOT), offlinePlayer.getUniqueId());
-      }
+    public void register(final @NotNull BetterJailsPlugin plugin) {
+        final Server server = plugin.getServer();
+        for (final OfflinePlayer offlinePlayer : server.getOfflinePlayers()) {
+            final String name = offlinePlayer.getName();
+            if (name != null) {
+                this.cache.put(name.toLowerCase(Locale.ROOT), offlinePlayer.getUniqueId());
+            }
+        }
+
+        server.getPluginManager().registerEvent(
+                PlayerJoinEvent.class, this, EventPriority.MONITOR,
+                (l, e) -> ((UniqueIdCache) l).playerLogin((PlayerJoinEvent) e), plugin
+        );
     }
 
-    server.getPluginManager().registerEvent(
-        PlayerJoinEvent.class, this, EventPriority.MONITOR,
-        (l, e) -> ((UniqueIdCache) l).playerLogin((PlayerJoinEvent) e), plugin
-    );
-  }
+    public UUID findUniqueId(final @NotNull String name) {
+        return this.cache.getOrDefault(name.toLowerCase(Locale.ROOT), NIL_UUID);
+    }
 
-  public UUID findUniqueId(final String name) {
-    return this.cache.getOrDefault(name.toLowerCase(Locale.ROOT), NIL_UUID);
-  }
+    @PluginMetrics.Metric(
+            metric = PluginMetrics.ID_CACHE_SIZE,
+            trackedFor = "Determining whether to replace the on-memory cache with SQLite"
+    )
+    public int cacheSize() {
+        return this.cache.size();
+    }
 
-  @PluginMetrics.Metric(
-      metric = PluginMetrics.ID_CACHE_SIZE,
-      trackedFor = "Determining whether to replace the on-memory cache with SQLite"
-  )
-  public int cacheSize() {
-    return this.cache.size();
-  }
-
-  private void playerLogin(final PlayerJoinEvent event) {
-    final Player player = event.getPlayer();
-    this.cache.putIfAbsent(player.getName().toLowerCase(Locale.ROOT), player.getUniqueId());
-  }
+    private void playerLogin(final @NotNull PlayerJoinEvent event) {
+        final Player player = event.getPlayer();
+        this.cache.putIfAbsent(player.getName().toLowerCase(Locale.ROOT), player.getUniqueId());
+    }
 }

@@ -39,10 +39,10 @@ import java.util.UUID;
  */
 public interface PlayerImprisonEvent extends BetterJailsEvent {
 
-  /**
-   * Gets the prisoner being imprisoned.
-   *
-   * @return the prisoner being imprisoned
-   */
-  @NotNull Prisoner prisoner();
+    /**
+     * Gets the prisoner being imprisoned.
+     *
+     * @return the prisoner being imprisoned
+     */
+    @NotNull Prisoner prisoner();
 }

@@ -35,10 +35,10 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface PrisonerReleaseEvent extends BetterJailsEvent {
 
-  /**
-   * Gets the prisoner being released.
-   *
-   * @return the prisoner being released
-   */
-  @NotNull Prisoner prisoner();
+    /**
+     * Gets the prisoner being released.
+     *
+     * @return the prisoner being released
+     */
+    @NotNull Prisoner prisoner();
 }

@@ -13,8 +13,18 @@ permissions:
   betterjails.setjail: { }
   betterjails.modjail: { }
   betterjails.deljail: { }
+  betterjails.jailtime: { }
   betterjails.receivebroadcast: { }
   betterjails.betterjails:
     default: "true"
   betterjails.betterjails.reload: { }
   betterjails.betterjails.save: { }
+  # Jail time limit permissions
+  # Format: betterjails.jaillimit.<duration>
+  # Duration format: <number><unit> where unit is s/m/h/d/w
+  # Examples:
+  #   betterjails.jaillimit.1w - Can jail for up to 1 week
+  #   betterjails.jaillimit.1m - Can jail for up to 1 month (30 days)
+  #   betterjails.jaillimit.unlimited - No jail time limit
+  # The highest limit permission takes precedence
+  betterjails.jaillimit.unlimited: { }

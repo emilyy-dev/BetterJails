@@ -29,6 +29,7 @@ import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.data.upgrade.jail.JailV1ToV2;
 import io.github.emilyydev.betterjails.data.upgrade.prisoner.PrisonerV1ToV2;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -41,60 +42,60 @@ import static java.lang.invoke.MethodType.methodType;
 @FunctionalInterface
 public interface DataUpgrader {
 
-  int PRISONER_VERSION = 2;
-  List<DataUpgrader> PRISONER_DATA_UPGRADERS = ImmutableList.of(new PrisonerV1ToV2());
+    int PRISONER_VERSION = 2;
+    List<DataUpgrader> PRISONER_DATA_UPGRADERS = ImmutableList.of(new PrisonerV1ToV2());
 
-  int JAILS_VERSION = 2;
-  List<DataUpgrader> JAILS_DATA_UPGRADERS = ImmutableList.of(new JailV1ToV2());
+    int JAILS_VERSION = 2;
+    List<DataUpgrader> JAILS_DATA_UPGRADERS = ImmutableList.of(new JailV1ToV2());
 
-  static void markPrisonerVersion(final ConfigurationSection config) {
-    config.set("version", PRISONER_VERSION);
-    SetInlineCommentsHelper.setVersionWarning(config);
-  }
+    static void markPrisonerVersion(final @NotNull ConfigurationSection config) {
+        config.set("version", PRISONER_VERSION);
+        SetInlineCommentsHelper.setVersionWarning(config);
+    }
 
-  static void markJailVersion(final ConfigurationSection config) {
-    config.set("version", JAILS_VERSION);
-    SetInlineCommentsHelper.setVersionWarning(config);
-  }
+    static void markJailVersion(final @NotNull ConfigurationSection config) {
+        config.set("version", JAILS_VERSION);
+        SetInlineCommentsHelper.setVersionWarning(config);
+    }
 
-  void upgrade(ConfigurationSection config, BetterJailsPlugin plugin);
+    void upgrade(ConfigurationSection config, BetterJailsPlugin plugin);
 }
 
 final class SetInlineCommentsHelper {
 
-  private static final MethodHandle SET_INLINE_COMMENTS_MH;
+    private static final MethodHandle SET_INLINE_COMMENTS_MH;
 
-  static {
-    final MethodHandles.Lookup lookup = lookup();
-    MethodHandle setInlineCommentsMh;
-    try {
-      setInlineCommentsMh = lookup.findVirtual(ConfigurationSection.class, "setInlineComments", methodType(void.class, String.class, List.class));
-    } catch (final NoSuchMethodException | IllegalAccessException ex) {
-      // no warning for you
-      try {
-        setInlineCommentsMh = lookup.findStatic(SetInlineCommentsHelper.class, "setInlineCommentsNoop", methodType(void.class, ConfigurationSection.class, String.class, List.class));
-      } catch (final NoSuchMethodException | IllegalAccessException ex2) {
-        throw new ExceptionInInitializerError(ex2);
-      }
+    static {
+        final MethodHandles.Lookup lookup = lookup();
+        MethodHandle setInlineCommentsMh;
+        try {
+            setInlineCommentsMh = lookup.findVirtual(ConfigurationSection.class, "setInlineComments", methodType(void.class, String.class, List.class));
+        } catch (final NoSuchMethodException | IllegalAccessException ex) {
+            // no warning for you
+            try {
+                setInlineCommentsMh = lookup.findStatic(SetInlineCommentsHelper.class, "setInlineCommentsNoop", methodType(void.class, ConfigurationSection.class, String.class, List.class));
+            } catch (final NoSuchMethodException | IllegalAccessException ex2) {
+                throw new ExceptionInInitializerError(ex2);
+            }
+        }
+
+        SET_INLINE_COMMENTS_MH = setInlineCommentsMh;
     }
 
-    SET_INLINE_COMMENTS_MH = setInlineCommentsMh;
-  }
-
-  static void setVersionWarning(final ConfigurationSection config) {
-    setInlineComments(config, "version", Collections.singletonList("DO NOT CHANGE OR REMOVE THIS VALUE UNDER ANY CIRCUMSTANCES"));
-  }
-
-  private static void setInlineCommentsNoop(final ConfigurationSection config, final String path, final List<String> comments) {
-  }
-
-  private static void setInlineComments(final ConfigurationSection config, final String path, final List<String> comments) {
-    try {
-      SET_INLINE_COMMENTS_MH.invokeExact(config, path, comments);
-    } catch (final RuntimeException | Error ex) {
-      throw ex;
-    } catch (final Throwable ex) {
-      throw new RuntimeException(ex);
+    static void setVersionWarning(final ConfigurationSection config) {
+        setInlineComments(config, "version", Collections.singletonList("DO NOT CHANGE OR REMOVE THIS VALUE UNDER ANY CIRCUMSTANCES"));
     }
-  }
+
+    private static void setInlineCommentsNoop(final ConfigurationSection config, final String path, final List<String> comments) {
+    }
+
+    private static void setInlineComments(final ConfigurationSection config, final String path, final List<String> comments) {
+        try {
+            SET_INLINE_COMMENTS_MH.invokeExact(config, path, comments);
+        } catch (final RuntimeException | Error ex) {
+            throw ex;
+        } catch (final Throwable ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 }

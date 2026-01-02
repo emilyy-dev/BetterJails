@@ -1,20 +1,20 @@
 plugins {
-  java
+    java
 }
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 java {
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(21)
-    vendor = JvmVendorSpec.ADOPTIUM
-  }
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+        vendor = JvmVendorSpec.ADOPTIUM
+    }
 }
 
 tasks {
-  compileJava {
-    options.release = 8
-  }
+    compileJava {
+        options.release = 8
+    }
 }

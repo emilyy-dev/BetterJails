@@ -29,53 +29,57 @@ import com.google.common.collect.ImmutableSet;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 import java.util.stream.Collector;
 
 public interface Util {
 
-  Collector<Object, ImmutableSet.Builder<Object>, ImmutableSet<Object>> IMMUTABLE_SET_COLLECTOR =
-      Collector.of(
-          ImmutableSet::builder,
-          ImmutableSet.Builder::add,
-          (first, second) -> first.addAll(second.build()),
-          ImmutableSet.Builder::build
-      );
+    Collector<Object, ImmutableSet.Builder<Object>, ImmutableSet<Object>> IMMUTABLE_SET_COLLECTOR =
+            Collector.of(
+                    ImmutableSet::builder,
+                    ImmutableSet.Builder::add,
+                    (first, second) -> first.addAll(second.build()),
+                    ImmutableSet.Builder::build
+            );
 
-  Collector<Object, ImmutableList.Builder<Object>, ImmutableList<Object>> IMMUTABLE_LIST_COLLECTOR =
-      Collector.of(
-          ImmutableList::builder,
-          ImmutableList.Builder::add,
-          (first, second) -> first.addAll(second.build()),
-          ImmutableList.Builder::build
-      );
+    Collector<Object, ImmutableList.Builder<Object>, ImmutableList<Object>> IMMUTABLE_LIST_COLLECTOR =
+            Collector.of(
+                    ImmutableList::builder,
+                    ImmutableList.Builder::add,
+                    (first, second) -> first.addAll(second.build()),
+                    ImmutableList.Builder::build
+            );
 
-  UUID NIL_UUID = new UUID(0L, 0L);
+    UUID NIL_UUID = new UUID(0L, 0L);
 
-  static UUID uuidOrNil(final CommandSender source) {
-    return source instanceof Entity ? ((Entity) source).getUniqueId() : NIL_UUID;
-  }
+    static UUID uuidOrNil(final CommandSender source) {
+        return source instanceof Entity ? ((Entity) source).getUniqueId() : NIL_UUID;
+    }
 
-  static String color(final String text) {
-    return ChatColor.translateAlternateColorCodes('&', text);
-  }
+    @Contract("_ -> new")
+    static @NotNull String color(final String text) {
+        return ChatColor.translateAlternateColorCodes('&', text);
+    }
 
-  static String color(final String text, final Object... args) {
-    return ChatColor.translateAlternateColorCodes('&', String.format(text, args));
-  }
+    @Contract("_, _ -> new")
+    static @NotNull String color(final String text, final Object... args) {
+        return ChatColor.translateAlternateColorCodes('&', String.format(text, args));
+    }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  static <T> Collector<T, ImmutableSet.Builder<T>, ImmutableSet<T>> toImmutableSet() {
-    return (Collector) IMMUTABLE_SET_COLLECTOR;
-  }
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static <T> Collector<T, ImmutableSet.Builder<T>, ImmutableSet<T>> toImmutableSet() {
+        return (Collector) IMMUTABLE_SET_COLLECTOR;
+    }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  static <T> Collector<T, ImmutableList.Builder<T>, ImmutableList<T>> toImmutableList() {
-    return (Collector) IMMUTABLE_LIST_COLLECTOR;
-  }
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static <T> Collector<T, ImmutableList.Builder<T>, ImmutableList<T>> toImmutableList() {
+        return (Collector) IMMUTABLE_LIST_COLLECTOR;
+    }
 
-  static String removeBracesFromMatchedPlaceholderPleaseAndThankYou(final String in) {
-    return in.substring(1, in.length() - 1);
-  }
+    static @NotNull String removeBracesFromMatchedPlaceholderPleaseAndThankYou(final @NotNull String in) {
+        return in.substring(1, in.length() - 1);
+    }
 }

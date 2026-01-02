@@ -24,6 +24,7 @@
 
 package io.github.emilyydev.betterjails;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,50 +40,50 @@ import java.util.function.Function;
 
 public final class UpdateChecker {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
+    private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
-  private static final int SPIGOTMC_RESOURCE_ID = 76001;
-  private static final URL API_URL;
+    private static final int SPIGOTMC_RESOURCE_ID = 76001;
+    private static final URL API_URL;
 
-  static {
-    URL apiUrl;
-    try {
-      apiUrl = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + SPIGOTMC_RESOURCE_ID);
-    } catch (final MalformedURLException ex) {
-      LOGGER.error(null, ex);
-      apiUrl = null;
-    }
-
-    API_URL = apiUrl;
-  }
-
-  public static CompletableFuture<String> fetchRemoteVersion(final BetterJailsPlugin plugin) {
-    if (API_URL == null) {
-      // do not complete
-      return new CompletableFuture<>();
-    }
-
-    final CompletableFuture<String> future = new CompletableFuture<>();
-    plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-      try {
-        final String version;
-        try (
-            final InputStream stream = API_URL.openStream();
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))
-        ) {
-          version = reader.readLine();
+    static {
+        URL apiUrl;
+        try {
+            apiUrl = new URL("https://api.spigotmc.org/legacy/update.php?resource=" + SPIGOTMC_RESOURCE_ID);
+        } catch (final MalformedURLException ex) {
+            LOGGER.error(null, ex);
+            apiUrl = null;
         }
 
-        future.complete(version);
-      } catch (final IOException ex) {
-        LOGGER.warn("An error occurred looking for plugin updates", ex);
-        future.completeExceptionally(ex);
-      }
-    });
+        API_URL = apiUrl;
+    }
 
-    return future.thenApplyAsync(Function.identity(), plugin);
-  }
+    private UpdateChecker() {
+    }
 
-  private UpdateChecker() {
-  }
+    public static @NotNull CompletableFuture<String> fetchRemoteVersion(final BetterJailsPlugin plugin) {
+        if (API_URL == null) {
+            // do not complete
+            return new CompletableFuture<>();
+        }
+
+        final CompletableFuture<String> future = new CompletableFuture<>();
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                final String version;
+                try (
+                        final InputStream stream = API_URL.openStream();
+                        final BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))
+                ) {
+                    version = reader.readLine();
+                }
+
+                future.complete(version);
+            } catch (final IOException ex) {
+                LOGGER.warn("An error occurred looking for plugin updates", ex);
+                future.completeExceptionally(ex);
+            }
+        });
+
+        return future.thenApplyAsync(Function.identity(), plugin);
+    }
 }

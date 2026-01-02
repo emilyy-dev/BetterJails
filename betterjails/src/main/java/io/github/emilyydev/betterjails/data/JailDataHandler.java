@@ -31,6 +31,7 @@ import com.github.fefo.betterjails.api.util.ImmutableLocation;
 import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
 import io.github.emilyydev.betterjails.interfaces.storage.StorageAccess;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -41,52 +42,52 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public final class JailDataHandler {
-  private final BetterJailsPlugin plugin;
-  private final StorageAccess storage;
-  private final Map<String, Jail> jails = new HashMap<>();
+    private final BetterJailsPlugin plugin;
+    private final StorageAccess storage;
+    private final Map<String, Jail> jails = new HashMap<>();
 
-  public JailDataHandler(final BetterJailsPlugin plugin) {
-    this.plugin = plugin;
-    this.storage = plugin.storageAccess();
-  }
-
-  public void load() throws IOException {
-    this.jails.clear();
-    loadJails();
-  }
-
-  private void loadJails() throws IOException {
-    try {
-      this.jails.putAll(this.storage.loadJails().get());
-    } catch (final InterruptedException ex) {
-      // bleh
-    } catch (final ExecutionException ex) {
-      throw new IOException(ex.getCause());
+    public JailDataHandler(final @NotNull BetterJailsPlugin plugin) {
+        this.plugin = plugin;
+        this.storage = plugin.storageAccess();
     }
-  }
 
-  public CompletableFuture<Void> save() {
-    return this.storage.saveJails(this.jails);
-  }
+    public void load() throws IOException {
+        this.jails.clear();
+        loadJails();
+    }
 
-  public Map<String, Jail> getJails() {
-    return this.jails;
-  }
+    private void loadJails() throws IOException {
+        try {
+            this.jails.putAll(this.storage.loadJails().get());
+        } catch (final InterruptedException ex) {
+            // bleh
+        } catch (final ExecutionException ex) {
+            throw new IOException(ex.getCause());
+        }
+    }
 
-  public @Nullable Jail getJail(final String name) {
-    return this.jails.get(name.toLowerCase(Locale.ROOT));
-  }
+    public @NotNull CompletableFuture<Void> save() {
+        return this.storage.saveJails(this.jails);
+    }
 
-  public CompletableFuture<Void> addJail(final String name, final ImmutableLocation location) {
-    final String lowerCaseName = name.toLowerCase(Locale.ROOT);
-    this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, location, null)).location(location);
-    this.plugin.eventBus().post(JailCreateEvent.class, name, location);
-    return save();
-  }
+    public Map<String, Jail> getJails() {
+        return this.jails;
+    }
 
-  public CompletableFuture<Void> removeJail(final Jail jail) {
-    this.jails.remove(jail.name().toLowerCase(Locale.ROOT));
-    this.plugin.eventBus().post(JailDeleteEvent.class, jail);
-    return save();
-  }
+    public @Nullable Jail getJail(final @NotNull String name) {
+        return this.jails.get(name.toLowerCase(Locale.ROOT));
+    }
+
+    public @NotNull CompletableFuture<Void> addJail(final @NotNull String name, final ImmutableLocation location) {
+        final String lowerCaseName = name.toLowerCase(Locale.ROOT);
+        this.jails.computeIfAbsent(lowerCaseName, key -> new ApiJail(key, location, null)).location(location);
+        this.plugin.eventBus().post(JailCreateEvent.class, name, location);
+        return save();
+    }
+
+    public @NotNull CompletableFuture<Void> removeJail(final @NotNull Jail jail) {
+        this.jails.remove(jail.name().toLowerCase(Locale.ROOT));
+        this.plugin.eventBus().post(JailDeleteEvent.class, jail);
+        return save();
+    }
 }

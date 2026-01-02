@@ -29,32 +29,29 @@ import io.github.emilyydev.betterjails.BetterJailsPlugin;
 import io.github.emilyydev.betterjails.data.upgrade.DataUpgrader;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public final class JailV1ToV2 implements DataUpgrader {
 
-  private static final String JAILS_FIELD = "jails";
+    private static final String JAILS_FIELD = "jails";
 
-  private static final String NAME_FIELD = "name";
-  private static final String LOCATION_FIELD = "location";
+    private static final String NAME_FIELD = "name";
+    private static final String LOCATION_FIELD = "location";
 
-  @Override
-  public void upgrade(final ConfigurationSection config, final BetterJailsPlugin plugin) {
-    final Set<String> keys = config.getKeys(false);
-    final List<Map<String, Object>> jails = new ArrayList<>();
-    for (final String name : keys) {
-      final Map<String, Object> jail = new HashMap<>();
-      jail.put(NAME_FIELD, name);
-      jail.put(LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(name)));
-      config.set(name, null);
-      jails.add(jail);
+    @Override
+    public void upgrade(final @NotNull ConfigurationSection config, final BetterJailsPlugin plugin) {
+        final Set<String> keys = config.getKeys(false);
+        final List<Map<String, Object>> jails = new ArrayList<>();
+        for (final String name : keys) {
+            final Map<String, Object> jail = new HashMap<>();
+            jail.put(NAME_FIELD, name);
+            jail.put(LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(name)));
+            config.set(name, null);
+            jails.add(jail);
+        }
+
+        config.set(JAILS_FIELD, jails);
     }
-
-    config.set(JAILS_FIELD, jails);
-  }
 }

@@ -35,6 +35,8 @@ import net.luckperms.api.node.NodeType;
 import net.luckperms.api.node.types.InheritanceNode;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -44,100 +46,101 @@ import java.util.concurrent.CompletionStage;
 
 final class LuckPermsPermissionInterface extends AbstractPermissionInterface {
 
-  private final LuckPerms luckPerms;
-  private final InheritanceNode prisonerGroupNode;
+    private final LuckPerms luckPerms;
+    private final InheritanceNode prisonerGroupNode;
 
-  LuckPermsPermissionInterface(final Server server, final String prisonerGroup) {
-    super(prisonerGroup);
-    this.luckPerms = server.getServicesManager().load(LuckPerms.class);
-    this.prisonerGroupNode = InheritanceNode.builder(prisonerGroup).build();
-  }
+    LuckPermsPermissionInterface(final @NotNull Server server, final String prisonerGroup) {
+        super(prisonerGroup);
+        this.luckPerms = server.getServicesManager().load(LuckPerms.class);
+        this.prisonerGroupNode = InheritanceNode.builder(prisonerGroup).build();
+    }
 
-  @Override
-  public void close() {
-  }
+    @Override
+    public void close() {
+    }
 
-  @Override
-  public CompletionStage<? extends String> fetchPrimaryGroup(final OfflinePlayer player) {
-    return this.luckPerms.getUserManager().loadUser(player.getUniqueId()).thenApply(User::getPrimaryGroup);
-  }
+    @Override
+    public @NotNull CompletionStage<? extends String> fetchPrimaryGroup(final @NotNull OfflinePlayer player) {
+        return this.luckPerms.getUserManager().loadUser(player.getUniqueId()).thenApply(User::getPrimaryGroup);
+    }
 
-  @Override
-  public CompletionStage<? extends Set<? extends String>> fetchParentGroups(final OfflinePlayer player) {
-    return this.luckPerms.getUserManager().loadUser(player.getUniqueId()).thenApply(user ->
-        user.getNodes(NodeType.INHERITANCE)
-            .stream()
-            // see below TODO
-            .filter(node -> node.getContexts().isEmpty() && !node.hasExpiry())
-            .map(InheritanceNode::getGroupName)
-            .collect(Util.toImmutableSet())
-    );
-  }
+    @Override
+    public @NotNull CompletionStage<? extends Set<? extends String>> fetchParentGroups(final @NotNull OfflinePlayer player) {
+        return this.luckPerms.getUserManager().loadUser(player.getUniqueId()).thenApply(user ->
+                user.getNodes(NodeType.INHERITANCE)
+                        .stream()
+                        // see below TODO
+                        .filter(node -> node.getContexts().isEmpty() && !node.hasExpiry())
+                        .map(InheritanceNode::getGroupName)
+                        .collect(Util.toImmutableSet())
+        );
+    }
 
-  @Override
-  public CompletionStage<?> setPrisonerGroup(final OfflinePlayer player, final UUID source, final String sourceName) {
-    return this.luckPerms.getUserManager().modifyUser(player.getUniqueId(), user -> {
-          final NodeMap nodeMap = user.data();
-          // TODO consider non-contextual node removal? That renders a problem for later, as currently parent groups
-          //  are stored as-is, no context information, therefore it is lost when re-adding the nodes back.
-          //  Remove global nodes for now...
-          //  (same issue is present with temporary permissions)
-          nodeMap.clear(ImmutableContextSet.empty(), NodeType.INHERITANCE.predicate(node -> !node.hasExpiry()));
-          nodeMap.add(this.prisonerGroupNode);
-        })
-        .thenCompose(ignored -> {
-          final ActionLogger actionLogger = this.luckPerms.getActionLogger();
-          final Action.Builder builder = actionLogger.actionBuilder();
-          builder.source(source)
-              .sourceName(sourceName + " (BetterJails)")
-              .target(player.getUniqueId())
-              .targetType(Action.Target.Type.USER)
-              .timestamp(Instant.now())
-              .description("clear global parents & set " + prisonerGroup());
-          final String name = player.getName();
-          if (name != null) {
-            builder.targetName(name);
-          }
+    @Override
+    public @NotNull CompletionStage<?> setPrisonerGroup(final @NotNull OfflinePlayer player, final UUID source, final String sourceName) {
+        return this.luckPerms.getUserManager().modifyUser(player.getUniqueId(), user -> {
+                    final NodeMap nodeMap = user.data();
+                    // TODO consider non-contextual node removal? That renders a problem for later, as currently parent groups
+                    //  are stored as-is, no context information, therefore it is lost when re-adding the nodes back.
+                    //  Remove global nodes for now...
+                    //  (same issue is present with temporary permissions)
+                    nodeMap.clear(ImmutableContextSet.empty(), NodeType.INHERITANCE.predicate(node -> !node.hasExpiry()));
+                    nodeMap.add(this.prisonerGroupNode);
+                })
+                .thenCompose(ignored -> {
+                    final ActionLogger actionLogger = this.luckPerms.getActionLogger();
+                    final Action.Builder builder = actionLogger.actionBuilder();
+                    builder.source(source)
+                            .sourceName(sourceName + " (BetterJails)")
+                            .target(player.getUniqueId())
+                            .targetType(Action.Target.Type.USER)
+                            .timestamp(Instant.now())
+                            .description("clear global parents & set " + prisonerGroup());
+                    final String name = player.getName();
+                    if (name != null) {
+                        builder.targetName(name);
+                    }
 
-          return actionLogger.submitToStorage(builder.build());
-        });
-  }
+                    return actionLogger.submitToStorage(builder.build());
+                });
+    }
 
-  @Override
-  public CompletionStage<?> setParentGroups(
-      final OfflinePlayer player,
-      final Collection<? extends String> parentGroups,
-      final UUID source,
-      final String sourceName
-  ) {
-    return this.luckPerms.getUserManager().modifyUser(player.getUniqueId(), user -> {
-          final NodeMap nodeMap = user.data();
-          nodeMap.remove(this.prisonerGroupNode);
-          parentGroups.stream()
-              .map(InheritanceNode::builder)
-              .map(InheritanceNode.Builder::build)
-              .forEach(nodeMap::add);
-        })
-        .thenCompose(ignored -> {
-          final ActionLogger actionLogger = this.luckPerms.getActionLogger();
-          final Action.Builder builder = actionLogger.actionBuilder();
-          builder.source(source)
-              .sourceName(sourceName + " (BetterJails)")
-              .target(player.getUniqueId())
-              .targetType(Action.Target.Type.USER)
-              .timestamp(Instant.now())
-              .description("remove " + prisonerGroup() + " & re-add " + String.join(", ", parentGroups));
-          final String name = player.getName();
-          if (name != null) {
-            builder.targetName(name);
-          }
+    @Override
+    public @NotNull CompletionStage<?> setParentGroups(
+            final @NotNull OfflinePlayer player,
+            final Collection<? extends String> parentGroups,
+            final UUID source,
+            final String sourceName
+    ) {
+        return this.luckPerms.getUserManager().modifyUser(player.getUniqueId(), user -> {
+                    final NodeMap nodeMap = user.data();
+                    nodeMap.remove(this.prisonerGroupNode);
+                    parentGroups.stream()
+                            .map(InheritanceNode::builder)
+                            .map(InheritanceNode.Builder::build)
+                            .forEach(nodeMap::add);
+                })
+                .thenCompose(ignored -> {
+                    final ActionLogger actionLogger = this.luckPerms.getActionLogger();
+                    final Action.Builder builder = actionLogger.actionBuilder();
+                    builder.source(source)
+                            .sourceName(sourceName + " (BetterJails)")
+                            .target(player.getUniqueId())
+                            .targetType(Action.Target.Type.USER)
+                            .timestamp(Instant.now())
+                            .description("remove " + prisonerGroup() + " & re-add " + String.join(", ", parentGroups));
+                    final String name = player.getName();
+                    if (name != null) {
+                        builder.targetName(name);
+                    }
 
-          return actionLogger.submitToStorage(builder.build());
-        });
-  }
+                    return actionLogger.submitToStorage(builder.build());
+                });
+    }
 
-  @Override
-  public String name() {
-    return "LuckPerms";
-  }
+    @Contract(pure = true)
+    @Override
+    public @NotNull String name() {
+        return "LuckPerms";
+    }
 }

@@ -49,55 +49,55 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 public class EventBusTest {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(EventBusTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventBusTest.class);
 
-  private static ServerMock server = null;
-  private static BetterJailsPlugin plugin = null;
+    private static ServerMock server = null;
+    private static BetterJailsPlugin plugin = null;
 
-  @BeforeAll
-  public static void prepare() throws IOException {
-    server = MockBukkit.mock();
-    server.addSimpleWorld("world");
-    try (final InputStream pluginDescriptorStream = BetterJailsPlugin.class.getResourceAsStream("/plugin.yml")) {
-      plugin = MockBukkit.loadWith(BetterJailsPlugin.class, Objects.requireNonNull(pluginDescriptorStream, "descriptor stream"), "do not enable bstats");
+    @BeforeAll
+    public static void prepare() throws IOException {
+        server = MockBukkit.mock();
+        server.addSimpleWorld("world");
+        try (final InputStream pluginDescriptorStream = BetterJailsPlugin.class.getResourceAsStream("/plugin.yml")) {
+            plugin = MockBukkit.loadWith(BetterJailsPlugin.class, Objects.requireNonNull(pluginDescriptorStream, "descriptor stream"), "do not enable bstats");
+        }
+
+        plugin.eventBus().subscribe(plugin, JailCreateEvent.class, EventBusTest::jailCreate);
+        plugin.eventBus().subscribe(plugin, PlayerImprisonEvent.class, EventBusTest::playerImprison);
+        plugin.eventBus().subscribe(plugin, PrisonerReleaseEvent.class, EventBusTest::prisonerRelease);
+        server.getScheduler().performOneTick();
     }
 
-    plugin.eventBus().subscribe(plugin, JailCreateEvent.class, EventBusTest::jailCreate);
-    plugin.eventBus().subscribe(plugin, PlayerImprisonEvent.class, EventBusTest::playerImprison);
-    plugin.eventBus().subscribe(plugin, PrisonerReleaseEvent.class, EventBusTest::prisonerRelease);
-    server.getScheduler().performOneTick();
-  }
+    @AfterAll
+    public static void teardown() {
+        server = null;
+        plugin = null;
+        MockBukkit.unmock();
+    }
 
-  @AfterAll
-  public static void teardown() {
-    server = null;
-    plugin = null;
-    MockBukkit.unmock();
-  }
+    private static void jailCreate(final JailCreateEvent event) {
+        LOGGER.info("event = {}", event);
+        LOGGER.info("event.jailName() = {}", assertDoesNotThrow(event::jailName));
+        LOGGER.info("event.jailLocation() = {}", assertDoesNotThrow(event::jailLocation));
+    }
 
-  private static void jailCreate(final JailCreateEvent event) {
-    LOGGER.info("event = {}", event);
-    LOGGER.info("event.jailName() = {}", assertDoesNotThrow(event::jailName));
-    LOGGER.info("event.jailLocation() = {}", assertDoesNotThrow(event::jailLocation));
-  }
+    private static void playerImprison(final PlayerImprisonEvent event) {
+        LOGGER.info("event = {}", event);
+        LOGGER.info("event.prisoner() = {}", assertDoesNotThrow(event::prisoner));
+    }
 
-  private static void playerImprison(final PlayerImprisonEvent event) {
-    LOGGER.info("event = {}", event);
-    LOGGER.info("event.prisoner() = {}", assertDoesNotThrow(event::prisoner));
-  }
+    private static void prisonerRelease(final PrisonerReleaseEvent event) {
+        LOGGER.info("event = {}", event);
+        LOGGER.info("event.prisoner() = {}", assertDoesNotThrow(event::prisoner));
+    }
 
-  private static void prisonerRelease(final PrisonerReleaseEvent event) {
-    LOGGER.info("event = {}", event);
-    LOGGER.info("event.prisoner() = {}", assertDoesNotThrow(event::prisoner));
-  }
+    @Test
+    public void test() {
+        assertDoesNotThrow(() -> plugin.jailData().addJail("jail0", ImmutableLocation.at(server.addSimpleWorld("world0"), 0, 0, 0)));
 
-  @Test
-  public void test() {
-    assertDoesNotThrow(() -> plugin.jailData().addJail("jail0", ImmutableLocation.at(server.addSimpleWorld("world0"), 0, 0, 0)));
-
-    final Jail jail = plugin.jailData().getJail("jail0");
-    final PlayerMock player = server.addPlayer();
-    assertDoesNotThrow(() -> plugin.prisonerData().addJailedPlayer(player, jail, Util.NIL_UUID, "test", Duration.ofHours(1L), null, false));
-    assertDoesNotThrow(() -> plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, "test", false));
-  }
+        final Jail jail = plugin.jailData().getJail("jail0");
+        final PlayerMock player = server.addPlayer();
+        assertDoesNotThrow(() -> plugin.prisonerData().addJailedPlayer(player, jail, Util.NIL_UUID, "test", Duration.ofHours(1L), null, false));
+        assertDoesNotThrow(() -> plugin.prisonerData().releaseJailedPlayer(player, Util.NIL_UUID, "test", false));
+    }
 }

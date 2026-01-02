@@ -10,10 +10,10 @@
 # These commands will not be executed if the player is already jailed.
 on-jail:
   as-prisoner:
-#    - "rules"
+  #    - "rules"
   as-console:
 #    - "execute as {prisoner} run say Oh, poopers! I've been imprisoned!"
 
 on-release:
-  as-prisoner: []
-  as-console: []
+  as-prisoner: [ ]
+  as-console: [ ]

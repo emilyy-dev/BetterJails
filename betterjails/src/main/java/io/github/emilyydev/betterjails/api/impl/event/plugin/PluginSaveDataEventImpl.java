@@ -31,7 +31,7 @@ import io.github.emilyydev.betterjails.api.impl.event.SimpleBetterJailsEvent;
 
 public final class PluginSaveDataEventImpl extends SimpleBetterJailsEvent implements PluginSaveDataEvent {
 
-  public PluginSaveDataEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType) {
-    super(api, eventType);
-  }
+    public PluginSaveDataEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType) {
+        super(api, eventType);
+    }
 }

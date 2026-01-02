@@ -47,21 +47,16 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnmodifiableView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
@@ -69,287 +64,289 @@ import java.util.function.Function;
 
 public final class PrisonerDataHandler {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
+    private static final Logger LOGGER = LoggerFactory.getLogger("BetterJails");
 
-  private final BetterJailsPlugin plugin;
-  private final BetterJailsConfiguration config;
-  private final SubCommandsConfiguration subCommands;
-  private final StorageAccess storage;
-  private final Server server;
-  private final Map<UUID, ApiPrisoner> prisoners = new HashMap<>();
+    private final BetterJailsPlugin plugin;
+    private final BetterJailsConfiguration config;
+    private final SubCommandsConfiguration subCommands;
+    private final StorageAccess storage;
+    private final Server server;
+    private final Map<UUID, ApiPrisoner> prisoners = new HashMap<>();
 
-  private @Deprecated ImmutableLocation backupLocation;
+    private @Deprecated ImmutableLocation backupLocation;
 
-  public PrisonerDataHandler(final BetterJailsPlugin plugin) {
-    this.plugin = plugin;
-    this.config = plugin.configuration();
-    this.subCommands = plugin.subCommands();
-    this.server = plugin.getServer();
-    this.storage = plugin.storageAccess();
-  }
-
-  public void load() throws IOException {
-    // TODO(v2): can't remove this yet
-    this.backupLocation = this.config.backupLocation();
-    this.prisoners.clear();
-    loadPrisoners();
-  }
-
-  private void loadPrisoners() throws IOException {
-    try {
-      this.prisoners.putAll(this.storage.loadPrisoners().get());
-    } catch (final InterruptedException ex) {
-      // bleh
-    } catch (final ExecutionException ex) {
-      throw new IOException(ex.getCause());
-    }
-  }
-
-  public Collection<Prisoner> getAllPrisoners() {
-    return Collections.unmodifiableCollection(this.prisoners.values());
-  }
-
-  public boolean isPlayerJailed(final UUID uuid) {
-    return this.prisoners.containsKey(uuid);
-  }
-
-  public ApiPrisoner getPrisoner(final UUID uuid) {
-    return this.prisoners.get(uuid);
-  }
-
-  public void addJailedPlayer(
-      final OfflinePlayer player,
-      final Jail jail,
-      final UUID jailer,
-      final @Nullable String jailerName,
-      final Duration sentenceDuration,
-      final @Nullable String reason,
-      final boolean teleport
-  ) {
-    final UUID prisonerUuid = player.getUniqueId();
-    final ApiPrisoner existingPrisoner = this.prisoners.get(prisonerUuid);
-
-    final boolean isPlayerOnline = player.isOnline();
-    final boolean isPlayerJailed = existingPrisoner != null;
-    final SentenceExpiry expiry;
-    ImmutableLocation knownLastLocation = null;
-
-    if (isPlayerJailed) {
-      // The player is already jailed, and being put in a new jail. Since we don't want to put their last location
-      // inside the previous jail, we use their existing last location.
-      knownLastLocation = existingPrisoner.lastLocationNullable();
+    public PrisonerDataHandler(final @NotNull BetterJailsPlugin plugin) {
+        this.plugin = plugin;
+        this.config = plugin.configuration();
+        this.subCommands = plugin.subCommands();
+        this.server = plugin.getServer();
+        this.storage = plugin.storageAccess();
     }
 
-    Runnable teleportAction = () -> { };
-    if (isPlayerOnline) {
-      // The player is online! We can get their last location, if needed, and put them in jail immediately.
-      final Player onlinePlayer = player.getPlayer();
-
-      if (knownLastLocation == null) {
-        knownLastLocation = ImmutableLocation.copyOf(onlinePlayer.getLocation());
-      }
-
-      // not pretty
-      if (teleport) {
-        teleportAction = () ->
-            Teleport.teleportAsync(onlinePlayer, jail.location().mutable())
-                .thenRun(() -> WorldGuardFacade.resetState(onlinePlayer));
-      }
-
-      if (!isPlayerJailed) {
-        // If the player is going to jail (not just moving between jails), run the onJail commands.
-        final SubCommandsConfiguration.SubCommands subCommands = this.subCommands.onJail();
-        subCommands.executeAsPrisoner(this.server, onlinePlayer, jailerName == null ? "" : jailerName);
-        subCommands.executeAsConsole(this.server, onlinePlayer, jailerName == null ? "" : jailerName);
-      }
+    public void load() throws IOException {
+        // TODO(v2): can't remove this yet
+        this.backupLocation = this.config.backupLocation();
+        this.prisoners.clear();
+        loadPrisoners();
     }
 
-    if (isPlayerOnline || this.config.considerOfflineTime()) {
-      // If the player is online or offline time is enabled, their remaining time will start ticking down immediately,
-      // so we store the deadline of their release.
-      expiry = SentenceExpiry.of(Instant.now().plus(sentenceDuration));
-    } else {
-      // Otherwise, the time doesn't start ticking until the player joins.
-      expiry = SentenceExpiry.of(sentenceDuration);
+    private void loadPrisoners() throws IOException {
+        try {
+            this.prisoners.putAll(this.storage.loadPrisoners().get());
+        } catch (final InterruptedException ex) {
+            // bleh
+        } catch (final ExecutionException ex) {
+            throw new IOException(ex.getCause());
+        }
     }
 
-    if (this.plugin.essentials != null) {
-      final User user = this.plugin.essentials.getUser(prisonerUuid);
-      if (user != null) {
-        user.setJailed(true);
+    public @NotNull @UnmodifiableView Collection<Prisoner> getAllPrisoners() {
+        return Collections.unmodifiableCollection(this.prisoners.values());
+    }
+
+    public boolean isPlayerJailed(final UUID uuid) {
+        return this.prisoners.containsKey(uuid);
+    }
+
+    public ApiPrisoner getPrisoner(final UUID uuid) {
+        return this.prisoners.get(uuid);
+    }
+
+    public void addJailedPlayer(
+            final @NotNull OfflinePlayer player,
+            final Jail jail,
+            final UUID jailer,
+            final @Nullable String jailerName,
+            final Duration sentenceDuration,
+            final @Nullable String reason,
+            final boolean teleport
+    ) {
+        final UUID prisonerUuid = player.getUniqueId();
+        final ApiPrisoner existingPrisoner = this.prisoners.get(prisonerUuid);
+
+        final boolean isPlayerOnline = player.isOnline();
+        final boolean isPlayerJailed = existingPrisoner != null;
+        final SentenceExpiry expiry;
+        ImmutableLocation knownLastLocation = null;
+
+        if (isPlayerJailed) {
+            // The player is already jailed, and being put in a new jail. Since we don't want to put their last location
+            // inside the previous jail, we use their existing last location.
+            knownLastLocation = existingPrisoner.lastLocationNullable();
+        }
+
+        Runnable teleportAction = () -> {
+        };
         if (isPlayerOnline) {
-          user.setJailTimeout(expiry.expiryDate().toEpochMilli());
-        }
-      }
-    }
+            // The player is online! We can get their last location, if needed, and put them in jail immediately.
+            final Player onlinePlayer = player.getPlayer();
 
-    // If we never got a last location for this player, it means we need to get it when they log in.
-    final boolean unknownLocation = knownLastLocation == null;
-    // TODO(v2): We have to set some location here
-    final ImmutableLocation lastLocation = MoreObjects.firstNonNull(knownLastLocation, this.backupLocation);
-    final PermissionInterface permissionInterface = this.plugin.permissionInterface();
+            if (knownLastLocation == null) {
+                knownLastLocation = ImmutableLocation.copyOf(onlinePlayer.getLocation());
+            }
 
-    final boolean groupsUnknown = existingPrisoner == null || existingPrisoner.primaryGroup() == null || existingPrisoner.released();
+            // not pretty
+            if (teleport) {
+                teleportAction = () ->
+                        Teleport.teleportAsync(onlinePlayer, jail.location().mutable())
+                                .thenRun(() -> WorldGuardFacade.resetState(onlinePlayer));
+            }
 
-    final CompletionStage<? extends String> primaryGroupFuture = groupsUnknown
-        ? permissionInterface.fetchPrimaryGroup(player).exceptionally(ex -> null)
-        : CompletableFuture.completedFuture(existingPrisoner.primaryGroup());
-    final CompletionStage<? extends Set<? extends String>> parentGroupsFuture = groupsUnknown
-        ? permissionInterface.fetchParentGroups(player).thenApply(Function.<Set<? extends String>>identity()).exceptionally(ex -> ImmutableSet.of())
-        : CompletableFuture.completedFuture(existingPrisoner.parentGroups());
-
-    primaryGroupFuture.thenCombineAsync(parentGroupsFuture, (primaryGroup, parentGroups) -> {
-      final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, expiry, sentenceDuration, reason, lastLocation, unknownLocation);
-
-      this.plugin.eventBus().post(PlayerImprisonEvent.class, prisoner);
-      final CompletionStage<?> setGroupFuture = groupsUnknown
-          ? permissionInterface.setPrisonerGroup(player, jailer, jailerName)
-          : CompletableFuture.completedFuture(null);
-      return setGroupFuture.exceptionally(ex -> {
-        if (permissionInterface != PermissionInterface.NULL) {
-          LOGGER.error("An error occurred changing the prisoner group for {}", prisonerUuid, ex);
+            if (!isPlayerJailed) {
+                // If the player is going to jail (not just moving between jails), run the onJail commands.
+                final SubCommandsConfiguration.SubCommands subCommands = this.subCommands.onJail();
+                subCommands.executeAsPrisoner(this.server, onlinePlayer, jailerName == null ? "" : jailerName);
+                subCommands.executeAsConsole(this.server, onlinePlayer, jailerName == null ? "" : jailerName);
+            }
         }
 
-        return null;
-      }).thenComposeAsync(v -> savePrisoner(prisoner), this.plugin).exceptionally(error -> {
-        LOGGER.error("An error occurred saving prisoner data for {}", prisonerUuid, error);
-        return null;
-      });
-    }, this.plugin).thenRunAsync(teleportAction, this.plugin);
-  }
-
-  public CompletableFuture<Void> savePrisoner(final ApiPrisoner prisoner) {
-    this.prisoners.put(prisoner.uuid(), prisoner);
-
-    return this.storage.savePrisoner(prisoner);
-  }
-
-  public void deletePrisonerFile(final ApiPrisoner prisoner) {
-    try {
-      this.storage.deletePrisoner(prisoner).get();
-    } catch (final InterruptedException | ExecutionException ex) {
-      LOGGER.error("Could not delete prisoner {}/{}", prisoner.uuid(), prisoner.name(), ex);
-    }
-  }
-
-  public boolean releaseJailedPlayer(final OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
-    final UUID prisonerUuid = player.getUniqueId();
-    final ApiPrisoner prisoner = this.prisoners.get(prisonerUuid);
-    if (prisoner == null) {
-      return false;
-    } else {
-      releasePrisoner(prisoner, player, source, sourceName, teleport);
-      return true;
-    }
-  }
-
-  public void releasePrisoner(
-      ApiPrisoner prisoner,
-      final OfflinePlayer player,
-      final UUID source,
-      final @Nullable String sourceName,
-      final boolean teleport
-  ) {
-    final UUID prisonerUuid = player.getUniqueId();
-
-    final PermissionInterface permissionInterface = this.plugin.permissionInterface();
-    final Set<String> parentGroups = prisoner.parentGroups();
-    final CompletionStage<?> settingParentGroups =
-        permissionInterface.setParentGroups(player, parentGroups, source, sourceName).handle((ignored, ex) -> {
-          if (ex != null && permissionInterface != PermissionInterface.NULL) {
-            LOGGER.error("An error occurred setting back prisoner's parent groups for {} {}", prisonerUuid, parentGroups, ex);
-          }
-
-          return ignored;
-        });
-
-    if (player.isOnline()) {
-      // Player is online, we can teleport them out of jail right away and clear up all their data
-      final Player online = Objects.requireNonNull(player.getPlayer());
-      if (teleport) {
-        final ImmutableLocation lastLocation = prisoner.lastLocationNullable();
-        final ImmutableLocation releaseLocation = prisoner.jail().releaseLocation();
-        final Location releaseLocationMutable;
-        if (releaseLocation != null) {
-          releaseLocationMutable = releaseLocation.mutable();
-        } else if (lastLocation != null) {
-          releaseLocationMutable = lastLocation.mutable();
+        if (isPlayerOnline || this.config.considerOfflineTime()) {
+            // If the player is online or offline time is enabled, their remaining time will start ticking down immediately,
+            // so we store the deadline of their release.
+            expiry = SentenceExpiry.of(Instant.now().plus(sentenceDuration));
         } else {
-          releaseLocationMutable = null;
+            // Otherwise, the time doesn't start ticking until the player joins.
+            expiry = SentenceExpiry.of(sentenceDuration);
         }
 
-        settingParentGroups.thenComposeAsync(ignored -> {
-          WorldGuardFacade.resetState(online);
-          if (releaseLocationMutable != null) {
-            return Teleport.teleportAsync(online, releaseLocationMutable);
-          } else {
-            return CompletableFuture.completedFuture(null);
-          }
-        }, this.plugin);
-      }
-
-      this.prisoners.remove(prisonerUuid);
-      deletePrisonerFile(prisoner);
-
-      final SubCommandsConfiguration.SubCommands subCommands = this.subCommands.onRelease();
-      subCommands.executeAsPrisoner(this.server, online, prisoner.jailedBy() == null ? "" : prisoner.jailedBy());
-      subCommands.executeAsConsole(this.server, online, prisoner.jailedBy() == null ? "" : prisoner.jailedBy());
-    } else {
-      if (prisoner.released()) {
-        // This player has already been released, don't need to do anything
-        return;
-      }
-
-      if (prisoner.unknownLastLocation()) {
-        // This prisoner has never joined during the entire duration of their sentence, meaning they are already where
-        // they need to be, so we can immediately forget they exist.
-        this.prisoners.remove(prisonerUuid);
-        deletePrisonerFile(prisoner);
-      } else {
-        prisoner = prisoner.withReleased();
-        savePrisoner(prisoner).exceptionally(error -> {
-          LOGGER.error("An error occurred saving data for prisoner {}", prisonerUuid, error);
-          return null;
-        });
-      }
-    }
-
-    if (this.plugin.essentials != null) {
-      final User user = this.plugin.essentials.getUser(prisonerUuid);
-      if (user != null && user.isJailed()) {
-        user.setJailTimeout(0L);
-        user.setJailed(false);
-      }
-    }
-
-    this.plugin.eventBus().post(PrisonerReleaseEvent.class, prisoner);
-  }
-
-  public CompletableFuture<Void> save() {
-    return this.storage.savePrisoners(this.prisoners);
-  }
-
-  public void timer() {
-    final Iterator<Map.Entry<UUID, ApiPrisoner>> iterator = this.prisoners.entrySet().iterator();
-    while (iterator.hasNext()) {
-      final Map.Entry<UUID, ApiPrisoner> entry = iterator.next();
-      final UUID key = entry.getKey();
-      final ApiPrisoner prisoner = entry.getValue();
-      final boolean released = prisoner.released();
-
-      // This prisoner has no known location, but they're also released. This means they're exactly where they need to
-      // be once they join, and so we can forget they exist.
-      if (prisoner.unknownLastLocation()) {
-        if (released) {
-          iterator.remove();
-          deletePrisonerFile(prisoner);
+        if (this.plugin.essentials != null) {
+            final User user = this.plugin.essentials.getUser(prisonerUuid);
+            if (user != null) {
+                user.setJailed(true);
+                if (isPlayerOnline) {
+                    user.setJailTimeout(expiry.expiryDate().toEpochMilli());
+                }
+            }
         }
-        continue;
-      }
 
-      if (released) {
-        releaseJailedPlayer(this.server.getOfflinePlayer(key), Util.NIL_UUID, "timer", true);
-      }
+        // If we never got a last location for this player, it means we need to get it when they log in.
+        final boolean unknownLocation = knownLastLocation == null;
+        // TODO(v2): We have to set some location here
+        final ImmutableLocation lastLocation = MoreObjects.firstNonNull(knownLastLocation, this.backupLocation);
+        final PermissionInterface permissionInterface = this.plugin.permissionInterface();
+
+        final boolean groupsUnknown = existingPrisoner == null || existingPrisoner.primaryGroup() == null || existingPrisoner.released();
+
+        final CompletionStage<? extends String> primaryGroupFuture = groupsUnknown
+                ? permissionInterface.fetchPrimaryGroup(player).exceptionally(ex -> null)
+                : CompletableFuture.completedFuture(existingPrisoner.primaryGroup());
+        final CompletionStage<? extends Set<? extends String>> parentGroupsFuture = groupsUnknown
+                ? permissionInterface.fetchParentGroups(player).thenApply(Function.<Set<? extends String>>identity()).exceptionally(ex -> ImmutableSet.of())
+                : CompletableFuture.completedFuture(existingPrisoner.parentGroups());
+
+        primaryGroupFuture.thenCombineAsync(parentGroupsFuture, (primaryGroup, parentGroups) -> {
+            final ApiPrisoner prisoner = new ApiPrisoner(prisonerUuid, player.getName(), primaryGroup, parentGroups, jail, jailerName, expiry, sentenceDuration, reason, lastLocation, unknownLocation);
+
+            this.plugin.eventBus().post(PlayerImprisonEvent.class, prisoner);
+            final CompletionStage<?> setGroupFuture = groupsUnknown
+                    ? permissionInterface.setPrisonerGroup(player, jailer, jailerName)
+                    : CompletableFuture.completedFuture(null);
+            return setGroupFuture.exceptionally(ex -> {
+                if (permissionInterface != PermissionInterface.NULL) {
+                    LOGGER.error("An error occurred changing the prisoner group for {}", prisonerUuid, ex);
+                }
+
+                return null;
+            }).thenComposeAsync(v -> savePrisoner(prisoner), this.plugin).exceptionally(error -> {
+                LOGGER.error("An error occurred saving prisoner data for {}", prisonerUuid, error);
+                return null;
+            });
+        }, this.plugin).thenRunAsync(teleportAction, this.plugin);
     }
-  }
+
+    public @NotNull CompletableFuture<Void> savePrisoner(final ApiPrisoner prisoner) {
+        this.prisoners.put(prisoner.uuid(), prisoner);
+
+        return this.storage.savePrisoner(prisoner);
+    }
+
+    public void deletePrisonerFile(final ApiPrisoner prisoner) {
+        try {
+            this.storage.deletePrisoner(prisoner).get();
+        } catch (final InterruptedException | ExecutionException ex) {
+            LOGGER.error("Could not delete prisoner {}/{}", prisoner.uuid(), prisoner.name(), ex);
+        }
+    }
+
+    public boolean releaseJailedPlayer(final @NotNull OfflinePlayer player, final UUID source, final @Nullable String sourceName, final boolean teleport) {
+        final UUID prisonerUuid = player.getUniqueId();
+        final ApiPrisoner prisoner = this.prisoners.get(prisonerUuid);
+        if (prisoner == null) {
+            return false;
+        } else {
+            releasePrisoner(prisoner, player, source, sourceName, teleport);
+            return true;
+        }
+    }
+
+    public void releasePrisoner(
+            @NotNull ApiPrisoner prisoner,
+            final @NotNull OfflinePlayer player,
+            final UUID source,
+            final @Nullable String sourceName,
+            final boolean teleport
+    ) {
+        final UUID prisonerUuid = player.getUniqueId();
+
+        final PermissionInterface permissionInterface = this.plugin.permissionInterface();
+        final Set<String> parentGroups = prisoner.parentGroups();
+        final CompletionStage<?> settingParentGroups =
+                permissionInterface.setParentGroups(player, parentGroups, source, sourceName).handle((ignored, ex) -> {
+                    if (ex != null && permissionInterface != PermissionInterface.NULL) {
+                        LOGGER.error("An error occurred setting back prisoner's parent groups for {} {}", prisonerUuid, parentGroups, ex);
+                    }
+
+                    return ignored;
+                });
+
+        if (player.isOnline()) {
+            // Player is online, we can teleport them out of jail right away and clear up all their data
+            final Player online = Objects.requireNonNull(player.getPlayer());
+            if (teleport) {
+                final ImmutableLocation lastLocation = prisoner.lastLocationNullable();
+                final ImmutableLocation releaseLocation = prisoner.jail().releaseLocation();
+                final Location releaseLocationMutable;
+                if (releaseLocation != null) {
+                    releaseLocationMutable = releaseLocation.mutable();
+                } else if (lastLocation != null) {
+                    releaseLocationMutable = lastLocation.mutable();
+                } else {
+                    releaseLocationMutable = null;
+                }
+
+                settingParentGroups.thenComposeAsync(ignored -> {
+                    WorldGuardFacade.resetState(online);
+                    if (releaseLocationMutable != null) {
+                        return Teleport.teleportAsync(online, releaseLocationMutable);
+                    } else {
+                        return CompletableFuture.completedFuture(null);
+                    }
+                }, this.plugin);
+            }
+
+            this.prisoners.remove(prisonerUuid);
+            deletePrisonerFile(prisoner);
+
+            final SubCommandsConfiguration.SubCommands subCommands = this.subCommands.onRelease();
+            final String executorName = prisoner.jailedBy() == null ? "" : prisoner.jailedBy();
+            subCommands.executeAsPrisoner(this.server, online, executorName);
+            subCommands.executeAsConsole(this.server, online, executorName);
+        } else {
+            if (prisoner.released()) {
+                // This player has already been released, don't need to do anything
+                return;
+            }
+
+            if (prisoner.unknownLastLocation()) {
+                // This prisoner has never joined during the entire duration of their sentence, meaning they are already where
+                // they need to be, so we can immediately forget they exist.
+                this.prisoners.remove(prisonerUuid);
+                deletePrisonerFile(prisoner);
+            } else {
+                prisoner = prisoner.withReleased();
+                savePrisoner(prisoner).exceptionally(error -> {
+                    LOGGER.error("An error occurred saving data for prisoner {}", prisonerUuid, error);
+                    return null;
+                });
+            }
+        }
+
+        if (this.plugin.essentials != null) {
+            final User user = this.plugin.essentials.getUser(prisonerUuid);
+            if (user != null && user.isJailed()) {
+                user.setJailTimeout(0L);
+                user.setJailed(false);
+            }
+        }
+
+        this.plugin.eventBus().post(PrisonerReleaseEvent.class, prisoner);
+    }
+
+    public @NotNull CompletableFuture<Void> save() {
+        return this.storage.savePrisoners(this.prisoners);
+    }
+
+    public void timer() {
+        final Iterator<Map.Entry<UUID, ApiPrisoner>> iterator = this.prisoners.entrySet().iterator();
+        while (iterator.hasNext()) {
+            final Map.Entry<UUID, ApiPrisoner> entry = iterator.next();
+            final UUID key = entry.getKey();
+            final ApiPrisoner prisoner = entry.getValue();
+            final boolean released = prisoner.released();
+
+            // This prisoner has no known location, but they're also released. This means they're exactly where they need to
+            // be once they join, and so we can forget they exist.
+            if (prisoner.unknownLastLocation()) {
+                if (released) {
+                    iterator.remove();
+                    deletePrisonerFile(prisoner);
+                }
+                continue;
+            }
+
+            if (released) {
+                releaseJailedPlayer(this.server.getOfflinePlayer(key), Util.NIL_UUID, "timer", true);
+            }
+        }
+    }
 }

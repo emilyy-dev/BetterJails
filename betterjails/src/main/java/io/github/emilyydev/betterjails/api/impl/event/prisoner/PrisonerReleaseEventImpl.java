@@ -33,16 +33,16 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PrisonerReleaseEventImpl extends SimpleBetterJailsEvent implements PrisonerReleaseEvent {
 
-  private final Prisoner prisoner;
+    private final Prisoner prisoner;
 
-  public PrisonerReleaseEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
-      final Prisoner prisoner) {
-    super(api, eventType);
-    this.prisoner = prisoner;
-  }
+    public PrisonerReleaseEventImpl(final BetterJails api, final Class<? extends BetterJailsEvent> eventType,
+                                    final Prisoner prisoner) {
+        super(api, eventType);
+        this.prisoner = prisoner;
+    }
 
-  @Override
-  public @NotNull Prisoner prisoner() {
-    return this.prisoner;
-  }
+    @Override
+    public @NotNull Prisoner prisoner() {
+        return this.prisoner;
+    }
 }

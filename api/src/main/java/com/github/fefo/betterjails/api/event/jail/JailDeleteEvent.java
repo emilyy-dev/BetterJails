@@ -35,10 +35,10 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface JailDeleteEvent extends BetterJailsEvent {
 
-  /**
-   * Gets the jail being deleted in this event.
-   *
-   * @return the jail to be deleted
-   */
-  @NotNull Jail jail();
+    /**
+     * Gets the jail being deleted in this event.
+     *
+     * @return the jail to be deleted
+     */
+    @NotNull Jail jail();
 }
