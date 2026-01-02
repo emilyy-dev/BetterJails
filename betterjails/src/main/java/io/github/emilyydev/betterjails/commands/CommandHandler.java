@@ -175,7 +175,7 @@ public final class CommandHandler {
         this.server.broadcast(
                 MessageUtil.parse(
                         this.configuration.messages().jailPlayerSuccess(prisonerName, executorName, jail.name(), timeInput, MoreObjects.firstNonNull(reason, "no reason provided"))
-                ),
+                ).toString(),
                 "betterjails.receivebroadcast"
         );
     }
@@ -266,10 +266,11 @@ public final class CommandHandler {
                 )
         );
 
+        // Please do it in a better way if that's a way to go
         this.server.broadcast(
                 MessageUtil.parse(
                         this.configuration.messages().releasePrisonerSuccess(prisoner.nameOr("(unknown)"), executorName)
-                ),
+                ).toString(),
                 "betterjails.receivebroadcast"
         );
     }

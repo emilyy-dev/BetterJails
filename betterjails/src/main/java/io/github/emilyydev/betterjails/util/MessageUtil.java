@@ -27,6 +27,7 @@ package io.github.emilyydev.betterjails.util;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -91,7 +92,7 @@ public final class MessageUtil {
      * @param message The message to parse
      * @return The parsed component
      */
-    public static String parse(final String message) {
+    public static @NotNull ComponentLike parse(final String message) {
         try {
             return MINI_MESSAGE.deserialize(message);
         } catch (final Exception ex) {
