@@ -33,6 +33,7 @@ dependencies {
   runtimeOnly(libs.slf4j.impl)
 
   testImplementation(libs.junit)
+  testRuntimeOnly(libs.junit.platform)
   testImplementation(libs.mockbukkit)
 }
 
@@ -80,7 +81,7 @@ tasks {
   }
 
   runServer {
-    minecraftVersion("1.21.10")
+    minecraftVersion("1.21.11")
     systemProperty("disable.watchdog", true)
   }
 }
