@@ -1,6 +1,6 @@
 [versions]
 cloud = "2.0.0"
-cloud-minecraft = "2.0.0-beta.13"
+cloud-minecraft = "2.0.0-beta.14"
 spigot = "1.8.8-R0.1-SNAPSHOT"
 bstats = "3.1.0"
 luckperms = "5.4"
@@ -27,6 +27,7 @@ annotations = { module = "org.jetbrains:annotations", version.ref = "annotations
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-impl = { module = "org.slf4j:slf4j-jdk14", version.ref = "slf4j" }
 junit = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-platform = { module = "org.junit.platform:junit-platform-launcher" }
 mockbukkit = { module = "com.github.seeseemelk:MockBukkit-v1.20", version.ref = "mockbukkit" }
 
 [plugins]

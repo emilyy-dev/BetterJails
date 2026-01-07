@@ -1,8 +1,7 @@
 //
 // This file is part of BetterJails, licensed under the MIT License.
 //
-// Copyright (c) 2024 emilyy-dev
-// Copyright (c) 2025 Emilia Kond
+// Copyright (c) 2025 emilyy-dev
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,23 +22,36 @@
 // SOFTWARE.
 //
 
-package io.github.emilyydev.betterjails.interfaces.storage;
+package io.github.emilyydev.betterjails.data.upgrade.jail;
 
-import io.github.emilyydev.betterjails.api.impl.model.jail.ApiJail;
-import io.github.emilyydev.betterjails.api.impl.model.prisoner.ApiPrisoner;
+import com.github.fefo.betterjails.api.util.ImmutableLocation;
+import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Set;
 
-public interface StorageInterface {
+public final class ObsoleteJailsV1ToV2 {
 
-  void savePrisoner(ApiPrisoner prisoner) throws Exception;
-  void savePrisoners(Map<UUID, ApiPrisoner> prisoners) throws Exception;
-  void deletePrisoner(ApiPrisoner prisoner) throws Exception;
-  Map<UUID, ApiPrisoner> loadPrisoners() throws Exception;
+  private static final String JAILS_FIELD = "jails";
 
-  void saveJail(ApiJail jail) throws Exception;
-  void saveJails(Map<String, ApiJail> jails) throws Exception;
-  void deleteJail(ApiJail jail) throws Exception;
-  Map<String, ApiJail> loadJails() throws Exception;
+  private static final String NAME_FIELD = "name";
+  private static final String LOCATION_FIELD = "location";
+
+  public static void upgrade(final ConfigurationSection config) {
+    final Set<String> keys = config.getKeys(false);
+    final List<Map<String, Object>> jails = new ArrayList<>();
+    for (final String name : keys) {
+      final Map<String, Object> jail = new HashMap<>();
+      jail.put(NAME_FIELD, name);
+      jail.put(LOCATION_FIELD, ImmutableLocation.copyOf((Location) config.get(name)));
+      config.set(name, null);
+      jails.add(jail);
+    }
+
+    config.set(JAILS_FIELD, jails);
+  }
 }
