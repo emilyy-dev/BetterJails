@@ -1,6 +1,6 @@
 [versions]
 cloud = "2.0.0"
-cloud-minecraft = "2.0.0-beta.14"
+cloud-minecraft = "2.0.0-beta.15"
 spigot = "1.8.8-R0.1-SNAPSHOT"
 bstats = "3.1.0"
 luckperms = "5.4"
@@ -10,7 +10,7 @@ annotations = "20.1.0"
 slf4j = "2.0.16"
 junit = "5.10.2"
 mockbukkit = "3.71.0"
-shadow = "8.3.9"
+shadow = "8.3.11"
 run-paper = "3.0.2"
 
 [libraries]
