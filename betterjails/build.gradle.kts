@@ -81,7 +81,7 @@ tasks {
   }
 
   runServer {
-    minecraftVersion("26.1.2")
+    minecraftVersion("26.2")
     systemProperty("disable.watchdog", true)
     javaLauncher = project.javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
   }
